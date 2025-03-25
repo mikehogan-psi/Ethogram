@@ -1,0 +1,41 @@
+
+all_frame_features = [];
+
+
+        for k = 1: length(balanced_indices) 
+            
+        num_frames = 10040;
+        window_size = 30;  % Define window size (/fps to get time over which features are being computed)
+        start_idx = max(1, balanced_indices(k) - floor(window_size / 2));
+        end_idx = min(num_frames, balanced_indices(k)  + floor(window_size / 2));
+
+        % Extract data for the window
+        b_window = b(:, start_idx:end_idx);
+        T_window = T(:, start_idx:end_idx);
+        A_window = A(start_idx:end_idx);
+
+        % Calculate velocity and angular velocity, these can be changed to
+        % capture the desired behaviour      
+        angular_velocity = [0, abs(diff(A_window))];  % Prepend 0 for alignment
+        velocity = [0, sqrt(sum(diff(T_window, 1, 2).^2))];  % Euclidean velocity
+
+        % Compute features for the current window
+        frame_features = [
+            mean(b_window(3, :));  % Mean of eigenpose 3 (looking up/down)
+            var(b_window(3, :));   % Variance of eigenpose 3
+            mean(diff(b_window(3, :)));  % Temporal derivative of eigenpose 3
+            mean(b_window(2, :));  % Mean of eigenpose 2 (elongation/hunching)
+            mean(velocity);        % Mean velocity
+            mean(angular_velocity) % Mean angular velocity
+        ];
+
+        all_frame_features = [all_frame_features, frame_features,];
+        end
+
+        
+ columns_with_nan = any(isnan(all_frame_features), 1);
+
+% Count the number of such columns
+num_columns_with_nan = sum(columns_with_nan);
+
+
