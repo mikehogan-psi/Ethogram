@@ -45,9 +45,12 @@
                                  mkdir(manual_labels_path);
         predicted_labels_path = [common_behav_dir '\' behaviour '_analyses\' RFM_model_name '\predicted_labels_data\'];   % data with behaviour labels predicted by model
                                  mkdir(predicted_labels_path);
-        corrected_labels_path = [common_behav_dir '\' behaviour '_analyses\' RFM_model_name '\corrected_labeled_data\'];   % predcited_labvelds data which was manually corrected        
+        corrected_labels_path = [common_behav_dir '\' behaviour '_analyses\' RFM_model_name '\corrected_labeled_data\'];   % predcited_labelds data which was manually corrected        
                                  mkdir(corrected_labels_path);
 
+        preselected_labels_path = [common_behav_dir '\' behaviour '_analyses\' RFM_model_name '\preselected_labeled_data\'];   % preselected labels data which was defined with velocity and duration thresholds    
+                                   mkdir(preselected_labels_path);
+ 
                                  addpath(genpath([common_behav_dir '\' behaviour '_analyses\' RFM_model_name ])); % adds new model folder and subfolders to matlab path
 
  % 2. Define directories to where models shall be saved (both the SSM and RFM will be saved here)
@@ -62,7 +65,7 @@
         all_SSM_files = dir(fullfile(SSM_data_path, '*mouse*')); % makes a struct containing details of all SSM fitted files 
         num_files = length(all_DLC_files);                   % identifies number of files (for each mouse two files so 2x nr. of mice)
 
-%% Exacting low-velocity frames via tresholding Euclidian distance travelled between frames 
+%% STEP 1: pre-selection low-velocity frames via tresholding Euclidian distance travelled between frames 
 
 % define body marker based on which euclidian distance shall be calculated
   body_marker = 5;  % nose = 1
@@ -75,7 +78,13 @@
                     % right eye = 8
                     % left eye = 9
 
+  body_markers_strings = {'nose'; 'right_ear';'left_ear';'neck_base';'body_anterior';'body_posterior';'tail_base';'right_eye';'left_eye'};                  
+  selected_body_marker = body_markers_strings{body_marker};
 
+ % add a body-marker folder in preselected_labels_path     
+   preselected_labels_path = [preselected_labels_path selected_body_marker '\' ];
+                             mkdir(preselected_labels_path);
+                             addpath(preselected_labels_path); 
 
 for i = 1:num_files
     
@@ -89,7 +98,7 @@ for i = 1:num_files
     dist = dist';
 
     % define everything below velocity threshold as freezing
-    
+
             freezing_velocity_threshold = 1.1; % pixels per frame, change as needed (*0.048*15 to get cm/s value)
             prior_freezing_selection = dist < freezing_velocity_threshold; 
 
@@ -111,12 +120,78 @@ for i = 1:num_files
                 end
             end
 
-
-    
-
-
+    % save preselected labels for each mouse
+      save([preselected_labels_path filename], 'prior_freezing_selection')
 
 end
 
+%% STEP 2: SETUP calculate features function
+ 
+%%%%%%%%%%%!!! DEFINE VARIABLES TO CALCULATE RELEVANT FEATURES !!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 1. out of the following list of all possible to calculate features decide which onces are relevant for the target behaviour
+%    ! for detailed explanation of features see mouse_feature_selectiontable !
+%    # can also modify this and add new features #
+
+ frame_features_all_strings = {
+
+  'mean(b_window(1, :))';                          % Feature 1:  Average "elongation/hunching" (General horizontal body deformation )
+  'var(b_window(1, :))';                           % Feature 2:  Variability in "elongation/hunching"  ( horizontal deformation dynamism / general fluctuation)
+  'mean(diff(b_window(1, :)))';                    % Feature 3:  Trend of change "elongation/hunching"  posture (rate and  direction of horizontal deformation dynamism)
+  'mean(b_window(2, :))';                          % Feature 4:  Average "bending side to side" (general lateral deformation) 
+  'var(b_window(2, :))';                           % Feature 5:  Variability in "bending side to side" (lateral motion dynamism)
+  'mean(diff(b_window(2, :)))';                    % Feature 6:  Trend of change in "bending side to side" (rate and  direction of lateral motion dynamism)
+  'mean(b_window(3, :))';                          % Feature 7:  Average "looking up/down" (General vertical posture trend)
+  'var(b_window(3, :))';                           % Feature 8:  Variability in "looking up/down" posture (vertical motion dynamism / general fluctuation)
+  'mean(diff(b_window(3, :)))';                    % Feature 9:  Trend of change in "looking up/down" posture (rate and  direction of vertical motion dynamism)
+  'mean([0, sqrt(sum(diff(T_window, 1, 2).^2))])'; % Feature 10: Average velocity (overall movement intensity)
+  'mean([0, abs(diff(A_window))])'                 % Feature 11: Average Angular Velocity / Average change in orientation (Describes rotational movement)
+  'var([0, diff([0, sqrt(sum(diff(T_window, 1, 2).^2))])])'                 % Feature 12: Variability in acceleration of movement / How much acceleration fluctuates
+  'sum(abs([0, diff([0, diff([0, sqrt(sum(diff(T_window, 1, 2).^2))])])]))' % Feature 13: Cumulative change in acceleration   
+  'max([0, sqrt(sum(diff(T_window, 1, 2).^2))])'                            % Feature 14: Peak velocity within the window
+  'sum(abs(diff([0, diff(b_window(2, :))])))'                               % Feature 15: Cumulative change in rate of bending
+  'sum([0, sqrt(sum(diff(T_window, 1, 2).^2))])'                            % Feature 16: Total distance travelled
+    
+ };
+
+% 2. define which features are relevant for the target behaviour 
+    
+    %feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection for RFM_darting_1-5
+    %feature_selectection_indx = [2,3,9,10,11,12,13,14];  % feature selection for RFM_darting_6
+    %feature_selectection_indx = [2,7,11,12,13,14,15,16];  % feature selection for RFM_darting_7
+    %feature_selectection_indx = [2,7,11,12,13,14,16];  % feature selection for RFM_darting_8
+    %feature_selectection_indx = [2,9,10,7,11,12,13,14,15];  % feature selection for RFM_darting_9
+    %feature_selectection_indx = [2,3,4,5,7,8,9,10,11];  % feature selection for RFM_rearing_3
+
+    feature_selectection_indx = [2,5,8,10,11,12,14,16];  % feature selection for RFM_freezing_1
+
+    frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
 
+% 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
+        window_size = 15; % time window for freezing
+      % window_size = 30; % time window for darting
+      % window_size = 30; % time window for rearing 
+
+
+%% STEP 3: Manually label within pre-selection the frames that exibit actual freezing behaviour
+
+% define file name of raw video and mat file containing results of SSM (2D_UPPER output)
+base_name = 'mouse22_extinction_p2'; % !!! CHANGE THIS !!!
+
+% Find the correct video and SSM(.mat) files and the preselected_labels data
+video_file_path = dir(fullfile(video_path, [base_name, '*.avi']));
+video_file_path = [video_path video_file_path.name];
+SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*DLC_resnet50*.mat']));
+SSM_file_path = [SSM_data_path SSM_file_path.name];
+preselected_file_path = dir(fullfile(preselected_labels_path, [base_name, '*DLC_resnet50*.mat']));
+preselected_file_path = [preselected_labels_path preselected_file_path.name];
+
+% run freature_extractor function
+from_preselect_feature_extractor(video_file_path, preselected_file_path , SSM_file_path, manual_labels_path, frame_features_strings, window_size); 
+% open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
+
+% Saved output files contain a lables and features variable for each mouse
+    % lables: vector containing 1s for all labled frames and 0s for balanced number of non-labled frames (randomly selects x-times (e.g. 5) non-labeled frames) 
+    % features: contains x columns (depending on how many features analysed) each with values representing de degree to which a cetrain behavioural feature is expresseed in a certain frame (per row)
+         
