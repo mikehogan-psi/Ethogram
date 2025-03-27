@@ -1,6 +1,6 @@
 load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
 load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
-% 
+
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
 
@@ -226,10 +226,10 @@ figure;
 hold on;
 
 % Plot actual freezing for vehicle group
-plot(trial_val, ym0, 'bo-', 'MarkerFaceColor', 'b', 'LineWidth', 1);
+plot(trial_val, ym0, 'ko-', 'MarkerFaceColor', 'k', 'LineWidth', 1);
 
 % Plot predicted freezing for vehicle group
-plot(trial_val, ym_hat0, 'b--', 'LineWidth', 1.5);
+plot(trial_val, ym_hat0, 'k--', 'LineWidth', 1.5);
 
 % Plot actual freezing for psilocybin group
 plot(trial_val, ym1, 'ro-', 'MarkerFaceColor', 'r', 'LineWidth', 1);
@@ -238,16 +238,19 @@ plot(trial_val, ym1, 'ro-', 'MarkerFaceColor', 'r', 'LineWidth', 1);
 plot(trial_val, ym_hat1, 'r--', 'LineWidth', 1.5);
 
 % Labels and title
-xlabel('Trial Number');
-ylabel('Mean Freezing Probability');
-title('Actual vs Predicted Freezing Across Trials');
-legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
-        'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
-       'Location', 'Best');
+xlabel('Trial Number', 'FontWeight', 'bold');
+ylabel('Mean Freezing Probability', 'FontWeight', 'bold');
+% % title('Actual vs Predicted Freezing Across Trials');
+% legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
+%         'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
+%        'Location', 'Best');
 ylim([0 1])
 xlim([1 20])
 grid on;
 hold off;
+
+% Save figure
+print(gcf, 'freezing_across_trials.png', '-dpng', '-r300');
 
 %% Plot real data over models predictions: across timebins 
 % show average probability for two groups across trials
@@ -267,10 +270,10 @@ figure;
 hold on;
 
 % Plot actual freezing for vehicle group
-plot(bin_val, ym0, 'bo-', 'MarkerFaceColor', 'b', 'LineWidth', 1);
+plot(bin_val, ym0, 'ko-', 'MarkerFaceColor', 'k', 'LineWidth', 1);
 
 % Plot predicted freezing for vehicle group
-plot(bin_val, ym_hat0, 'b--', 'LineWidth', 1.5);
+plot(bin_val, ym_hat0, 'k--', 'LineWidth', 1.5);
 
 % Plot actual freezing for psilocybin group
 plot(bin_val, ym1, 'ro-', 'MarkerFaceColor', 'r', 'LineWidth', 1);
@@ -279,13 +282,16 @@ plot(bin_val, ym1, 'ro-', 'MarkerFaceColor', 'r', 'LineWidth', 1);
 plot(bin_val, ym_hat1, 'r--', 'LineWidth', 1.5);
 
 % Labels and title
-xlabel('Time Bin Number');
-ylabel('Mean Freezing Probability');
-title('Actual vs Predicted Freezing Within Trials');
-legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
-        'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
-       'Location', 'Best');
+xlabel('Time Bin Number (2s)', 'FontWeight', 'bold');
+ylabel('Mean Freezing Probability', 'FontWeight', 'bold');
+% title('Actual vs Predicted Freezing Within Trials');
+% legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
+%         'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
+%        'Location', 'Best');
 ylim([0 1])
 xlim([1 8])
 grid on;
 hold off;
+
+% Save figure
+print(gcf, 'freezing_across_timebins.png', '-dpng', '-r300');
