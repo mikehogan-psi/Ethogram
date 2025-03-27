@@ -1,12 +1,14 @@
 %%
-load('D:\PhD 2nd Year\T_matrices.mat');
+load('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\T_matrices.mat');
 
+% define constants
 num_frames = 502;
 num_trials = 40;
 num_mice = 30;
+num_dims = 2;
 
 % Initialise storage for all positional data
-all_positional_data = zeros(2, num_frames, num_trials, num_mice);
+all_positional_data = zeros(num_dims, num_frames, num_trials, num_mice);
 
 for mouse_idx = 1:num_mice
     % Extract x and y position data for the current mouse
@@ -25,8 +27,7 @@ for mouse_idx = 1:num_mice
         current_positional_data_x = x_posi(start_idx:end_idx);
         current_positional_data_y = y_posi(start_idx:end_idx);
         
-        % Reshape and assign to the correct position in
-        % current_positional_data
+        % Reshape and assign to the correct position in current_positional_data
         current_positional_data(1, :, trial_idx) = current_positional_data_x; % x positions
         current_positional_data(2, :, trial_idx) = current_positional_data_y; % y positions
     end
@@ -35,7 +36,8 @@ for mouse_idx = 1:num_mice
     all_positional_data(:, :, :, mouse_idx) = current_positional_data;
 end
 %% Aligning positional data between mice with corner labels as reference data
-data = readmatrix('D:\PhD 2nd Year\DeepLabCut Models\corner_labels.xlsx');
+
+data = readmatrix('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\corner_labels.xlsx');
 data = data(:, 4:end);
 
 data_x = data(:, 1:2:end);
@@ -48,16 +50,16 @@ for i = 1:num_mice
     corner_matrix(:, 2, i) = data_y(i, :)';
 end
 
-% Get dimensions
-[num_dims, num_frames, num_trials, num_mice] = size(all_positional_data);
+ref_corner_matrix = corner_matrix(:,:,1);
 
 % Loop through each mouse to align their positional data
 for mouse_idx = 1:num_mice
-    % Extract this mouse's corner coordinates (4x2)
+
+    % Extract this mouse's arena corner coordinates (4x2)
     mouse_corners = squeeze(corner_matrix(:, :, mouse_idx));
 
     % Compute Procrustes transformation using this mouse's own reference
-    [~, ~, transform] = procrustes(mouse_corners, mouse_corners); % Identity transform
+    [~, ~, transform] = procrustes(ref_corner_matrix, mouse_corners); % Identity transform
 
     % Loop through trials
     for trial_idx = 1:num_trials
