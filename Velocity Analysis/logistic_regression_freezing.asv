@@ -254,11 +254,11 @@ hold off;
 yhat = glmval(b,X(:,2:end),'logit');
 bin_val = unique(time_bins);
 Nval = num_bins;
-for n = 1:Nval
+for n = 1:num_bins
     ind = find((time_bin == bin_val(n))&(group == 0));
     ym0(n) = mean(y(ind));
     ym_hat0(n) = mean(yhat(ind));
-    ind = find((time_bin == bin_val(n))&(group == 1));
+    ind = find((trial == trial_val(n))&(group == 1));
     ym1(n) = mean(y(ind));
     ym_hat1(n) = mean(yhat(ind));
 end
@@ -286,6 +286,6 @@ legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
         'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
        'Location', 'Best');
 ylim([0 1])
-xlim([1 8])
+xlim([1 20])
 grid on;
 hold off;
