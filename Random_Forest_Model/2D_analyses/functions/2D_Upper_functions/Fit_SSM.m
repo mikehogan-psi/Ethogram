@@ -104,13 +104,13 @@ end
 make_fig = false;
 if make_fig & ~missing & ind_num<6
     fig1 = figure; hold on
-    plot(X(:,1),X(:,2),'k.','MarkerSize',16); 
+    %plot(X(:,1),X(:,2),'k.','MarkerSize',16); 
     plot(Xfit(:,1),Xfit(:,2),'bo','MarkerSize',8,'LineWidth',2); 
     title(['mean fit: C = ' num2str(C)]);
-    mX = nanmean(X);
+    %mX = nanmean(X);
     xlim([mX(1)-150 mX(1)+150]);
     ylim([mX(2)-150 mX(2)+150]);
-    ginput(); close all;
+    %ginput(); close all;
 end
 
 function[C, Xfit, R, T] = fit_SSM(b, X, mu, lambda, P, alpha_reg, var_res)

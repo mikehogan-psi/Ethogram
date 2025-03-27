@@ -1,6 +1,3 @@
-%%       NOTE: 
-%%%%%%%  currently set up to analysise darting but can be adapted for any desired behaviour %%%%%%%%%%
-
 %% Behavioural Analysis Pipeline to define an predict specific behaviours (for 2D data)
 
 % This analysis pipeline allows for the identification (a.k.a. extraction) of desired mouse behaviours ("target behaviour")
@@ -399,7 +396,7 @@ for i = 1:num_files % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-          duration_threshold = 8;  % for darting
+          duration_threshold = 15;  % for darting
     
     % Iterate over detected darting sequences
     for segment = 1:num_segments
