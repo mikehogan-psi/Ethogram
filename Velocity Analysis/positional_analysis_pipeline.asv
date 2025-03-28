@@ -221,7 +221,7 @@ vehicle_y = reshape(veh_pre_stim_data(2, :, :, :), [], 1);  % Extract y position
 
 % Plot the heatmap
 % Define the bin size for the heatmap (e.g., a larger number of bins for finer resolution)
-nbins = [15, 15];  % Adjust this to increase/decrease bin size
+nbins = [20, 20];  % Adjust this to increase/decrease bin size
 [veh_counts, xedges, yedges] = histcounts2(vehicle_x, vehicle_y, nbins);
 
 % Plot using imagesc for a regular heatmap
@@ -231,7 +231,7 @@ axis equal;
 title('Vehicle Pre-Stim');
 xlabel('X Position (cm)');
 ylabel('Y Position (cm)');
-clim([0,  7358]); % max(veh_counts(:))]???
+clim([0, 1500]);
 xlim([x_min, x_max]);
 ylim([y_min, y_max]);
 
@@ -261,7 +261,7 @@ axis equal;
 title('Psilocybin Pre-Stim');
 xlabel('X Position (cm)');
 ylabel('Y Position (cm)');
-clim([0, 7358]); % max(psi_counts(:))???
+clim([0, 1500]);
 xlim([x_min, x_max]);
 ylim([y_min, y_max]);
 
@@ -297,10 +297,10 @@ figure
 imagesc(xedges, yedges, difference_counts'); % Transpose counts to match x/y axes
 set(gca, 'YDir', 'normal'); % Set Y-axis direction to normal
 axis equal;
-title('Difference Heatmap Veh - Psi (Pre-Stim)');
+title('Vehicle Pre-Stim');
 xlabel('X Position (cm)');
 ylabel('Y Position (cm)');
-clim([min(difference_counts(:)), max(difference_counts(:))]);
+clim([0, 1500]);
 xlim([x_min, x_max]);
 ylim([y_min, y_max]);
 
@@ -330,4 +330,6 @@ colorbar_ticks_in_seconds = colorbar_ticks / 15;  % Convert frames to seconds
 % Set the new tick labels to be in seconds
 c.TickLabels = arrayfun(@(x) sprintf('%.0f s', x), colorbar_ticks_in_seconds, 'UniformOutput', false);
 
+% Adjusting the layout
+sgtitle('Difference Heatmap Veh - Psi (Pre-Stim)');
 
