@@ -1,5 +1,6 @@
 %%
-load('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\T_matrices.mat');
+% load('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\T_matrices.mat');
+load('D:\PhD 2nd Year\T_matrices.mat')
 
 % define constants
 num_frames = 502;
@@ -37,7 +38,8 @@ for mouse_idx = 1:num_mice
 end
 %% Aligning positional data between mice with corner labels as reference data
 
-data = readmatrix('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\corner_labels.xlsx');
+% data = readmatrix('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\positional_analysis\corner_labels.xlsx');
+data = readmatrix('D:\PhD 2nd Year\DeepLabCut Models\corner_labels.xlsx');
 data = data(:, 4:end);
 
 data_x = data(:, 1:2:end);
