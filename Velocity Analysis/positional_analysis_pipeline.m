@@ -237,17 +237,20 @@ end
 
 % Display the plot
 hold off;
+
+
+%% choose which groups of psi and veh data you want analyse 
+%  these datagroups will be used for all the future analyses
+
+  vehicle_data = veh_fF;    % flash-FLASH trials veh
+  psilocybin_data = psi_fF; % flash-FLASH trials Psi
+
+  % vehicle_data = veh_post_stim_loom;    % loom trials (post-stim) veh
+  % psilocybin_data = psi_post_stim_loom; % loom trials (post-stim) Psi
+
+
 %% Plotting heatmaps of time spent in parts of the arena (Psi and Veh individually)
 
-% choose which data you want analyse
-
-  % vehicle_data = veh_fF;    % flash-FLASH trials veh
-  % psilocybin_data = psi_fF; % flash-FLASH trials Psi
-
-  vehicle_data = veh_post_stim_loom;    % loom trials (post-stim) veh
-  psilocybin_data = psi_post_stim_loom; % loom trials (post-stim) Psi
-
-% Create a figure for the heatmaps
 % Create a figure for the heatmaps
 figure;
 subplot(1, 2, 1); % Create two subplots: one for vehicle and one for psilocybin
@@ -374,7 +377,7 @@ c.TickLabels = arrayfun(@(x) sprintf('%.0f s', x), colorbar_ticks_in_seconds, 'U
 % column_nr = round(mouse_cm / bin_width); 
 
 
-%% determining time spent along wall and in center in flash-FLASH trials (psi vs vehicle)
+%% determining time spent along wall and in center (psi vs vehicle)
 
 % define boundaries of center of arena (in cm)
   edge_widht = 4; % width of the area around all the walls that shall be counted as thigmotactic area (mouse is touching walls)
@@ -383,10 +386,9 @@ c.TickLabels = arrayfun(@(x) sprintf('%.0f s', x), colorbar_ticks_in_seconds, 'U
   x_cen_max = top_right(1) - edge_widht;
   y_cen_max = top_right(2) - edge_widht;
 
-% define which frames mouse is spending time in periphery of center of arena 
-
-  thigmotaxis_matrix_psi = zeros(502,8,15); % later all frames where mouse is in center filled with 1s
-  thigmotaxis_matrix_veh = zeros(502,8,15); 
+% initialize matrices to hold thigmotaxis behaviour (periphery = 0, center = 1)  
+  thigmotaxis_matrix_psi = zeros(size(psilocybin_data,2),size(psilocybin_data,3),size(psilocybin_data,4)); 
+  thigmotaxis_matrix_veh = zeros(size(vehicle_data,2),size(vehicle_data,3),size(vehicle_data,4)); 
 
 % loop trough all frames in all trials and all mice 
   for m = 1: size(thigmotaxis_matrix_psi,3)
@@ -396,15 +398,15 @@ c.TickLabels = arrayfun(@(x) sprintf('%.0f s', x), colorbar_ticks_in_seconds, 'U
       for f = 1: size(thigmotaxis_matrix_psi,1)
           
           % for psilocybin data
-          if x_cen_min < psi_fF(1,f,t,m) && psi_fF(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
-             y_cen_min < psi_fF(2,f,t,m) && psi_fF(2,f,t,m) < y_cen_max     
+          if x_cen_min < psilocybin_data(1,f,t,m) && psilocybin_data(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
+             y_cen_min < psilocybin_data(2,f,t,m) && psilocybin_data(2,f,t,m) < y_cen_max     
         
              thigmotaxis_matrix_psi(f,t,m) = 1;                                 % ... set to 1
           end
           
           % for vehicle data
-          if x_cen_min < veh_fF(1,f,t,m) && veh_fF(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
-             y_cen_min < veh_fF(2,f,t,m) && veh_fF(2,f,t,m) < y_cen_max     
+          if x_cen_min < vehicle_data(1,f,t,m) && vehicle_data(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
+             y_cen_min < vehicle_data(2,f,t,m) && vehicle_data(2,f,t,m) < y_cen_max     
         
              thigmotaxis_matrix_veh(f,t,m) = 1;                                  % ... set to 1
           end
@@ -438,136 +440,76 @@ end
   veh_center    = veh_center / 15;
   veh_periphery =  veh_periphery / 15;
 
-%% determining time spent along wall and in center in loom trials (psi vs vehicle)
+%%   Statitistical analysis of thigmotaxis behaviour 
 
-% define boundaries of center of arena (in cm)
-  edge_widht = 6; % width of the area around all the walls that shall be counted as thigmotactic area (mouse is touching walls)
-  x_cen_min = edge_widht;
-  y_cen_min = edge_widht;
-  x_cen_max = top_right(1) - edge_widht;
-  y_cen_max = top_right(2) - edge_widht;
+% Test if data is normally distributed (h = 0: yes, h = 1: no)
+[h_psi_c, p_psi_c] = lillietest(psi_center);
+[h_veh_c, p_veh_c] = lillietest(veh_center);
 
-% define which frames mouse is spending time in periphery of center of arena 
+[h_psi_p, p_psi_p] = lillietest(psi_periphery);
+[h_veh_p, p_veh_p] = lillietest(veh_periphery);
 
-  thigmotaxis_matrix_psi = zeros(502,8,15); % later all frames where mouse is in center filled with 1s
-  thigmotaxis_matrix_veh = zeros(502,8,15); 
-
-% loop trough all frames in all trials and all mice 
-  for m = 1: size(thigmotaxis_matrix_psi,3)
-
-    for t = 1: size(thigmotaxis_matrix_psi,2)
-
-      for f = 1: size(thigmotaxis_matrix_psi,1)
-          
-          % for psilocybin data
-          if x_cen_min < psi_fF(1,f,t,m) && psi_fF(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
-             y_cen_min < psi_fF(2,f,t,m) && psi_fF(2,f,t,m) < y_cen_max     
-        
-             thigmotaxis_matrix_psi(f,t,m) = 1;                                 % ... set to 1
-          end
-          
-          % for vehicle data
-          if x_cen_min < veh_fF(1,f,t,m) && veh_fF(1,f,t,m) < x_cen_max && ...  % if mouse coordinates fall within center boundaries...
-             y_cen_min < veh_fF(2,f,t,m) && veh_fF(2,f,t,m) < y_cen_max     
-        
-             thigmotaxis_matrix_veh(f,t,m) = 1;                                  % ... set to 1
-          end
-      end
-    end
-  end
-
-% calculate total time spent in periphery and center per mouse
-  
- % Initialize counters for total frames spent in center and periphery
-    psi_center = zeros(1, size(thigmotaxis_matrix_psi, 3));
-    psi_periphery = zeros(1, size(thigmotaxis_matrix_psi, 3));
-    
-    veh_center = zeros(1, size(thigmotaxis_matrix_veh, 3));
-    veh_periphery = zeros(1, size(thigmotaxis_matrix_veh, 3));
-
-% Loop through each mouse
-for m = 1:size(thigmotaxis_matrix_psi, 3)
-    % Count frames in center and periphery for psilocybin
-    psi_center(m) = sum(thigmotaxis_matrix_psi(:,:,m) == 1, 'all'); % Center (1 indicates center)
-    psi_periphery(m) = sum(thigmotaxis_matrix_psi(:,:,m) == 0, 'all'); % Periphery (0 indicates periphery)
-    
-    % Count frames in center and periphery for vehicle
-    veh_center(m) = sum(thigmotaxis_matrix_veh(:,:,m) == 1, 'all'); % Center
-    veh_periphery(m) = sum(thigmotaxis_matrix_veh(:,:,m) == 0, 'all'); % Periphery
+% Satistical comparison of time spent in center
+fprintf('\n=== Time Spent in Center ===\n');
+if h_psi_c == 0 && h_veh_c == 0
+    % Both groups are normally distributed → use t-test
+    [center_h, center_p] = ttest2(psi_center, veh_center);
+    fprintf('Data is normally distributed. Using t-test.\n');
+    fprintf('t-test p-value = %.4f\n', center_p);
+else
+    % Not normally distributed → use Mann–Whitney U test
+    [center_p, center_h, stats_center] = ranksum(psi_center, veh_center);
+    fprintf('Data is NOT normally distributed. Using Mann–Whitney U test.\n');
+    fprintf('Mann–Whitney U test p-value = %.4f\n', center_p);
 end
 
-% convert to seconds (15 fps)
-  psi_center = psi_center / 15;
-  psi_periphery = psi_periphery / 15;
-  veh_center    = veh_center / 15;
-  veh_periphery =  veh_periphery / 15;
-
-%% Statitistical analysis of thigmotaxis behaviour
-
-% test if data normally distributed (h = 0 yes, h = 1 no)
-    % For time spent in center
-    [h_psi_c, p_psi_c] = lillietest(psi_center); % 
-    [h_veh_c, p_veh_c] = lillietest(veh_center); % 
-    % For time spent in periphery
-    [h_psi_p, p_psi_p] = lillietest(psi_periphery); % 
-    [h_veh_p, p_veh_p] = lillietest(veh_periphery); % 
-
-% % IF NOT NROMALLY DISTRIBUTED: Mann–Whitney U test 
-%     % Compare time spent in center
-%     [p_center, h_center, stats_center] = ranksum(psi_center, veh_center);
-%     % Compare time spent in periphery
-%     [p_periphery, h_periphery, stats_periphery] = ranksum(psi_periphery, veh_periphery);
-%     % Display results
-%         fprintf('Mann–Whitney U test for time spent in center: p-value = %.4f\n', p_center);
-%         fprintf('Mann–Whitney U test for time spent in periphery: p-value = %.4f\n', p_periphery);
+% Satistical comparison of time spent in periphery
+fprintf('\n=== Time Spent in Periphery ===\n');
+if h_psi_p == 0 && h_veh_p == 0
+    % Both groups are normally distributed → use t-test
+    [periphery_h, periphery_p] = ttest2(psi_periphery, veh_periphery);
+    fprintf('Data is normally distributed. Using t-test.\n');
+    fprintf('t-test p-value = %.4f\n', periphery_p);
+else
+    % Not normally distributed → use Mann–Whitney U test
+    [periphery_p, periphery_h, stats_periphery] = ranksum(psi_periphery, veh_periphery);
+    fprintf('Data is NOT normally distributed. Using Mann–Whitney U test.\n');
+    fprintf('Mann–Whitney U test p-value = %.4f\n', periphery_p);
+end
 
 
-  
- % IF NOT NROMALLY DISTRIBUTED: independent t-tests
-    % Independent t-test for time spent in center
-    [center_h, center_p] = ttest2(psi_center, veh_center); % Independent t-test for center timee   
-    % Independent t-test for time spent in periphery
-    [periphery_h, periphery_p] = ttest2(psi_periphery, veh_periphery); % Independent t-test for periphery time   
-    % Display results
-    fprintf('Independent t-test for time spent in center: p-value = %.4f\n', center_p);
-    fprintf('Independent t-test for time spent in periphery: p-value = %.4f\n', periphery_p);
+%% plot resuts     
 
+% Compute average time in center and periphery for each group
+avg_psi_center = mean(psi_center);
+avg_psi_periphery = mean(psi_periphery);
 
-% plot resuts     
-% Create a figure for the plots
+avg_veh_center = mean(veh_center);
+avg_veh_periphery = mean(veh_periphery);
+
+% Combine data for stacked bar plot: [center, periphery] for each group
+stacked_data = [
+    avg_psi_center, avg_psi_periphery;  % Psilocybin group
+    avg_veh_center, avg_veh_periphery   % Vehicle group
+];
+
+% Create stacked bar plot
 figure;
+hold on
+bar(stacked_data, 'stacked');
+set(gca, 'XTick', [1 2], 'XTickLabel', {'Psilocybin', 'Vehicle'}, 'FontSize', 12);
+ylabel('Total Time Spent in Arena (s)', 'FontSize', 12);
+title('Time Spent in Center vs Periphery', 'FontSize', 14);
 
-% Plot time spent in center
-subplot(1, 2, 1); % Create subplot (1 row, 2 columns, first plot)
-hold on;
+% Set colors for center and periphery parts
+% (center: blueish, periphery: reddish)
+bar_colors = [0.2, 0.6, 1;  % Center (blue)
+              0.9, 0.4, 0.4]; % Periphery (red)
 
-% Bar plot with error bars
-bar([mean(psi_center), mean(veh_center)], 'FaceColor', [0.2, 0.6, 1]); % Psilocybin and Vehicle
-errorbar([1, 2], [mean(psi_center), mean(veh_center)], ...
-         [std(psi_center)/sqrt(length(psi_center)), std(veh_center)/sqrt(length(veh_center))], ...
-         'k', 'LineStyle', 'none'); % Standard error bars
+b = bar(stacked_data, 'stacked');
+for k = 1:2
+    b(k).FaceColor = bar_colors(k,:);
+end
 
-% Set plot properties
-set(gca, 'XTick', [1, 2], 'XTickLabel', {'Psilocybin', 'Vehicle'});
-ylabel('Time Spent in Center (s)');
-title('Time Spent in Center');
-
+legend({'Center', 'Periphery'}, 'Location', 'southeast', 'FontSize', 8);
 hold off;
-
-% Plot time spent in periphery
-subplot(1, 2, 2); % Second plot
-hold on;
-
-% Bar plot with error bars
-bar([mean(psi_periphery), mean(veh_periphery)], 'FaceColor', [0.9, 0.4, 0.4]); % Psilocybin and Vehicle
-errorbar([1, 2], [mean(psi_periphery), mean(veh_periphery)], ...
-         [std(psi_periphery)/sqrt(length(psi_periphery)), std(veh_periphery)/sqrt(length(veh_periphery))], ...
-         'k', 'LineStyle', 'none'); % Standard error bars
-
-% Set plot properties
-set(gca, 'XTick', [1, 2], 'XTickLabel', {'Psilocybin', 'Vehicle'});
-ylabel('Time Spent in Periphery (s)');
-title('Time Spent in Periphery');
-
-hold off;
-
