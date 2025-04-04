@@ -4,8 +4,11 @@
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
 
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
+
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort2.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort2.mat')
 
 % Define decay period
 
@@ -147,17 +150,23 @@ plot(trial_val, ym_hat1, 'r--', 'LineWidth', 1.5);
 % Labels and title
 xlabel('Trial Number', 'FontWeight', 'bold');
 ylabel('Mean Freezing Probability', 'FontWeight', 'bold');
-% % title('Actual vs Predicted Freezing Across Trials');
-% legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
-%         'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
-%        'Location', 'Best');
+% title('Actual vs Predicted Freezing Across Trials');
+legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
+        'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
+       'Location', 'Best');
 ylim([0 1])
 xlim([1 20])
+% Set axis properties
+ax = gca;
+ax.FontWeight = 'bold';  % Make all text in axes bold
+ax.FontSize = 12;         % Increase font size for better visibility
+ax.LineWidth = 2;         % Make the axes lines bold
+ax.GridLineWidth = 0.5;   % Keep grid lines thin
 grid on;
 hold off;
 
 % Save figure
-print(gcf, 'freezing_across_trials.png', '-dpng', '-r300');
+% print(gcf, 'freezing_across_trials.png', '-dpng', '-r300');
 
 %% Plot real data over models predictions: across timebins 
 % show average probability for two groups across trials
@@ -197,8 +206,16 @@ legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
        'Location', 'Best');
 ylim([0 1])
 xlim([1 8])
+% Set axis properties
+ax = gca;
+ax.FontWeight = 'bold';  % Make all text in axes bold
+ax.FontSize = 12;         % Increase font size for better visibility
+ax.LineWidth = 2;         % Make the axes lines bold
+ax.GridLineWidth = 0.5;   % Keep grid lines thin
 grid on;
 hold off;
 
-% Save figure
-print(gcf, 'freezing_across_timebins.png', '-dpng', '-r300');
+% save_folder = 'D:\PhD 2nd Year\Figures'; 
+% save_path = fullfile(save_folder, 'freezing_across_timebins_preext.png');
+% % Save figure
+% print(gcf, '-dpng', '-r300');

@@ -1,5 +1,6 @@
-% Specify the folder containing your .mat files
+% Specify the folder containing your .csv files
 folderPath = 'D:\PhD 2nd Year\dlc_data_cohort2\Habituation';
+% folderPath = 'D:\PhD 2nd Year\DLC Extinction Data  Cohort 1\Habituation';
 
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*habituation*.csv'));
@@ -78,38 +79,49 @@ end
 %% Plotting results for vehicle and psilocybin group
 
 % Splitting into treatment groups 
-psilocybin_freezing_data = mice_freezing(2:2:end);
-vehicle_freezing_data = mice_freezing(1:2:end);
+psilocybin_freezing_data = mice_freezing(2:2:end)*100;
+vehicle_freezing_data = mice_freezing(1:2:end)*100;
 
 % Calculate means and standard deviations
 mean_psilocybin_habituation = mean(psilocybin_freezing_data);
 std_psilocybin = std(psilocybin_freezing_data);
 mean_vehicle_habituation = mean(vehicle_freezing_data);
 std_vehicle = std(vehicle_freezing_data);
-%%
+
 % Create a figure
 figure;
 hold on;
 
-% Plot individual data points
-scatter(ones(size(psilocybin_freezing_data)), psilocybin_freezing_data, 'filled', 'MarkerFaceColor', 'blue', 'DisplayName', 'Psilocybin Data');
-scatter(2*ones(size(vehicle_freezing_data)), vehicle_freezing_data, 'filled', 'MarkerFaceColor', 'red', 'DisplayName', 'Vehicle Data');
-
 % Plot mean values as bars
-bar(1, mean_psilocybin_habituation, 'FaceColor', 'blue', 'FaceAlpha', 0.5, 'DisplayName', 'Psilocybin Mean');
-bar(2, mean_vehicle_habituation, 'FaceColor', 'red', 'FaceAlpha', 0.5, 'DisplayName', 'Vehicle Mean');
+bar(1, mean_psilocybin_habituation, 'FaceColor', 'red', 'FaceAlpha', 0.6, 'EdgeColor', 'black', 'LineWidth', 2, 'DisplayName', 'Psilocybin Mean');
+bar(2, mean_vehicle_habituation, 'FaceColor', 'black', 'FaceAlpha', 0.6, 'EdgeColor', 'black', 'LineWidth', 2, 'DisplayName', 'Vehicle Mean');
 
 % Add error bars for standard deviation
 errorbar([1, 2], [mean_psilocybin_habituation, mean_vehicle_habituation], [std_psilocybin, std_vehicle], ...
     'k', 'linestyle', 'none', 'CapSize', 10, 'LineWidth', 1.5, 'DisplayName', 'Std Dev');
 
 % Customize plot
-xlim([0.5, 2.5]);
+ylim ([0 30]);
 xticks([1, 2]);
 xticklabels({'Psilocybin', 'Vehicle'});
-ylabel('Freezing Time (%)');
-title('Individual Data Points with Mean and Std Dev');
+
+% Set axis properties
+ax = gca;
+ax.FontWeight = 'bold';  % Make all text in axes bold
+ax.FontSize = 12;         % Increase font size for better visibility
+ax.LineWidth = 2;         % Make the axes lines bold
+ax.GridLineWidth = 0.5;   % Keep grid lines thin
+
+% Labels and title
+ylabel('Mean % Time Spent Freezing', 'FontWeight', 'bold');
+% xlabel('Treatment Group', 'FontWeight', 'bold');
+% title('Freezing Probability by Treatment Group', 'FontWeight', 'bold');
+
 grid on;
-legend('Location', 'best');
 hold off;
 
+save_folder = 'D:\PhD 2nd Year\Figures\BNA poster figures'; 
+save_path = fullfile(save_folder, 'pre_extinction_habituation.png');
+
+% Save figure
+print(gcf, save_path, '-dpng', '-r300');
