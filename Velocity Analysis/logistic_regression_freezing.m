@@ -1,14 +1,14 @@
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
 
-% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
-% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
 
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
 
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort2.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort2.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort2.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort2.mat')
 
 % Define decay period
 
@@ -166,7 +166,7 @@ grid on;
 hold off;
 
 % Save figure
-% print(gcf, 'freezing_across_trials.png', '-dpng', '-r300');
+print(gcf, 'freezing_across_trials_Acq_ren.png', '-dpng', '-r300');
 
 %% Plot real data over models predictions: across timebins 
 % show average probability for two groups across trials
@@ -219,3 +219,5 @@ hold off;
 % save_path = fullfile(save_folder, 'freezing_across_timebins_preext.png');
 % % Save figure
 % print(gcf, '-dpng', '-r300');
+
+ print(gcf, 'freezing_across_timebins_acq_ren.png', '-dpng', '-r300');

@@ -1,5 +1,5 @@
 % Specify the folder containing your .mat files
-folderPath = 'D:\PhD 2nd Year\dlc_data_cohort2\camera_5 (Renewal)';
+folderPath = 'D:\PhD 2nd Year\DLC Extinction Data Cohort 1';
 
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*.csv'));
