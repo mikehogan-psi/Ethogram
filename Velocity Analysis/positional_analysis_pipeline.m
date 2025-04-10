@@ -168,8 +168,7 @@ veh_pre_stim_flash = veh_flash_data(:, pre_stim_period, :, :);
 psi_pre_stim_data = cat(3, psi_pre_stim_loom, psi_pre_stim_flash);
 veh_pre_stim_data = cat(3, veh_pre_stim_loom, veh_pre_stim_flash);
 
-%% extracting data (whole trial-period) of flash tials precursored by another flash trial (flash - FLASH)
-
+% extracting data (whole trial-period) of flash tials precursored by another flash trial (flash - FLASH)
 % Identify indices of flash tials preceded by a flash (fF)
     ss1_fF_indx = [7, 8, 16, 17, 22, 23, 30, 34];
     ss2_fF_indx = [1, 12, 19, 20, 27, 28, 22, 28,]; 
@@ -242,11 +241,11 @@ hold off;
 %% choose which groups of psi and veh data you want analyse 
 %  these datagroups will be used for all the future analyses
 
-  vehicle_data = veh_fF;    % flash-FLASH trials veh
-  psilocybin_data = psi_fF; % flash-FLASH trials Psi
+  % vehicle_data = veh_fF;    % flash-FLASH trials veh
+  % psilocybin_data = psi_fF; % flash-FLASH trials Psi
 
-  % vehicle_data = veh_post_stim_loom;    % loom trials (post-stim) veh
-  % psilocybin_data = psi_post_stim_loom; % loom trials (post-stim) Psi
+  vehicle_data = veh_post_stim_loom;    % loom trials (post-stim) veh
+  psilocybin_data = psi_post_stim_loom; % loom trials (post-stim) Psi
 
 
 %% Plotting heatmaps of time spent in parts of the arena (Psi and Veh individually)
@@ -256,10 +255,11 @@ figure;
 subplot(1, 2, 1); % Create two subplots: one for vehicle and one for psilocybin
 
 % Adjusting the layout
-% sgtitle('Heatmaps of Positions in flash-FLASH trials ');
+%sgtitle('Heatmaps of Positions in flash-FLASH trials ');
 sgtitle('Positions in loom trials (post-stim)');
 
-color_lim = 2400; %define bin count value that sets colourlimit
+%color_lim = 2400; %define bin count value that sets colourlimit
+color_lim = max(veh_counts(:));
 
 %%%% Vehicle Post-Stimulus Heatmap
 % Aggregating all positions of vehicle (pre-stim)
