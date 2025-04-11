@@ -9,7 +9,7 @@ options_SSM.K = 3;
 options_SSM.TH_Eigen = 0.8;
 
 %load data
-filepath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\pre_aquisistion_3D_analysis\data_all_mice\Extinction\triangulated_data\';
+filepath = triangulated_data_path;
 fname = dir(filepath);
 fname = fname(3:end);
 X = []; W = [];
@@ -68,7 +68,7 @@ X = Alignment(X, template);
 
 %estimate eigenvectors
 X_KNN = Near_NaN_Euclidian(X, options_SSM.K, false);
-[~, Ndim, Cov_SSM, lambda, eignVectors, sigma2] = probPCA(X_KNN,options_SSM.TH_Eigen,false);
+[~, Ndim, Cov_SSM, lambda, eignVectors, sigma2] = probPCA(X_KNN,options_SSM.TH_Eigen,true);
 lambda = lambda(1:Ndim);
 eignVectors = eignVectors(:,1:Ndim);
 for n = 1:Ndim
@@ -76,8 +76,7 @@ for n = 1:Ndim
 end
 
 %save
-save('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\pre_aquisistion_3D_analysis\models\SSM_3D_headNOTfitted_good_frames',...
-      'lambda','template','eignV3D','sigma2');
+save(SSM_model_name_path,'lambda','template','eignV3D','sigma2', 'options_SSM', "Cov_SSM", 'X');
 
 %figure all poses
 figure; hold on;
@@ -90,7 +89,7 @@ xlim([-10 10]); ylim([-10 10]); zlim([-10 10]);
 figure; 
 h = subplot(1,1,1); hold on;
 pattern = 6*sin(2*pi*[1:100]/20);
-for d = 1: 3 %Ndim
+for d = 1: Ndim 
     for t = 1:numel(pattern)
         subplot(h); hold on;
         Xfig = template+pattern(t)*sqrt(lambda(d))*eignV3D(:,:,d);

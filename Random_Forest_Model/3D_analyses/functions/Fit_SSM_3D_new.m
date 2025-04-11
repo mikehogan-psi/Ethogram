@@ -36,9 +36,16 @@ disp(sprintf('Smooth time series'));
 [Rtf,Ttf,btf] = smooth_data(Rt,Tt,bt,good_trials,options.wind);
 %regenerate X smoothed
 Xtf = generate_X(btf,Rtf,Ttf,template,eignV3D);
+
+%reshape to have all frames in one dimension
+
+
+
+
+
 %save
 disp(sprintf('Saving results'));
-save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], 'X', 'Xtf','Ttf','Rtf','btf','template','eignV3D','lambda','good_trials');
+save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], 'X', 'Xtf','Ttf','Rtf','btf','good_trials');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%SUBFUNCTIONS%%%%%%%%%%%%%%%%%%%%%%%%%%
