@@ -37,7 +37,27 @@ disp(sprintf('Smooth time series'));
 %regenerate X smoothed
 Xtf = generate_X(btf,Rtf,Ttf,template,eignV3D);
 
-%reshape
+
+%reshape to have all frames in one dimension
+disp('Reshaping output to flatten trials');
+
+% Determine total number of frames
+Ltrial = options.Ltrial;
+Ntrial = size(btf,3);
+Nframes_total = Ltrial * Ntrial;
+
+% Reshape btf: [Ltrial x Nb x Ntrial] → [Nb x total_frames]
+b = reshape(permute(btf, [2 1 3]), size(btf,2), Nframes_total);    % [Nb x total_frames]
+
+% Reshape Ttf: [Ltrial x 3 x Ntrial] → [3 x total_frames]
+T = reshape(permute(Ttf, [2 1 3]), 3, Nframes_total);              % [3 x total_frames]
+
+% Reshape Rtf: [3 x 3 x Ltrial x Ntrial] → [3 x 3 x total_frames]
+R = reshape(Rtf, 3, 3, Nframes_total);                             % [3 x 3 x total_frames]
+
+% Reshape Xtf: [Np x 3 x Ltrial x Ntrial] → [Np x 3 x total_frames]
+Xfit = reshape(Xtf, size(Xtf,1), 3, Nframes_total);                % [Np x 3 x total_frames]
+
 
 
 
@@ -45,6 +65,9 @@ Xtf = generate_X(btf,Rtf,Ttf,template,eignV3D);
 %save
 disp(sprintf('Saving results'));
 save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], 'X', 'Xtf','Ttf','Rtf','btf','good_trials');
+save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], ...
+    'X', 'Xtf', 'Ttf', 'Rtf', 'btf', 'good_trials', ...
+    'Xfit', 'T', 'R', 'b');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%SUBFUNCTIONS%%%%%%%%%%%%%%%%%%%%%%%%%%
