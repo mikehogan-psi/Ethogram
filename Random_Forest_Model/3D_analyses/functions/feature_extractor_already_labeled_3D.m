@@ -1,4 +1,4 @@
-function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+function feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
 
 % labeled_data_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\extinction_analysis\rearing_data\corrected_labels_data\mouse13_extinction_p2_2024-10-16-131736-0000_verified_labels.mat';
 % mat_file_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\data_all_mice\SSM_fitted_data\SSM_fitted_data_extinction\mouse13_extinction_p2_2024-10-16-131736-0000DLC_resnet50_Fear Extinction No ImplantOct15shuffle1_500000_body_fit.mat';
@@ -14,9 +14,14 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
     R = data.R;
     T = data.T;
     missing = data.missing; 
+    X = data.X; 
+
+    % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
+    R = rotm2eul(R, 'ZYX');
+    R = R';
 
     % Initialise feature matrix 
-    num_frames = length(data.A);
+    num_frames = length(b);
     features = [];  % Store features for all frames as rows
 
 
@@ -68,13 +73,13 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
         function frame_features = calculate_features(frame_idx)
         
         % Define window size that seems relevant to behaviour being analysed
-        start_idx = max(1, round(frame_idx - (window_size / 2)));
-        end_idx = min(num_frames, round(frame_idx + (window_size / 2)));
+        start_idx = max(1, frame_idx - (window_size / 2));
+        end_idx = min(num_frames, frame_idx + (window_size / 2));
 
         % Extract data for the window
         b_window = b(:, start_idx:end_idx);
         T_window = T(:, start_idx:end_idx);
-        A_window = A(start_idx:end_idx);
+        R_window = R(:,start_idx:end_idx);
 
         % find how many frames are missing datapoints
         miss_window = missing(start_idx:end_idx);
@@ -84,10 +89,10 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
         % If 1-6 frames with missing datapoints, exclude these  
         % (If 7 or more columns have NaNs, we proceed without excluding them)
         if miss_num >= 1 && miss_num <= 6
-            valid_cols = ~any(isnan([b_window; T_window; A_window]), 1);
+            valid_cols = ~any(isnan([b_window; T_window; R_window]), 1);
             b_window = b_window(:, valid_cols);
             T_window = T_window(:, valid_cols);
-            A_window = A_window(valid_cols);
+            R_window = R_window(:, valid_cols);
         end   
         
         % compute all features for this frame  

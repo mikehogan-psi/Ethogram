@@ -8,6 +8,7 @@ function feature_extractor_3D(video_path, mat_file_path, output_folder, frame_fe
     R = data.R;
     T = data.T;
     missing = data.missing; 
+    X = data.X; 
 
     % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
     R = rotm2eul(R, 'ZYX');
@@ -172,8 +173,6 @@ function feature_extractor_3D(video_path, mat_file_path, output_folder, frame_fe
         
 
         % compute all features for this frame        
-       
-
         frame_features = zeros(length(frame_features_strings), 1); % Preallocate for efficiency
 
         for i = 1:length(frame_features_strings)
