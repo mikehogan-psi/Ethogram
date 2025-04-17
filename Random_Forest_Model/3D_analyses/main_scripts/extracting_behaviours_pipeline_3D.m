@@ -49,8 +49,8 @@
             behaviour = 'rearing'; 
 
      % C: define which name generated models shall be given
-            SSM_model_name = ['SSM_3D_headNOTfitted_good_frames.mat'];      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_1'];      % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            SSM_model_name = 'SSM_3D_headNOTfitted_good_frames.mat';      % Can be left out if SSM fitted data already generated
+            RFM_model_name = ['RFM_' behaviour '_9'];      % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                 % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
@@ -119,23 +119,14 @@ SSM_est_mike_abi(triangulated_data_path, SSM_model_name_path)
 
 %% STEP 2: Generate Statistical Shape model fitted data (using 2D-Upper trained model) - skip if SSM fitted data already generated
 
-% the SSM is used to generate mouse body shape parameter measures for every single frame:
-%     X(Input Coordinates)     - The original input coordinates after applying the necessary filters (body or tail). 
-%     Xtf(Fitted Coordinates)  - The reconstructed 3D coordinates of the shape after fitting the Statistical Shape Model (after smoothing data)
-%     Ttf(Translation Vector)  - The 3D translation vector that aligns the fitted model to the observed data, describes the offset in x, y and z directions.
-%     Rtf(Rotation Angle)      - rotational alignment of the fitted Statistical Shape Model (SSM) with the observed data for each frame (via 3x3 rotation matrix) 
-%     btf(Shape Coefficients)  - These are the weights for the eigenvectors in the shape model, describe how much each principal component contributes to the reconstructed shape.
+% the SSM is used to generate mouse body shape parameter measures for every single frame :
+%     X(Input Coordinates)          - The original input coordinates after applying the necessary filters (body or tail). 
+%     Xtf/Xfit(Fitted Coordinates)  - The reconstructed 3D coordinates of the shape after fitting the Statistical Shape Model (after smoothing data)
+%     Ttf/T(Translation Vector)     - The 3D translation vector that aligns the fitted model to the observed data, describes the offset in x, y and z directions.
+%     Rtf/R(Rotation Angle)         - rotational alignment of the fitted Statistical Shape Model (SSM) with the observed data for each frame (via 3x3 rotation matrix)
+%     btf/b(Shape Coefficients)     - These are the weights for the eigenvectors in the shape model, describe how much each principal component contributes to the reconstructed shape.
+% (the ...tf variable forms have data split into infividual trials)
 
-
-
-
-%     A(Rotation Angle)        - rotational alignment of the fitted Statistical Shape Model (SSM) with the observed data for each frame 
-%     b(Shape Coefficients)    - These are the weights for the eigenvectors in the shape model, describe how much each principal component contributes to the reconstructed shape.
-%     C(Cost Function Value)   - Measures the fit quality of the model to the observed data
-%     missing(Missing Data)    - A logical flag indicating whether the frame has insufficient valid data points (e.g., due to outliers or missing observations)
-%     T(Translation Vector)    - The 2D translation vector that aligns the fitted model to the observed data, describes the offset in x and y directions.
-%     X(Input Coordinates)     - The original input coordinates after removing outliers and applying the necessary filters (body or tail). 
-%     Xfit(Fitted Coordinates) - The reconstructed 2D coordinates of the shape after fitting the Statistical Shape Model. Represents the closest match to the observed data.
 
 % run SSM on all 3D data files to generate body shape parameters
  cd(triangulated_data_path) 
@@ -160,58 +151,68 @@ end
 %    # can also modify this and add new features #
 
  frame_features_all_strings = {
-
-  'mean(b_window(1, :))';                          % Feature 1:  Average "elongation/hunching" (General horizontal body deformation )
-  'var(b_window(1, :))';                           % Feature 2:  Variability in "elongation/hunching"  ( horizontal deformation dynamism / general fluctuation)
-  'mean(diff(b_window(1, :)))';                    % Feature 3:  Trend of change "elongation/hunching"  posture (rate and  direction of horizontal deformation dynamism)
-  'mean(b_window(2, :))';                          % Feature 4:  Average "bending side to side" (general lateral deformation) 
-  'var(b_window(2, :))';                           % Feature 5:  Variability in "bending side to side" (lateral motion dynamism)
-  'mean(diff(b_window(2, :)))';                    % Feature 6:  Trend of change in "bending side to side" (rate and  direction of lateral motion dynamism)
+ 
+  'mean(b_window(2, :))';                          % Feature 1:  Average "elongation/hunching" (General horizontal body deformation )
+  'var(b_window(2, :))';                           % Feature 2:  Variability in "elongation/hunching"  ( horizontal deformation dynamism / general fluctuation)
+  'mean(diff(b_window(2, :)))';                    % Feature 3:  Trend of change "elongation/hunching"  posture (rate and  direction of horizontal deformation dynamism)
+  'mean(b_window(1, :))';                          % Feature 4:  Average "bending side to side" (general lateral deformation) 
+  'var(b_window(1, :))';                           % Feature 5:  Variability in "bending side to side" (lateral motion dynamism)
+  'mean(diff(b_window(1, :)))';                    % Feature 6:  Trend of change in "bending side to side" (rate and  direction of lateral motion dynamism)
   'mean(b_window(3, :))';                          % Feature 7:  Average "looking up/down" (General vertical posture trend)
   'var(b_window(3, :))';                           % Feature 8:  Variability in "looking up/down" posture (vertical motion dynamism / general fluctuation)
   'mean(diff(b_window(3, :)))';                    % Feature 9:  Trend of change in "looking up/down" posture (rate and  direction of vertical motion dynamism)
-  'mean([0, sqrt(sum(diff(T_window, 1, 2).^2))])'; % Feature 10: Average velocity (overall movement intensity)
-  'mean([0, abs(diff(A_window))])'                 % Feature 11: Average Angular Velocity / Average change in orientation (Describes rotational movement)
-  'var([0, diff([0, sqrt(sum(diff(T_window, 1, 2).^2))])])'                 % Feature 12: Variability in acceleration of movement / How much acceleration fluctuates
-  'sum(abs([0, diff([0, diff([0, sqrt(sum(diff(T_window, 1, 2).^2))])])]))' % Feature 13: Cumulative change in acceleration   
-  'max([0, sqrt(sum(diff(T_window, 1, 2).^2))])'                            % Feature 14: Peak velocity within the window
-  'sum(abs(diff([0, diff(b_window(2, :))])))'                               % Feature 15: Cumulative change in rate of bending
-  'sum([0, sqrt(sum(diff(T_window, 1, 2).^2))])'                            % Feature 16: Total distance travelled
+
+  'mean([0, sqrt(sum(diff(T_window(1:2,:), 1, 2).^2, 1))])';                          % Feature 10: Average 2D velocity - ONLY USING X AND Y COODINATES !!!
+  'mean([0, abs(diff(R_window(1,:)))])'                                             % Feature 11: Average Angular Velocity / Average yaw (Describes rotational movement around z-axis)
+  'var([0, diff([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])])'                 % Feature 12: Variability in acceleration of movement / How much acceleration fluctuates (2D)
+  'sum(abs([0, diff([0, diff([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])])]))' % Feature 13: Cumulative change in acceleration (2D)  
+  'max([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])'                            % Feature 14: Peak velocity within the window (2D)
+  'sum(abs(diff([0, diff(b_window(1, :))])))'                                       % Feature 15: Cumulative change in rate of bending
+  'sum([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])'                            % Feature 16: Total distance travelled (2D)
+  'mean([0, abs(diff(R_window(2,:))) + abs(diff(R_window(3,:)))])';                 % Feature 17: average angular velocity (magnitude only) in pitch and roll directions combined (Describes rotational movement around x- and y-axis)
+
+
+  'X(1,3,frame_idx)-X(8,3,frame_idx)'                                               % Feature 18: z-difference between nose (body-marker 1) and tail-anterior (body-marker 8)
+  'mean([0, sqrt(sum(diff(T_window(1:2,:), 1, 2).^2, 1))])';                        % Feature 19: Average 3D velocity (overall movement intensity) - ONLY USING X AND Y COODINATES
+  'sum([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])'                         % Feature 20: Total distance travelled (3D)
     
+  'sum(abs(diff(T_window(3, :))))'                % Feature 21: cumulative vertical movement 
+  'X(3,3,frame_idx)-X(7,3,frame_idx)'             % Feature 22: z-difference between neck base (body-marker 3) and tail-base (body-marker 7)
+  'norm(X(3,1:2,frame_idx) - X(7,1:2,frame_idx))' % Feature 23: euclidian distance in x-y plane bewteen neck base and tail base 
+  'X(1,3,frame_idx)'                              % Feature 24: z-value of nose
+  'max(T_window(3, :))'                            % Feature 25: max vertical translation
+
  };
 
 % 2. define which features are relevant for the target behaviour 
     
-    %feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection for RFM_darting_1-5
-    %feature_selectection_indx = [2,3,9,10,11,12,13,14];  % feature selection for RFM_darting_6
-    %feature_selectection_indx = [2,7,11,12,13,14,15,16];  % feature selection for RFM_darting_7
-    %feature_selectection_indx = [2,7,11,12,13,14,16];  % feature selection for RFM_darting_8
-
-    feature_selectection_indx = [2,9,10,7,11,12,13,14,15];  % feature selection for RFM_darting_9
-
-    %feature_selectection_indx = [2,3,4,5,7,8,9,10,11];  % feature selection for RFM_rearing_3
+    
+    %feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25];  % feature selection RFM_rearing_8
+     feature_selectection_indx = [18,22,24];  % feature selection 
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
 
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
-      window_size = 30; % time window for darting
-      % window_size = 30; % time window for rearing 
+       window_size = 30; % time window for RFM_rearing_2
+      % window_size = 30; % time window for RFM_rearing_1
 
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
 % define file name of raw video and mat file containing results of SSM (2D_UPPER output)
-base_name = 'mouse26_extinction_p2'; % !!! CHANGE THIS !!!
+base_name = 'mouse14_extinction_p1'; % !!! CHANGE THIS !!!
 
 % Find the correct video and SSM(.mat) file
-video_file_path = dir(fullfile(video_path, [base_name, '*.avi']));
-video_file_path = video_file_path.name;
-SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*DLC_resnet50*.mat']));
-SSM_file_path = SSM_file_path.name;
+video_file_path = dir(fullfile(video_path, ['camera9_' base_name, '*.avi']));
+video_file_path = [video_path '\' video_file_path.name];
+%video_file2_path = [video_path '\' video_file_path(2).name];
+%video_file3_path = [video_path '\' video_file_path(3).name];
+SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
+SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
 
 % run freature_extractor function
-feature_extractor_new(video_file_path, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
+feature_extractor_3D(video_file_path, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
 % open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
 
 % Saved output files contain a lables and features variable for each mouse
@@ -240,21 +241,22 @@ for f = 1 : length(files)
         end
     
     % extract basename
-    base_name = regexp(files(f).name, '^(mouse\d+_extinction_p\d+)', 'match', 'once');  
+    base_name = regexp(files(f).name, '(mouse\d+_extinction_p\d+)', 'match', 'once');  
     
     % Find the correct video and SSM(.mat) file
-    video_file_path = dir(fullfile(video_path, [base_name, '*.avi']));
-    video_file_path = [video_path video_file_path.name];
-    SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*DLC_resnet50*.mat']));
-    SSM_file_path = [SSM_data_path SSM_file_path.name];
+    video_file_path = dir(fullfile(video_path, ['camera*_' base_name, '*.avi']));
+    video_file_path = [video_path '\' video_file_path.name];
+    SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
+    SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
     
     % run feature_extractor_already_labeled function
-    feature_extractor_already_labeled(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+    feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
 
 end 
 
 % Clear unnecessary variables
   clearvars all_frames_labels base_name features labels 
+
 
 %% STEP 5: Train Random Forest Model using 5-Fold Cross-Validation
 
@@ -327,29 +329,36 @@ disp(['Final Cross-Validation d-prime: ', num2str(final_d_prime)]);
 final_model = TreeBagger(numTrees, all_features, all_labels, 'Method', 'classification');
 save([RFM_model_name_path '.mat'], 'final_model');
 
+
 %% STEP 6: Use Model on to predict labels in full dataset
 
 % Load SSM files for all mice
-file_list_SSM = dir(fullfile(SSM_data_path, '*body_fit.mat')); % change if body or tail data needed
+file_list_SSM = dir(fullfile(SSM_data_path, '*_fit.mat')); % change if body or tail data needed
 
 % Load model that shall be used to predict labels
 loaded_model = load(RFM_model_name_path);
 model = loaded_model.final_model; % load saved model, make sure to delete old one if retraining
 
-for i = 1:num_files
+for i = 1:length(file_list_SSM)
 
     % get the mouseID to name predicted_label file at the end
     filename = file_list_SSM(i).name;
-    new_file_name = regexp(filename, '^(.*?)-0000', 'match', 'once');
+    new_file_name = erase(filename, '_3D_SSM_fit.mat');
 
     % load the SSM data
     mat_path = fullfile(SSM_data_path, file_list_SSM(i).name);
     data = load(mat_path);
     
     b = data.b;
-    A = data.A;
+    R = data.R;
     T = data.T;
     missing = data.missing;
+    X = data.X; 
+
+    % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
+    R = rotm2eul(R, 'ZYX');
+    R = R';
+
   
     % define nr of frames and features
     num_frames = size(b, 2);
@@ -358,16 +367,16 @@ for i = 1:num_files
     
     % Extract behaviour-relevant features for every frame based on specified time-window 
     % (identical to calculation of features in feature_extractor function)
-    for f = 1:num_frames
+    for frame_idx = 1:num_frames
 
      % Define window size that seems relevant to behaviour being analysed
-        start_idx = max(1, f - (window_size / 2));
-        end_idx = min(num_frames, f + (window_size / 2));
+        start_idx = max(1, frame_idx - (window_size / 2));
+        end_idx = min(num_frames, frame_idx + (window_size / 2));
 
      % Extract data for the window
         b_window = b(:, start_idx:end_idx);
         T_window = T(:, start_idx:end_idx);
-        A_window = A(start_idx:end_idx);
+        R_window = R(:, start_idx:end_idx);
 
     % find how many frames are missing datapoints
         miss_window = missing(start_idx:end_idx);      
@@ -376,15 +385,15 @@ for i = 1:num_files
         % If 1-6 frames with missing datapoints, exclude these  
         % (If 7 or more columns have NaNs, we proceed without excluding them)
         if miss_num >= 1 && miss_num <= 6
-            valid_cols = ~any(isnan([b_window; T_window; A_window]), 1);
+            valid_cols = ~any(isnan([b_window; T_window; R_window]), 1);
             b_window = b_window(:, valid_cols);
             T_window = T_window(:, valid_cols);
-            A_window = A_window(valid_cols);
+            R_window = R_window(:, valid_cols);
         end   
        
         % compute all features for this frame  
         for s = 1:length(frame_features_strings)
-            all_frames_features(f,s) = eval(frame_features_strings{s});
+            all_frames_features(frame_idx,s) = eval(frame_features_strings{s});
         end
 
     end
@@ -439,13 +448,13 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = 'mouse13_extinction_p1';
+base_name = 'mouse15_extinction_p2';
 
     % Find the correct video and predicted labels file
-    video_file_path = dir(fullfile(video_path, [base_name, '*.avi']));
-    video_file_path = [video_path video_file_path.name];
+    video_file_path = dir(fullfile(video_path, ['camera9_' base_name, '*.avi']));
+    video_file_path = [video_path '/' video_file_path.name];
     predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
-    predicted_file_path = [predicted_labels_path predicted_file_path.name];
+    predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
     
     % fun validate predcitions function
          validate_predictions(video_file_path, predicted_file_path, corrected_labels_path);
@@ -456,7 +465,7 @@ base_name = 'mouse13_extinction_p1';
 %% STEP 9: Assess model accuracy and sensitivity 
 
 % choose a video which you have the manual or verified labels and predicted labels for 
-base_name = 'mouse2_extinction_p2';
+base_name = 'mouse15_extinction_p2';
 
     % load the correct label variable (either from manually labelled or corrected label files)
     matFiles = dir(fullfile(corrected_labels_path, [base_name, '*.mat']));
