@@ -1,6 +1,6 @@
 % Specify the folder containing your .csv files
-folderPath = 'D:\PhD 2nd Year\dlc_data_cohort2\Habituation';
-% folderPath = 'D:\PhD 2nd Year\DLC Extinction Data  Cohort 1\Habituation';
+folderPath = 'D:\PhD 2nd Year\DLC Extinction Data Cohort 1\Habituation\Extinction';
+% folderPath = 'D:\PhD 2nd Year\DLC Extinction Data Cohort 1\Habituation\Renewal';
 
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*habituation*.csv'));

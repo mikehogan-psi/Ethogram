@@ -486,3 +486,13 @@ for i = 1:2
                   veh_loom_ss1_mean + veh_loom_ss1_sem, ...
                   veh_loom_ss2_mean + veh_loom_ss2_sem], [], 'all')]);
 end
+
+%%
+first_half_psi_loom = psi_post_stim_loom(1:10, :, :);
+first_half_veh_loom = veh_post_stim_loom(1:10, :, :);
+
+mean_first_half_psi_loom = squeeze(mean(first_half_psi_loom, 1));
+mean_first_half_psi_loom = squeeze(mean(mean_first_half_psi_loom, 1))*100;
+
+mean_first_half_veh_loom = squeeze(mean(first_half_veh_loom, 1));
+mean_first_half_veh_loom = squeeze(mean(mean_first_half_veh_loom, 1))*100;
