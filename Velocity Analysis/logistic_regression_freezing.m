@@ -81,6 +81,12 @@ glme = fitglme(full_data_binned, ...
 % Display model summary
 disp(glme);
 
+% % Calculate raw probability values from log odds values (if you want)
+% log_odds = dataset2table(glme.Coefficients(:,2));
+% log_odds = table2array(log_odds);
+% convert_log_odds(log_odds);
+% disp(raw_probability);
+
 %% Plot: Actual vs Predicted Freezing Across Trials
 
 trial_val = unique(full_data_binned.Trial);
