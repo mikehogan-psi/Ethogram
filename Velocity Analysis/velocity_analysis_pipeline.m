@@ -488,8 +488,8 @@ for i = 1:2
 end
 
 %%
-first_half_psi_loom = psi_post_stim_loom(1:10, :, :);
-first_half_veh_loom = veh_post_stim_loom(1:10, :, :);
+first_half_psi_loom = psi_post_stim_loom(1:3, :, :);
+first_half_veh_loom = veh_post_stim_loom(1:3, :, :);
 
 mean_first_half_psi_loom = squeeze(mean(first_half_psi_loom, 1));
 mean_first_half_psi_loom = squeeze(mean(mean_first_half_psi_loom, 1))*100;

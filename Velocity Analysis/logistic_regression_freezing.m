@@ -21,8 +21,10 @@ freezing_psi_binned = zeros(num_bins * num_trials * num_mice, 1);
 freezing_veh_binned = zeros(num_bins * num_trials * num_mice, 1);
 time_bins = repmat((1:num_bins)', num_trials * num_mice, 1); % Time bin indices
 trials_binned = repmat(repelem((1:num_trials)', num_bins), num_mice, 1); % Trial numbers
-mice_binned = repelem((1:num_mice)', num_trials * num_bins); % Mouse IDs
-
+psi_mouse_ids = 2:2:30;  % Original even-numbered mice
+veh_mouse_ids = 1:2:29;  % Original odd-numbered mice
+mice_binned_psi = repelem(psi_mouse_ids', num_trials * num_bins);
+mice_binned_veh = repelem(veh_mouse_ids', num_trials * num_bins);
 group_psi = ones(num_bins * num_trials * num_mice, 1);
 group_veh = zeros(num_bins * num_trials * num_mice, 1);
 
@@ -55,9 +57,9 @@ for mouse = 1:num_mice
 end
 
 % Combine data into a single table
-data_psi_binned = table(freezing_psi_binned, time_bins, trials_binned, group_psi, mice_binned, ...
+data_psi_binned = table(freezing_psi_binned, time_bins, trials_binned, group_psi, mice_binned_psi, ...
     'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
-data_veh_binned = table(freezing_veh_binned, time_bins, trials_binned, group_veh, mice_binned, ...
+data_veh_binned = table(freezing_veh_binned, time_bins, trials_binned, group_veh, mice_binned_veh, ...
     'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
 
 full_data_binned = [data_psi_binned; data_veh_binned];
