@@ -1,0 +1,405 @@
+%% Load data
+load("D:\PhD 2nd Year\processed renewal data for matlab scripts\psi_loom_data_renewal_cohort1.mat")
+load("D:\PhD 2nd Year\processed renewal data for matlab scripts\veh_loom_data_renewal_cohort1.mat")
+
+%% Calculate percentage change in freezing from trial 1 to 20
+
+num_trials = 20;
+num_mice = 14;
+psi_loom_data(:, :, 1) = [];
+
+% Collapse frame dimension
+mean_freeze_trials_psi = squeeze(mean(psi_loom_data, 2));
+mean_freeze_trials_veh = squeeze(mean(veh_loom_data, 2));
+
+
+% Preallocate arrays for percentage change data
+percentage_change_psi = zeros(num_mice, 1);
+percentage_change_veh = zeros(num_mice, 1);
+
+% Define early v late trials here
+early_trials_idx = 1:5;
+late_trials_idx = num_trials-4:num_trials;
+
+% Calculating percentage change between early and late trials for treatment
+% groups
+for mouse_idx = 1:num_mice
+    temp_change = (sum(mean_freeze_trials_psi(early_trials_idx, mouse_idx))...
+        -sum(mean_freeze_trials_psi(late_trials_idx, mouse_idx)))...
+        /sum(mean_freeze_trials_psi(early_trials_idx, mouse_idx));
+    percentage_change_psi(mouse_idx) = temp_change*100;
+end
+
+
+for mouse_idx = 1:num_mice
+    temp_change = (sum(mean_freeze_trials_veh(early_trials_idx, mouse_idx))...
+        -sum(mean_freeze_trials_veh(late_trials_idx, mouse_idx)))...
+        /sum(mean_freeze_trials_veh(early_trials_idx, mouse_idx));
+    percentage_change_veh(mouse_idx) = temp_change*100;
+end
+
+%%
+figure;
+scatter(ones(1, num_mice), percentage_change_psi, 60, 'ro', 'filled', 'XJitter', 'rand'); hold on;
+scatter(2*ones(1, num_mice), percentage_change_veh, 60, 'ko', 'filled', 'XJitter', 'rand');
+xlim([0.5 2.5]); xticks([1 2]); xticklabels({'Psilocybin','Vehicle'});
+ylabel('% reduction in freezing');
+yline(0, lineStyle="--");
+ax=gca;
+ax.FontWeight = 'bold';
+title('Extinction Rate By Mouse: Retention');
+
+%%
+% Define decay period
+decay_period = 233:502;
+psi_loom_data_freeze_decay = psi_loom_data(:, decay_period, :);
+veh_loom_data_freeze_decay = veh_loom_data(:, decay_period, :);
+
+% Define parameters
+num_trials = 20;
+num_frames = 270;
+num_mice = 14; % mice per group
+time_bin_size = 30; % 2 seconds = 30 frames at 15 FPS
+num_bins = floor(num_frames / time_bin_size);
+
+% Preallocate arrays for binned data
+freezing_psi_binned = zeros(num_bins * num_trials * num_mice, 1);
+freezing_veh_binned = zeros(num_bins * num_trials * num_mice, 1);
+time_bins = repmat((1:num_bins)', num_trials * num_mice, 1); % Time bin indices
+trials_binned = repmat(repelem((1:num_trials)', num_bins), num_mice, 1); % Trial numbers
+psi_mouse_ids = 4:2:30;  % Original even-numbered mice
+veh_mouse_ids = 3:2:29;  % Original odd-numbered mice
+mice_binned_psi = repelem(psi_mouse_ids', num_trials * num_bins);
+mice_binned_veh = repelem(veh_mouse_ids', num_trials * num_bins);
+group_psi = ones(num_bins * num_trials * num_mice, 1);
+group_veh = zeros(num_bins * num_trials * num_mice, 1);
+
+% Process psilocybin data
+idx = 1;
+for mouse = 1:num_mice
+    for trial = 1:num_trials
+        current_trial = squeeze(psi_loom_data_freeze_decay(trial, :, mouse));
+        for bin = 1:num_bins
+            start_idx = (bin - 1) * time_bin_size + 1;
+            end_idx = start_idx + time_bin_size - 1;
+            freezing_psi_binned(idx) = mean(current_trial(start_idx:end_idx));
+            idx = idx + 1;
+        end
+    end
+end
+
+% Process vehicle data
+idx = 1;
+for mouse = 1:num_mice
+    for trial = 1:num_trials
+        current_trial = squeeze(veh_loom_data_freeze_decay(trial, :, mouse));
+        for bin = 1:num_bins
+            start_idx = (bin - 1) * time_bin_size + 1;
+            end_idx = start_idx + time_bin_size - 1;
+            freezing_veh_binned(idx) = mean(current_trial(start_idx:end_idx));
+            idx = idx + 1;
+        end
+    end
+end
+
+% Combine data into a single table
+data_psi_binned = table(freezing_psi_binned, time_bins, trials_binned, group_psi, mice_binned_psi, ...
+    'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
+data_veh_binned = table(freezing_veh_binned, time_bins, trials_binned, group_veh, mice_binned_veh, ...
+    'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
+
+full_data_binned = [data_psi_binned; data_veh_binned];
+
+% Binarise freezing (>= 0.5 frozen = frozen)
+full_data_binned.Freezing = full_data_binned.Freezing >= 0.5;
+
+% Standardise continuous predictors
+full_data_binned.TimeBinStd = zscore(full_data_binned.TimeBin);
+full_data_binned.TrialStd = zscore(full_data_binned.Trial);
+
+% Create a categorical variable for Group (0 = veh, 1 = psi)
+full_data_binned.Group = categorical(full_data_binned.Group);
+
+full_data_binned_renewal = full_data_binned;
+clearvars full_data_binned;
+
+load("D:\PhD 2nd Year\full_data_binned.mat")
+% next remove mice 1 and 2 from full_data_binned (extinction), then
+% concatenate freezing data from renewal table with extinction table under
+% new variable name, before seeing if response type is related to freezing
+% during renewal
+
+full_data_binned_extinction = full_data_binned;
+clearvars full_data_binned;
+
+% Logical index of rows to remove
+logical_mouse = (full_data_binned_extinction.Mouse == 1) | (full_data_binned_extinction.Mouse == 2);
+
+% Keep rows where Mouse is not 1 or 2
+full_data_binned_extinction = full_data_binned_extinction(~logical_mouse, :);
+
+renewal_freezing_data = full_data_binned_renewal.Freezing;
+
+full_data_binned_extinction.RenewalFreezing = renewal_freezing_data;
+
+%%
+glme = fitglme(full_data_binned_extinction, ...
+    ['RenewalFreezing ~ TimeBinStd + TrialStd + Group + ResponseType ' ...
+     '+ TimeBinStd:Group + TrialStd:Group + TimeBinStd:ResponseType ' ...
+     '+ ResponseType:TrialStd + Group:ResponseType ' ...
+     '+ (1|Mouse)'], ...
+    'Distribution', 'Binomial', ...
+    'Link', 'Logit');
+
+
+% Display model summary
+disp(glme);
+
+%% Plot predicted v actual data for responder v non-responders across trials
+trial_val = unique(full_data_binned_extinction.Trial);
+group_val = unique(full_data_binned_extinction.Group);
+response_val = unique(full_data_binned_extinction.ResponseType);  % [0 1]
+Nval = numel(trial_val);
+
+yhat = fitted(glme);
+
+for r = 1:numel(response_val)
+
+    % Preallocate for each response type
+    ym_actual = zeros(Nval, numel(group_val));
+    ym_pred = zeros(Nval, numel(group_val));
+    sem_actual = zeros(Nval, numel(group_val));
+
+    response_idx = full_data_binned_extinction.ResponseType == response_val(r);
+
+    for g = 1:numel(group_val)
+        for n = 1:Nval
+            % Logical indices
+            group_idx = full_data_binned_extinction.Group == group_val(g);
+            trial_idx = full_data_binned_extinction.Trial == trial_val(n);
+            idx = group_idx & trial_idx & response_idx;
+
+            mice = unique(full_data_binned_extinction.Mouse(idx));
+            n_mice = numel(mice);
+            per_mouse_mean = zeros(n_mice, 1);
+
+            for m = 1:n_mice
+                mouse_idx = full_data_binned_extinction.Mouse == mice(m);
+                mouse_trial_idx = idx & mouse_idx;
+                per_mouse_mean(m) = mean(full_data_binned_extinction.RenewalFreezing(mouse_trial_idx));
+            end
+
+            ym_actual(n, g) = mean(per_mouse_mean);
+            sem_actual(n, g) = std(per_mouse_mean) / sqrt(n_mice);
+            ym_pred(n, g) = mean(yhat(idx));
+        end
+    end
+
+    % Plot
+    figure; hold on;
+
+    errorbar(trial_val, ym_actual(:,1), sem_actual(:,1), 'ko-', ...
+        'MarkerFaceColor', 'k', 'LineWidth', 1);
+    plot(trial_val, ym_pred(:,1), 'k--', 'LineWidth', 1.5);
+
+    errorbar(trial_val, ym_actual(:,2), sem_actual(:,2), 'ro-', ...
+        'MarkerFaceColor', 'r', 'LineWidth', 1);
+    plot(trial_val, ym_pred(:,2), 'r--', 'LineWidth', 1.5);
+
+    xlabel('Trial Number', 'FontWeight', 'bold');
+    ylabel('Mean Freezing Probability', 'FontWeight', 'bold');
+    legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
+            'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
+           'Location', 'Best');
+
+    ylim([0 1]);
+    xlim([1 20]);
+
+    title(sprintf('Freezing Across Trials: %s', ...
+        ternary(response_val(r)==1, 'Responders', 'Non-Responders')));
+
+    ax = gca;
+    ax.FontWeight = 'bold';
+    ax.FontSize = 12;
+    ax.LineWidth = 2;
+    ax.GridLineWidth = 0.5;
+    grid on;
+    hold off;
+
+end
+
+print(gcf, 'responders_across_trials_retention.png', '-dpng', '-r300');
+%% Plot predicted v actual data for responder v non-responders across timebins
+bin_val = unique(full_data_binned_extinction.TimeBin);
+group_val = unique(full_data_binned_extinction.Group);
+response_val = unique(full_data_binned_extinction.ResponseType);  % [0 1]
+Nval = numel(bin_val);
+
+yhat = fitted(glme);
+
+for r = 1:numel(response_val)
+
+    % Preallocate for each response type
+    ym_actual = zeros(Nval, numel(group_val));
+    ym_pred = zeros(Nval, numel(group_val));
+    sem_actual = zeros(Nval, numel(group_val));
+
+    response_idx = full_data_binned_extinction.ResponseType == response_val(r);
+
+    for g = 1:numel(group_val)
+        for n = 1:Nval
+            group_idx = full_data_binned_extinction.Group == group_val(g);
+            time_idx = full_data_binned_extinction.TimeBin == bin_val(n);
+            idx = group_idx & time_idx & response_idx;
+
+            mice = unique(full_data_binned_extinction.Mouse(idx));
+            n_mice = numel(mice);
+            per_mouse_mean = zeros(n_mice, 1);
+
+            for m = 1:n_mice
+                mouse_idx = full_data_binned_extinction.Mouse == mice(m);
+                mouse_time_idx = idx & mouse_idx;
+                per_mouse_mean(m) = mean(full_data_binned_extinction.RenewalFreezing(mouse_time_idx));
+            end
+
+            ym_actual(n, g) = mean(per_mouse_mean);
+            sem_actual(n, g) = std(per_mouse_mean) / sqrt(n_mice);
+            ym_pred(n, g) = mean(yhat(idx));
+        end
+    end
+
+    % Plot
+    figure; hold on;
+
+    errorbar(bin_val, ym_actual(:,1), sem_actual(:,1), 'ko-', ...
+        'MarkerFaceColor', 'k', 'LineWidth', 1);
+    plot(bin_val, ym_pred(:,1), 'k--', 'LineWidth', 1.5);
+
+    errorbar(bin_val, ym_actual(:,2), sem_actual(:,2), 'ro-', ...
+        'MarkerFaceColor', 'r', 'LineWidth', 1);
+    plot(bin_val, ym_pred(:,2), 'r--', 'LineWidth', 1.5);
+
+    xlabel('Time Bin Number (2s)', 'FontWeight', 'bold');
+    ylabel('Mean Freezing Probability', 'FontWeight', 'bold');
+    legend({'Vehicle (Actual)', 'Vehicle (Predicted)', ...
+            'Psilocybin (Actual)', 'Psilocybin (Predicted)'}, ...
+           'Location', 'Best');
+
+    title(sprintf('Freezing Across Time Bins: %s', ...
+        ternary(response_val(r)==1, 'Responders', 'Non-Responders')));
+
+    ylim([0 1]);
+    xlim([min(bin_val), max(bin_val)]);
+    ax = gca;
+    ax.FontWeight = 'bold';
+    ax.FontSize = 12;
+    ax.LineWidth = 2;
+    ax.GridLineWidth = 0.5;
+    grid on;
+    hold off;
+
+end
+%%
+% Extract variables
+response = double(full_data_binned_extinction.ResponseType);
+treatment = double(full_data_binned_extinction.Group);
+freezing = full_data_binned_extinction.RenewalFreezing;
+
+% Unique group combinations
+groups_comb = unique([response, treatment], 'rows');
+
+% Preallocate arrays for means and SEMs
+mean_freezing = zeros(size(groups_comb,1),1);
+sem_freezing = zeros(size(groups_comb,1),1);
+
+% Assuming groups_comb and labels are already defined as before:
+% groups_comb = [0 0; 1 0; 0 1; 1 1]; % [Response, Group]
+% labels = {'NR Vehicle', 'R Vehicle', 'NR Psilo', 'R Psilo'};
+
+% Filter rows for first 5 trials
+idx_first5 = full_data_binned_extinction.Trial <= 1;
+
+response_5 = response(idx_first5);
+treatment_5 = treatment(idx_first5);
+freezing_5 = freezing(idx_first5);
+
+% Preallocate
+mean_freezing_5 = zeros(size(groups_comb,1),1);
+sem_freezing_5 = zeros(size(groups_comb,1),1);
+
+for i = 1:size(groups_comb,1)
+    idx = (response_5 == groups_comb(i,1)) & (treatment_5 == groups_comb(i,2));
+    data = freezing_5(idx);
+    mean_freezing_5(i) = mean(data);
+    sem_freezing_5(i) = std(data)/sqrt(length(data));
+end
+
+% Define bar colors: Non-responders red, Responders blue
+bar_colors = [1 0 0; 0 0 1; 1 0 0; 0 0 1]; 
+
+% Define x positions for grouping (Vehicle: 1 & 2, Psilocybin: 4 & 5)
+x_pos = [5 4 2 1];
+
+figure; hold on
+for i = 1:4
+    bar(x_pos(i), mean_freezing_5(i), 'FaceColor', bar_colors(i,:))
+    errorbar(x_pos(i), mean_freezing_5(i), sem_freezing_5(i), 'k.', 'LineWidth', 1.5)
+end
+
+xlim([0 6])
+xticks([1.5 4.5])
+xticklabels({'Psilocybin' 'Vehicle'})
+ax = gca;
+ax.FontWeight = 'bold';
+ylabel('Mean Freezing')
+title('Retention Freezing (Last 5 Trials)')
+ylim([0 0.7])
+
+grid on
+
+
+% Legend for responders and non-responders
+legend({'Non-responders', '', 'Responders'}, 'Location', 'northwest')
+
+box off
+hold off
+
+%%
+% Filter rows for first 5 trials
+idx_first5 = full_data_binned_extinction.Trial <= 5;
+
+response_5 = response(idx_first5);
+treatment_5 = treatment(idx_first5);
+freezing_5 = freezing(idx_first5);
+
+% Preallocate
+mean_freezing_5 = zeros(size(groups_comb,1),1);
+sem_freezing_5 = zeros(size(groups_comb,1),1);
+
+for i = 1:size(groups_comb,1)
+    idx = (response_5 == groups_comb(i,1)) & (treatment_5 == groups_comb(i,2));
+    data = freezing_5(idx);
+    mean_freezing_5(i) = mean(data);
+    sem_freezing_5(i) = std(data)/sqrt(length(data));
+end
+
+% Plot bar graph
+figure;
+bar(mean_freezing_5)
+hold on
+errorbar(1:4, mean_freezing_5, sem_freezing_5, 'k.', 'LineWidth', 1.5)
+set(gca, 'XTickLabel', labels, 'XTick', 1:4)
+ylabel('Average Renewal Freezing')
+title('Average Renewal Freezing by ResponseType and Group (First Trial)')
+xtickangle(45)
+box off
+
+
+%%
+function out = ternary(cond, valTrue, valFalse)
+    if cond
+        out = valTrue;
+    else
+        out = valFalse;
+    end
+end
