@@ -2,9 +2,9 @@ function[] = Fit_SSM_3D_new(current_3Ddata_file, SSM_data_path, SSM_model_name_p
 
 options.Ltrial = 502;
 options.wind = [0.2 0.6 0.2];
-options.good_landm = [1:8];
-options.ind_head = [1:4];
-options.ind_body = [5:8];
+options.good_landm = [1:11];
+options.ind_head = [1:7];      % including implant markers (1:3)
+options.ind_body = [8:11];
 options.alpha_reg = 0.1;
 options.TH_missing = 0.5;
 options.Lwind_missing = [1:3];
