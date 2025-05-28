@@ -201,18 +201,21 @@ end
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
 % define file name of raw video and mat file containing results of SSM (2D_UPPER output)
-base_name = 'mouse14_extinction_p1'; % !!! CHANGE THIS !!!
+base_name = 'mouse1_extinction_p1'; % !!! CHANGE THIS !!!
 
-% Find the correct video and SSM(.mat) file
-video_file_path = dir(fullfile(video_path, ['camera9_' base_name, '*.avi']));
-video_file_path = [video_path '\' video_file_path.name];
-%video_file2_path = [video_path '\' video_file_path(2).name];
-%video_file3_path = [video_path '\' video_file_path(3).name];
+% find specific camera filepaths
+all_camera_files = dir(fullfile(video_path, ['camera*' base_name, '*.avi']));
+video_files_paths{1} = [video_path '\' all_camera_files(1).name];
+video_files_paths{2} = [video_path '\' all_camera_files(4).name];
+video_files_paths{3} = [video_path '\' all_camera_files(6).name];
+video_files_paths{4} = [video_path '\' all_camera_files(9).name];
+
+% Find the correct SSM(.mat) file
 SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
 SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
 
 % run freature_extractor function
-feature_extractor_3D(video_file_path, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
+feature_extractor_3D(video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
 % open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
 
 % Saved output files contain a lables and features variable for each mouse
