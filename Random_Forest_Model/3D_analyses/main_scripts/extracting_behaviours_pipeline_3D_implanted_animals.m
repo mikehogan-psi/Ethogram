@@ -50,7 +50,7 @@
 
      % C: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_1'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_2'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
@@ -141,7 +141,8 @@ for f = 1 : length(all_files)
 
 end
 
-
+% can manually check how fitted data looks like (just load a specific SSM_fit.mat)
+ % plot3d_video(Xfit,false)
 
 
 %% STEP 3: SETUP calculate features function
@@ -190,6 +191,8 @@ end
 % 2. define which features are relevant for the target behaviour
     
     feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
+
+  % feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
@@ -451,10 +454,10 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = 'mouse15_extinction_p2';
+base_name = 'mouse1_extinction_p2';
 
     % Find the correct video and predicted labels file
-    video_file_path = dir(fullfile(video_path, ['camera9_' base_name, '*.avi']));
+    video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
     video_file_path = [video_path '/' video_file_path.name];
     predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
     predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
@@ -468,7 +471,7 @@ base_name = 'mouse15_extinction_p2';
 %% STEP 9: Assess model accuracy and sensitivity 
 
 % choose a video which you have the manual or verified labels and predicted labels for 
-base_name = 'mouse15_extinction_p2';
+base_name = '*mouse1_extinction_p2';
 
     % load the correct label variable (either from manually labelled or corrected label files)
     matFiles = dir(fullfile(corrected_labels_path, [base_name, '*.mat']));

@@ -21,19 +21,26 @@
 
 %% General Setup
 
+% define session 
+  %sesh = 'extinction';
+  sesh = 'renewal';
+
 % load camera projection matrix (P)
   load('C:\Users\Abi Hogan\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P');
  
 % define folder path to folder that contains dlc data from all cameras
-  dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\DLC_data\';
-  
-% define likelihood treshold (only markers which exeed this threshold will be used)
+  dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal\DLC_data\';
+
+% define folder path to where triangulated data files shall be saved
+  save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal\triangulated_data\';
+
+  % define likelihood treshold (only markers which exeed this threshold will be used)
   TH = 0.8; % 
 
 %% A: test for single mouse
 
 % define mouse file name
-  base_name = 'mouse1_extinction_p2';
+  base_name = ['mouse1_' sesh '_p2'];
   
 
 % extract filenames from different cameras
@@ -71,7 +78,8 @@ base_names = cell(size(file_names));
 % Loop through each filename and extract base name using regex
 for i = 1:length(file_names)
     % Match pattern: mouseX_extinction_pY
-    tokens = regexp(file_names{i}, 'mouse\d+_extinction_p\d+', 'match');
+
+    tokens = regexp(file_names{i}, ['mouse\d+_' sesh '_p\d+'] , 'match');
     if ~isempty(tokens)
         base_names{i} = tokens{1};
     end
@@ -102,7 +110,7 @@ for n = 1 : length(base_names)
       [X, W] = triangulate_simple_og(x, L, P, TH); 
 
     % save data  
-      save(['C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\triangulated_data\' base_names{n} '_3D_triangulated'],"W","X","x","L","TH","camera_files"); 
+      save([save_path base_names{n} '_3D_triangulated'],"W","X","x","L","TH","camera_files"); 
 
 end
 

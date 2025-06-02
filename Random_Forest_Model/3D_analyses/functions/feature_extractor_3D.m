@@ -29,43 +29,80 @@ function feature_extractor_3D(video_path, mat_file_path, output_folder, frame_fe
     all_frames_labels = zeros(num_frames, 1);
     playing = false;
 
-    % Create GUI with tiled layout for multiple cameras
-   fig = figure('Name', 'Video Player with Labelling', ...
+    % % Create GUI with tiled layout for multiple cameras
+    % fig = figure('Name', 'Video Player with Labelling', ...
+    %              'NumberTitle', 'off', ...
+    %              'KeyPressFcn', @key_press_callback, ...
+    %              'Units', 'normalized', 'Position', [0.05, 0.05, 0.9, 1]);
+    % 
+    % % Create a panel for video display (top 95% of window)
+    % video_panel = uipanel(fig, 'Units', 'normalized', ...
+    %                       'Position', [0, 0.15, 1, 0.95]);
+    % 
+    % t = tiledlayout(video_panel, 2, 2, ...
+    %             'Padding', 'none', 'TileSpacing', 'none', ...
+    %             'Units', 'normalized', 'Position', [0.0, 0, 1, 1]);  % Fill parent panel fully
+    % 
+    % axes_handles = gobjects(num_cams, 1);
+    % image_handles = gobjects(num_cams, 1);
+    % 
+    % for cam = 1:num_cams
+    %     ax = nexttile(t);
+    %     axes_handles(cam) = ax;
+    %     frame = read(obj{cam}, 1);
+    %     if cam <= 2
+    %         frame = flipud(frame);  % Flip upside down
+    %     end
+    %     image_handles(cam) = imshow(frame, 'Parent', ax);
+    %     axis(ax, 'off');  % Turn off axis lines and ticks
+    % end
+    % 
+    % % Shared title with label info
+    % super_title = sgtitle(sprintf('Frame 1 - Label: %d', labels(1)));
+
+    % GUI figure
+fig = figure('Name', 'Video Player with Labelling', ...
              'NumberTitle', 'off', ...
              'KeyPressFcn', @key_press_callback, ...
-             'Units', 'normalized', 'Position', [0.05, 0.05, 0.9, 0.85]);
+             'Units', 'normalized', ...
+             'Position', [0.05, 0.05, 0.9, 0.85]);
 
-    % Create a panel for video display (top 85% of window)
-    % Create GUI window
-    fig = figure('Name', 'Video Player with Labelling', ...
-                 'NumberTitle', 'off', ...
-                 'KeyPressFcn', @key_press_callback, ...
-                 'Units', 'normalized', 'Position', [0.05, 0.05, 0.9, 0.85]);
-    
-    % Create a panel for video display (top 85% of window)
-    video_panel = uipanel(fig, 'Units', 'normalized', ...
-                          'Position', [0, 0.15, 1, 0.85]);
-    
-    % Tiled layout inside video panel
-    t = tiledlayout(video_panel, 2, 2, ...
-                    'Padding', 'none', 'TileSpacing', 'none');  % Maximize video area
-    
-    axes_handles = gobjects(num_cams, 1);
-    image_handles = gobjects(num_cams, 1);
-    
-    for cam = 1:num_cams
-        ax = nexttile(t);
-        axes_handles(cam) = ax;
-        frame = read(obj{cam}, 1);
-        if cam <= 2
-            frame = flipud(frame);  % Flip upside down
-        end
-        image_handles(cam) = imshow(frame, 'Parent', ax);
-        axis(ax, 'off');  % Turn off axis lines and ticks
+% Define video axes positions manually (tight 2x2 grid)
+video_positions = {
+    [0.13, 0.54, 0.48, 0.42];  % Top-left (Cam 1)
+    [0.41, 0.54, 0.48, 0.42];   % Top-right (Cam 2)
+    [0.13, 0.12, 0.48, 0.42];  % Bottom-left (Cam 3)
+    [0.41, 0.12, 0.48, 0.42];   % Bottom-right (Cam 4)
+};
+
+axes_handles = gobjects(num_cams, 1);
+image_handles = gobjects(num_cams, 1);
+
+for cam = 1:num_cams
+    ax = axes(fig, 'Units', 'normalized', ...
+                   'Position', video_positions{cam});
+    axes_handles(cam) = ax;
+    frame = read(obj{cam}, 1);
+    if cam <= 2
+        frame = flipud(frame);  % Flip upside down if needed
     end
+    image_handles(cam) = imshow(frame, 'Parent', ax);
+    axis(ax, 'off');  % Hide axes
+end
 
-    % Shared title with label info
-    super_title = sgtitle(sprintf('Frame 1 - Label: %d', labels(1)));
+% Single shared title (at top center)
+super_title = annotation(fig, 'textbox', ...
+    [0.3, 0.96, 0.4, 0.04], ...
+    'String', sprintf('Frame 1 - Label: %d', labels(1)), ...
+    'HorizontalAlignment', 'center', ...
+    'FontWeight', 'bold', ...
+    'EdgeColor', 'none', ...
+    'FontSize', 12);
+
+
+
+
+
 
     % Slider
     slider = uicontrol(fig, 'Style', 'slider', 'Min', 1, 'Max', num_frames, ...
