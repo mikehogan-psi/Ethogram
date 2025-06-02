@@ -133,7 +133,7 @@
 % run SSM on all 3D data files to generate body shape parameters
  cd(triangulated_data_path) 
 
-for f = 1 : length(all_files) 
+for f = 3 : length(all_files) 
 
     current_3Ddata_file = all_files(f).name;
 
