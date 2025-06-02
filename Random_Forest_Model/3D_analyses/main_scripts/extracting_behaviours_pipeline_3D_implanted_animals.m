@@ -55,7 +55,7 @@
 
      % D: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_1'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_2'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
