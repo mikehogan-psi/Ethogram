@@ -1,8 +1,10 @@
 % Load data
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
+%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
+%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
 
 % Define decay period
 decay_period = 233:502;
@@ -12,7 +14,7 @@ veh_loom_data_freeze_decay = veh_loom_data(:, decay_period, :);
 % Define parameters
 num_trials = 20;
 num_frames = 270;
-num_mice = 15; % mice per group
+num_mice = 10; % mice per group (change as needed)
 time_bin_size = 30; % 2 seconds = 30 frames at 15 FPS
 num_bins = floor(num_frames / time_bin_size);
 
@@ -21,8 +23,8 @@ freezing_psi_binned = zeros(num_bins * num_trials * num_mice, 1);
 freezing_veh_binned = zeros(num_bins * num_trials * num_mice, 1);
 time_bins = repmat((1:num_bins)', num_trials * num_mice, 1); % Time bin indices
 trials_binned = repmat(repelem((1:num_trials)', num_bins), num_mice, 1); % Trial numbers
-psi_mouse_ids = 2:2:30;  % Original even-numbered mice
-veh_mouse_ids = 1:2:29;  % Original odd-numbered mice
+psi_mouse_ids = 2:2:20;  % Original even-numbered mice (change total as needed)
+veh_mouse_ids = 1:2:19;  % Original odd-numbered mice (change total as needed)
 mice_binned_psi = repelem(psi_mouse_ids', num_trials * num_bins);
 mice_binned_veh = repelem(veh_mouse_ids', num_trials * num_bins);
 group_psi = ones(num_bins * num_trials * num_mice, 1);
