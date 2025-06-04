@@ -55,7 +55,7 @@
 
      % D: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_2'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_3'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
@@ -179,23 +179,23 @@ end
   'mean([0, abs(diff(R_window(2,:))) + abs(diff(R_window(3,:)))])';                    % Feature 17: average angular velocity (magnitude only) in pitch and roll directions combined (Describes rotational movement around x- and y-axis)
 
 
-  'X(4,3,frame_idx)-X(11,3,frame_idx)'                                               % Feature 18: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
+  'Xfit(4,3,frame_idx)-Xfit(11,3,frame_idx)'                                         % Feature 18: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
   'mean([0, sqrt(sum(diff(T_window(1:2,:), 1, 2).^2, 1))])';                         % Feature 19: Average 3D velocity (overall movement intensity) - ONLY USING X AND Y COODINATES
   'sum([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])'                          % Feature 20: Total distance travelled (3D)
     
-  'sum(abs(diff(T_window(3, :))))'                 % Feature 21: cumulative vertical movement 
-  'X(7,3,frame_idx)-X(10,3,frame_idx)'             % Feature 22: z-difference between neck base (body-marker 7) and tail-base (body-marker 10)
-  'norm(X(7,1:2,frame_idx) - X(10,1:2,frame_idx))' % Feature 23: euclidian distance in x-y plane bewteen neck base and tail base 
-  'X(4,3,frame_idx)'                               % Feature 24: z-value of nose
-  'max(T_window(3, :))'                            % Feature 25: max vertical translation
-  'X(1,3,frame_idx)'                               % Feature 26: z-value of cable tip
-  'X(4,3,frame_idx)-X(7,3,frame_idx)'              % Feature 27: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
+  'sum(abs(diff(T_window(3, :))))'                	     % Feature 21: cumulative vertical movement 
+  'Xfit(7,3,frame_idx)-Xfit(10,3,frame_idx)'             % Feature 22: z-difference between neck base (body-marker 7) and tail-base (body-marker 10)
+  'norm(Xfit(7,1:2,frame_idx) - Xfit(10,1:2,frame_idx))' % Feature 23: euclidian distance in x-y plane bewteen neck base and tail base 
+  'Xfit(4,3,frame_idx)'                                  % Feature 24: z-value of nose
+  'max(T_window(3, :))'                                  % Feature 25: max vertical translation
+  'Xfit(1,3,frame_idx)'                                  % Feature 26: z-value of cable tip
+  'Xfit(4,3,frame_idx)-Xfit(7,3,frame_idx)'              % Feature 27: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
 
  };
 
 % 2. define which features are relevant for the target behaviour
     
-    feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
+    % feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
     feature_selectection_indx = [22, 27];  % feature selection RFM_rearing_2
 
   % feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
@@ -204,8 +204,8 @@ end
 
 
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
-       window_size = 30; % time window for RFM_rearing_1
-
+       % window_size = 30; % time window for RFM_rearing_1 & 2
+       window_size = 2; % time window for RFM_rearing_3
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
@@ -224,7 +224,7 @@ SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
 SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
 
 % run freature_extractor function
-feature_extractor_3D(video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
+feature_extractor_3D(base_name, video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
 % open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
 
 % Saved output files contain a lables and features variable for each mouse
@@ -256,13 +256,11 @@ for f = 1 : length(files)
     base_name = regexp(files(f).name, ['(mouse\d+_' sesh '_p\d+)'], 'match', 'once');  
     
     % Find the correct video and SSM(.mat) file
-    video_file_path = dir(fullfile(video_path, ['camera*_' base_name, '*.avi']));
-    video_file_path = [video_path '\' video_file_path.name];
     SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
     SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
     
     % run feature_extractor_already_labeled function
-    feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+    feature_extractor_already_labeled_3D(base_name, all_frames_labels, SSM_file_path, manual_labels_path, frame_features_strings, window_size)
 
 end 
 
@@ -469,7 +467,7 @@ base_name = ['mouse1_' sesh '_p2'];
     predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
     
     % fun validate predcitions function
-         validate_predictions(video_file_path, predicted_file_path, corrected_labels_path);
+         validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it
     
     % repeat this for a couple of videos to generate enough verified_labels data to update model (to increase its accuracy)     
