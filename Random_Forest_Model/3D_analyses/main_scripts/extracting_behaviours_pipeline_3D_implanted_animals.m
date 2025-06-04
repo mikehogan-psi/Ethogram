@@ -55,7 +55,7 @@
 
      % D: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_3'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_5'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
@@ -196,7 +196,7 @@ end
 % 2. define which features are relevant for the target behaviour
     
     % feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
-    feature_selectection_indx = [22, 27];  % feature selection RFM_rearing_2
+    feature_selectection_indx = [21, 24, 25, 26, 27];  % feature selection RFM_rearing_5
 
   % feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
 
@@ -205,7 +205,7 @@ end
 
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
        % window_size = 30; % time window for RFM_rearing_1 & 2
-       window_size = 2; % time window for RFM_rearing_3
+       window_size = 4; % time window for RFM_rearing_4
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
@@ -363,7 +363,7 @@ for i = 1:length(file_list_SSM)
     R = data.R;
     T = data.T;
     missing = data.missing;
-    X = data.X; 
+    Xfit = data.Xfit; 
 
     % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
     R = rotm2eul(R, 'ZYX');
@@ -436,8 +436,9 @@ for i = 1:num_files % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-          duration_threshold = 8;  % for darting
-    
+          % duration_threshold = 8;  % for darting
+            duration_threshold = 7;  % for rearing
+
     % Iterate over detected darting sequences
     for segment = 1:num_segments
         if segment_props(segment).Area < duration_threshold    
