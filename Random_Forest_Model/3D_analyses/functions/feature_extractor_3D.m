@@ -1,4 +1,4 @@
-function feature_extractor_3D(video_path, mat_file_path, output_folder, frame_features_strings, window_size)
+function feature_extractor_3D(base_name, video_path, mat_file_path, output_folder, frame_features_strings, window_size)
 
     % Load the 4 videos
     num_cams = 4;
@@ -21,7 +21,7 @@ function feature_extractor_3D(video_path, mat_file_path, output_folder, frame_fe
     R = rotm2eul(data.R, 'ZYX')';
     T = data.T;
     missing = data.missing;
-    X = data.X;
+    Xfit = data.Xfit;
 
     % Initialise
     features = [];
@@ -193,7 +193,6 @@ super_title = annotation(fig, 'textbox', ...
         if ~endsWith(output_folder, filesep)
             output_folder = [output_folder, filesep];
         end
-        [~, base_name, ~] = fileparts(video_path{1});
         save_path = [output_folder, base_name, '_labels.mat'];
         try
             save(save_path, 'labels', 'features', 'all_frames_labels');

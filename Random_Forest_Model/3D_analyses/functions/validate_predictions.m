@@ -1,4 +1,4 @@
-function validate_predictions(video_file_path, predicted_labels_path, output_folder)
+function validate_predictions(base_name, video_file_path, predicted_labels_path, output_folder)
     % Load the video
     obj = VideoReader(video_file_path);
 
@@ -105,8 +105,7 @@ function validate_predictions(video_file_path, predicted_labels_path, output_fol
         end
 
         % Create the full path for saving the file
-        [~, video_name, ~] = fileparts(video_file_path);
-        save_path = [output_folder, video_name, '_verified_labels.mat'];
+        save_path = [output_folder, base_name, '_verified_labels.mat'];
 
         try
             save(save_path, 'verified_labels');

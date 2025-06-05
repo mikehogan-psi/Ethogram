@@ -1,4 +1,4 @@
-function feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+function feature_extractor_already_labeled_3D(base_name, all_frames_labels, SSM_file_path, manual_labels_path, frame_features_strings, window_size)
 
 % labeled_data_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\extinction_analysis\rearing_data\corrected_labels_data\mouse13_extinction_p2_2024-10-16-131736-0000_verified_labels.mat';
 % mat_file_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\data_all_mice\SSM_fitted_data\SSM_fitted_data_extinction\mouse13_extinction_p2_2024-10-16-131736-0000DLC_resnet50_Fear Extinction No ImplantOct15shuffle1_500000_body_fit.mat';
@@ -14,7 +14,7 @@ function feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, 
     R = data.R;
     T = data.T;
     missing = data.missing; 
-    X = data.X; 
+    Xfit = data.Xfit; 
 
     % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
     R = rotm2eul(R, 'ZYX');
@@ -58,8 +58,7 @@ function feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, 
         end
 
         % Create the full path for saving the file
-        [~, video_name, ~] = fileparts(video_file_path);
-        save_path = [manual_labels_path, video_name, '_labels.mat']; 
+        save_path = [manual_labels_path, base_name, '_labels.mat']; 
 
         try     
             save(save_path, 'labels', 'features', 'all_frames_labels');

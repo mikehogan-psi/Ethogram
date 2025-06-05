@@ -47,17 +47,22 @@
 
      % B: define target behaviour that shall be analysed
             behaviour = 'rearing'; 
+    
+     % C: define session 
+           sesh = 'extinction';
+          %  sesh = 'renewal';
 
-     % C: define which name generated models shall be given
+
+     % D: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_2'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_5'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
 % 2. Define directories to where specific data can be accessed/saved 
      % A: folder containing 'raw' data from all mice (data before any behaviours predicted)  
-            % common_raw_dir = 'C:\Abi_Hogan\behavioral_analysis\data_all_mice\'; % Stopford PC
             common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction'; % Laptop
+            %common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
 
      % subdirectories containing video and DLC data (must be already defined) + folder where SSM fitted data shall be saved 
             % ! make sure these folders already exist and contain correct data prior to starting analysis !
@@ -68,7 +73,6 @@
           
       
      % B: folder where data labeled with desired behaviour shall be saved   
-            % common_behav_dir = 'C:\Abi_Hogan\behavioral_analysis\extinction_analysis\rearing_data\';  % Stopford PC
               common_behav_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis'; % Laptop
 
 
@@ -142,7 +146,7 @@ for f = 3 : length(all_files)
 end
 
 % can manually check how fitted data looks like (just load a specific SSM_fit.mat)
- % plot3d_video(Xfit,false)
+  plot3d_video(Xfit,false)
 
 
 %% STEP 3: SETUP calculate features function
@@ -175,22 +179,24 @@ end
   'mean([0, abs(diff(R_window(2,:))) + abs(diff(R_window(3,:)))])';                    % Feature 17: average angular velocity (magnitude only) in pitch and roll directions combined (Describes rotational movement around x- and y-axis)
 
 
-  'X(4,3,frame_idx)-X(11,3,frame_idx)'                                               % Feature 18: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
+  'Xfit(4,3,frame_idx)-Xfit(11,3,frame_idx)'                                         % Feature 18: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
   'mean([0, sqrt(sum(diff(T_window(1:2,:), 1, 2).^2, 1))])';                         % Feature 19: Average 3D velocity (overall movement intensity) - ONLY USING X AND Y COODINATES
   'sum([0, sqrt(sum(diff(T_window(1:2, :), 1, 2).^2, 1))])'                          % Feature 20: Total distance travelled (3D)
     
-  'sum(abs(diff(T_window(3, :))))'                 % Feature 21: cumulative vertical movement 
-  'X(7,3,frame_idx)-X(10,3,frame_idx)'             % Feature 22: z-difference between neck base (body-marker 7) and tail-base (body-marker 10)
-  'norm(X(7,1:2,frame_idx) - X(10,1:2,frame_idx))' % Feature 23: euclidian distance in x-y plane bewteen neck base and tail base 
-  'X(4,3,frame_idx)'                               % Feature 24: z-value of nose
-  'max(T_window(3, :))'                            % Feature 25: max vertical translation
-  'X(1,3,frame_idx)'                               % Feature 26: z-value of cable tip
+  'sum(abs(diff(T_window(3, :))))'                	     % Feature 21: cumulative vertical movement 
+  'Xfit(7,3,frame_idx)-Xfit(10,3,frame_idx)'             % Feature 22: z-difference between neck base (body-marker 7) and tail-base (body-marker 10)
+  'norm(Xfit(7,1:2,frame_idx) - Xfit(10,1:2,frame_idx))' % Feature 23: euclidian distance in x-y plane bewteen neck base and tail base 
+  'Xfit(4,3,frame_idx)'                                  % Feature 24: z-value of nose
+  'max(T_window(3, :))'                                  % Feature 25: max vertical translation
+  'Xfit(1,3,frame_idx)'                                  % Feature 26: z-value of cable tip
+  'Xfit(4,3,frame_idx)-Xfit(7,3,frame_idx)'              % Feature 27: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
 
  };
 
 % 2. define which features are relevant for the target behaviour
     
-    feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
+    % feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
+    feature_selectection_indx = [21, 24, 25, 26, 27];  % feature selection RFM_rearing_5
 
   % feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
 
@@ -198,13 +204,13 @@ end
 
 
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
-       window_size = 30; % time window for RFM_rearing_1
-
+       % window_size = 30; % time window for RFM_rearing_1 & 2
+       window_size = 4; % time window for RFM_rearing_4
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
 % define file name of raw video and mat file containing results of SSM (2D_UPPER output)
-base_name = 'mouse1_extinction_p1'; % !!! CHANGE THIS !!!
+base_name = ['mouse1_' sesh '_p1']; % !!! CHANGE THIS !!!
 
 % find specific camera filepaths
 all_camera_files = dir(fullfile(video_path, ['camera*' base_name, '*.avi']));
@@ -218,7 +224,7 @@ SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
 SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
 
 % run freature_extractor function
-feature_extractor_3D(video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
+feature_extractor_3D(base_name, video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
 % open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
 
 % Saved output files contain a lables and features variable for each mouse
@@ -247,16 +253,14 @@ for f = 1 : length(files)
         end
     
     % extract basename
-    base_name = regexp(files(f).name, '(mouse\d+_extinction_p\d+)', 'match', 'once');  
+    base_name = regexp(files(f).name, ['(mouse\d+_' sesh '_p\d+)'], 'match', 'once');  
     
     % Find the correct video and SSM(.mat) file
-    video_file_path = dir(fullfile(video_path, ['camera*_' base_name, '*.avi']));
-    video_file_path = [video_path '\' video_file_path.name];
     SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
     SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
     
     % run feature_extractor_already_labeled function
-    feature_extractor_already_labeled_3D(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+    feature_extractor_already_labeled_3D(base_name, all_frames_labels, SSM_file_path, manual_labels_path, frame_features_strings, window_size)
 
 end 
 
@@ -359,7 +363,7 @@ for i = 1:length(file_list_SSM)
     R = data.R;
     T = data.T;
     missing = data.missing;
-    X = data.X; 
+    Xfit = data.Xfit; 
 
     % calculate Euler angles from R (rotational matrix) -> [yaw, pitch, roll] / [yaw, roll, pitch] for each frame
     R = rotm2eul(R, 'ZYX');
@@ -432,8 +436,9 @@ for i = 1:num_files % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-          duration_threshold = 8;  % for darting
-    
+          % duration_threshold = 8;  % for darting
+            duration_threshold = 7;  % for rearing
+
     % Iterate over detected darting sequences
     for segment = 1:num_segments
         if segment_props(segment).Area < duration_threshold    
@@ -454,7 +459,7 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = 'mouse1_extinction_p2';
+base_name = ['mouse1_' sesh '_p2'];
 
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
@@ -463,7 +468,7 @@ base_name = 'mouse1_extinction_p2';
     predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
     
     % fun validate predcitions function
-         validate_predictions(video_file_path, predicted_file_path, corrected_labels_path);
+         validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it
     
     % repeat this for a couple of videos to generate enough verified_labels data to update model (to increase its accuracy)     
@@ -471,7 +476,7 @@ base_name = 'mouse1_extinction_p2';
 %% STEP 9: Assess model accuracy and sensitivity 
 
 % choose a video which you have the manual or verified labels and predicted labels for 
-base_name = '*mouse1_extinction_p2';
+base_name = ['*mouse1_' sesh '_p2'];
 
     % load the correct label variable (either from manually labelled or corrected label files)
     matFiles = dir(fullfile(corrected_labels_path, [base_name, '*.mat']));
