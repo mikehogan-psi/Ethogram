@@ -50,7 +50,7 @@
     
      % C: define session 
            sesh = 'extinction';
-          %  sesh = 'renewal';
+          % sesh = 'renewal';
 
 
      % D: define which name generated models shall be given
@@ -62,7 +62,7 @@
 % 2. Define directories to where specific data can be accessed/saved 
      % A: folder containing 'raw' data from all mice (data before any behaviours predicted)  
             common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction'; % Laptop
-            %common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
+           % common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
 
      % subdirectories containing video and DLC data (must be already defined) + folder where SSM fitted data shall be saved 
             % ! make sure these folders already exist and contain correct data prior to starting analysis !
@@ -137,7 +137,7 @@
 % run SSM on all 3D data files to generate body shape parameters
  cd(triangulated_data_path) 
 
-for f = 3 : length(all_files) 
+for f = 1 : length(all_files) 
 
     current_3Ddata_file = all_files(f).name;
 
@@ -425,7 +425,7 @@ end
 % Load predicted labels files for all mice
 file_list_pred_labels = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_*'])); % change if body or tail data needed
 
-for i = 1:num_files % loop through all files
+for i = 1:length(file_list_pred_labels) % loop through all files
 
     % load predicted labels variable
     load([predicted_labels_path file_list_pred_labels(i).name]);
@@ -459,7 +459,7 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = ['mouse1_' sesh '_p2'];
+base_name = ['mouse1_' sesh '_p1'];
 
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));

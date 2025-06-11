@@ -101,7 +101,7 @@ cont0 = 0; % set start recording time to 0
 
 for s = 1:3
 
-evt{s} = evt-cont{1}(1) +cont0;
+evt{s} = evt-cont{1}(1)+cont0;
 
 evt{s} = evt(states{s}==1);
 evt{s} = evt_p2(2:end); 
@@ -116,6 +116,6 @@ end
 
 save([filepath_out mouse '_' sesh 'event_timestamps'],'evt_hab' 'evt_p1' 'evt_p2');
 
-save([filepath_out mouse '_' sesh 'raw_data'],'evt', 'cont', 'states' );
+save([filepath_out mouse '_' sesh 'raw_data'],'evt' 'cont' 'states' );
 
 
