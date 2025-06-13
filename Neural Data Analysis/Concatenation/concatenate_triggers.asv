@@ -13,28 +13,28 @@ filepath_out = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data';
 
 cont0 = 0;
 
-evt = readNPY([path1 'sample_numbers.npy']); 
+evt = readNPY([path1 'timestamps.npy']); 
 states = readNPY([path1 'states.npy']);
-cont = readNPY([path1_continuous 'sample_numbers.npy']);
-evt = evt-cont(1)+cont0;
+cont = readNPY([path1_continuous 'timestamps.npy']);
+%evt = evt-cont(1)+cont0;
 evt = evt(states==1);
-cont0 = cont0+numel(cont);
+%cont0 = cont0+cont(end);
 save([filepath_out 'mouse2_hab'],'evt');
 
-evt = readNPY([path2 'sample_numbers.npy']); 
+evt = readNPY([path2 'timestamps.npy']); 
 states = readNPY([path2 'states.npy']);
-cont = readNPY([path2_continuous 'sample_numbers.npy']);
+%cont = readNPY([path2_continuous 'timestamps.npy']);
 evt = evt-cont(1)+cont0;
 evt = evt(states==1);
-cont0 = cont0+numel(cont);
+%cont0 = cont0+cont(end);
 save([filepath_out 'mouse2_p1'],'evt');
 
-evt = readNPY([path3 'sample_numbers.npy']); 
+evt = readNPY([path3 'timestamps.npy']); 
 states = readNPY([path3 'states.npy']);
-cont = readNPY([path3_continuous 'sample_numbers.npy']);
-evt = evt-cont(1)+cont0;
+%cont = readNPY([path3_continuous 'timestamps.npy']);
+%evt = evt-cont(1)+cont0;
 evt = evt(states==1);
-cont0 = cont0+numel(cont);
+%cont0 = cont0+cont(end);
 save([filepath_out 'mouse2_p2'],'evt');
 
 % evt = readNPY([path4 'timestamps.npy']); 

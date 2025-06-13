@@ -24,8 +24,8 @@ if graph&length(frspk)
     %
     h1 = subplot(1,2,1), hold on;
     %plot(frspk,trialspk,'k.','MarkerSize',8);
-    p = pcolor(fr); set(p,'LineStyle','none');
-    xlim([1 size(fr,2)]);ylim([1 size(fr,1)]);
+    p = pcolor(t,1:size(fr,1),fr); set(p,'LineStyle','none');
+    xlim([t(1) t(end)]);ylim([1 size(fr,1)]);
     %xlim([t(1) t(end)]);
     %xlabel('Time(s)','FontSize',14,'FontName','Arial');
     ylabel('#Trial','FontSize',14,'FontName','Arial');
