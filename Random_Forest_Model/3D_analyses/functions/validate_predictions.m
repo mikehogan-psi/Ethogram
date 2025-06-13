@@ -46,6 +46,16 @@ function validate_predictions(base_name, video_file_path, predicted_labels_path,
     % Playback control
     playing = false;
 
+    % --- Glider bar for showing labeled frames ---
+    glider_bar_ax = axes(fig, 'Position', [0.17, 0.13, 0.7, 0.01]);
+    glider_bar_patches = [];  % Will hold patch handles
+    set(glider_bar_ax, 'XLim', [1, num_frames], ...
+                       'YLim', [0, 1], ...
+                       'XTick', [], 'YTick', [], ...
+                       'Color', 'w', 'XColor', 'none', 'YColor', 'none', ...
+                       'Box', 'on');
+    update_glider_bar();  % Initialize glider bar
+
     % Slider callback
     function slider_callback(~, ~)
         frame_idx = round(slider.Value);
@@ -58,14 +68,16 @@ function validate_predictions(base_name, video_file_path, predicted_labels_path,
             frame = read(obj, frame_idx);
             im.CData = frame;
 
-            % Update title with predicted and verified labels
-            set(title_text, 'String', sprintf('Frame %d - Prediction: %d, Verified: %d', frame_idx, predicted_labels(frame_idx), verified_labels(frame_idx)));
+            % Update title
+            set(title_text, 'String', ...
+                sprintf('Frame %d - Prediction: %d, Verified: %d', ...
+                        frame_idx, predicted_labels(frame_idx), verified_labels(frame_idx)));
 
-            % Update background color based on label
+            % Update background color
             if verified_labels(frame_idx) == 1
                 set(fig, 'Color', [1, 0.8, 0.8]); % Light red background
             else
-                set(fig, 'Color', [1, 1, 1]); % Default white background
+                set(fig, 'Color', [1, 1, 1]); % White background
             end
 
             slider.Value = frame_idx;
@@ -87,24 +99,20 @@ function validate_predictions(base_name, video_file_path, predicted_labels_path,
         playing = false;
     end
 
-    % Correct the label of the current frame
+    % Correct label for current frame
     function correct_label(~, ~)
         frame_idx = round(slider.Value);
-        verified_labels(frame_idx) = 1 - verified_labels(frame_idx);  % Toggle label between 0 and 1
-        disp(sprintf('Frame %d label corrected to %d.', frame_idx, verified_labels(frame_idx)));
-
-        % Update the title and background color to reflect the corrected label
+        verified_labels(frame_idx) = 1 - verified_labels(frame_idx);  % Toggle label
+        fprintf('Frame %d label corrected to %d.\n', frame_idx, verified_labels(frame_idx));
         update_frame(frame_idx);
+        update_glider_bar();
     end
 
-    % Save verified labels to a .mat file
+    % Save verified labels to file
     function save_labels(~, ~)
-        % Ensure the output folder path ends with a separator
         if ~endsWith(output_folder, filesep)
             output_folder = [output_folder, filesep];
         end
-
-        % Create the full path for saving the file
         save_path = [output_folder, base_name, '_verified_labels.mat'];
 
         try
@@ -115,7 +123,7 @@ function validate_predictions(base_name, video_file_path, predicted_labels_path,
         end
     end
 
-    % Keyboard shortcut callback
+    % Handle key press shortcuts
     function key_press_callback(~, event)
         if strcmp(event.Key, 'rightarrow') && slider.Value < num_frames
             slider.Value = slider.Value + 1;
@@ -125,6 +133,24 @@ function validate_predictions(base_name, video_file_path, predicted_labels_path,
             update_frame(round(slider.Value));
         elseif strcmp(event.Key, 'c')
             correct_label();
+        end
+    end
+
+    % Glider bar update function
+    function update_glider_bar()
+        if ~isempty(glider_bar_patches)
+            delete(glider_bar_patches(ishandle(glider_bar_patches)));
+        end
+
+        labeled_frames = find(verified_labels == 1);
+        glider_bar_patches = gobjects(size(labeled_frames));
+
+        for i = 1:length(labeled_frames)
+            x = labeled_frames(i);
+            glider_bar_patches(i) = patch(glider_bar_ax, ...
+                [x-0.5, x+0.5, x+0.5, x-0.5], ...
+                [0, 0, 1, 1], ...
+                'r', 'EdgeColor', 'none');
         end
     end
 
