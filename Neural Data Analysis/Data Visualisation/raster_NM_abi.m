@@ -1,4 +1,4 @@
-function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
+function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM_abi(tsp,evt,tpre,tpost,dt,graph)
 
 % General: this function creates raster plots and peri-stimulus time histograms (PSTHs) 
 %          for spike trains aligned to a set of events
