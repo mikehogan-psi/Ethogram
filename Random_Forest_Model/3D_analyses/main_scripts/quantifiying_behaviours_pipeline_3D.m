@@ -11,15 +11,15 @@
 %% Setup
 
 % define target behaviour that was predicted and shall now be anlysed
-            behaviour = 'darting'; % !!!CHANGE THIS!!!
+            behaviour = 'rearing'; % !!!CHANGE THIS!!!
 
 % define the name of model that was used to predict the data
-            model_name = ['RFM_' behaviour '_9'];  % !!!CHANGE THIS!!!
+            model_name = ['RFM_' behaviour '_5'];  % !!!CHANGE THIS!!!
 
 % Setup directories
 
     % Common directory containing behavioural-label data and where anlysis outcomes shall be saved
-        common_dir = ['C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\extinction_analysis\darting_analyses\' model_name]; % !!!CHANGE THIS!!!
+        common_dir = ['C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\rearing_analyses\' model_name]; % !!!CHANGE THIS!!!
 
     % folderpath containing behaviour-labels predicted by model
         predicted_labels_path = [common_dir '\predicted_labels_data\'];

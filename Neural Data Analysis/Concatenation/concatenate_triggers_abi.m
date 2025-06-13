@@ -119,7 +119,6 @@ evt_extinction  = [evt_extinction ; evt{s}];
 
 end
 
-
 %% concatinating triggers timeline (alined to cont/sampling data timestamps)
 
 % put all data into joined variabes (for loop)
@@ -188,8 +187,8 @@ hold on;
 y_limits = [0 1];  % You can change this to fit your data context
 
 % Loop through each event and plot a vertical line
-for i = 1:length(evt_concat)
-    x = evt_concat(i);
+for i = 1:length(evt_extinction)
+    x = evt_extinction(i);
     line([x x], y_limits, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1);
 end
 
@@ -205,14 +204,14 @@ grid on;
 
 %%
 % Convert evt_concat (in seconds) to minutes
-evt_minutes = evt_concat / 60;
+evt_minutes = evt_extinction / 60;
 
 % Create a new figure
 figure;
 hold on;
 
 % Split into first 4500 events (habituation) and the rest
-n_events = length(evt_concat);
+n_events = length(evt_extinction);
 cutoff = min(4500, n_events);  % In case there are fewer than 4500 events
 
 % Plot first 4500 triggers in red
@@ -235,3 +234,19 @@ grid on;
 
 % Optional aesthetic y-limits
 ylim([0 1]);
+
+
+%% Extracting triggers that mark stimulus onset
+
+% Initialize vector of stimulus onset indices
+trial_length = 502;
+stimulus_within_trial = 153;
+
+% Calculate total number of trials
+num_trials = floor(length(evt_extinction) / trial_length);
+
+% Get indices of stimulus onsets
+stimulus_indices = (0:num_trials-1) * trial_length + stimulus_within_trial;
+
+% Extract corresponding timestamps
+stimulus_onsets = evt_extinction(stimulus_indices);

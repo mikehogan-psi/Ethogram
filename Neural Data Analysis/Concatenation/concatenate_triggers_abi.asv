@@ -106,7 +106,7 @@ end
 
 % initialize variables
 t_start = 0;
-evt_concat = [];
+evt_extinction = [];
 
 %conactinate evt data
 for s = 2:3
@@ -115,7 +115,7 @@ evt{s} = evt{s}(states{s}==1);
 evt{s} = evt{s}(2:end); 
 evt{s} = evt{s} - evt{s}(1) + t_start;
 t_start = evt{s}(end) + 30;
-evt_concat = [evt_concat; evt{s}]; 
+evt_extinction  = [evt_extinction ; evt{s}]; 
 
 end
 
@@ -188,7 +188,7 @@ hold on;
 y_limits = [0 1];  % You can change this to fit your data context
 
 % Loop through each event and plot a vertical line
-for i = 1:length(evt_concat)
+for i = 1:length(evt_extinction)
     x = evt_concat(i);
     line([x x], y_limits, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1);
 end
@@ -205,14 +205,14 @@ grid on;
 
 %%
 % Convert evt_concat (in seconds) to minutes
-evt_minutes = evt_concat / 60;
+evt_minutes = evt_extinction / 60;
 
 % Create a new figure
 figure;
 hold on;
 
 % Split into first 4500 events (habituation) and the rest
-n_events = length(evt_concat);
+n_events = length(evt_extinction);
 cutoff = min(4500, n_events);  % In case there are fewer than 4500 events
 
 % Plot first 4500 triggers in red
