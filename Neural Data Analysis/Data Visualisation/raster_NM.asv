@@ -10,8 +10,14 @@ function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
 %        - tpost: Time after each event to include.
 %        - dt: Bin size (time resolution of histogram, in seconds).
 %        - graph: Flag (0 or 1) to plot the raster and PSTH.
-
-
+% 
+% Outputs:
+%        - mfr: Mean firing rate across trials (Hz).
+%        - sfr: Standard error of firing rate across trials (Hz).
+%        - t: Time vector (excluding the first and last bin).
+%        - fr: Firing rate matrix (trials × time bins).
+%        - frspk: Vector of spike times aligned to events (all trials concatenated).
+%        - trialspk: Trial numbers for each spike in frspk.
 
 t = [-tpre:dt:tpost];
 N = length(evt);

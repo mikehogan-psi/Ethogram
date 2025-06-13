@@ -10,21 +10,33 @@ function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
 %        - tpost: Time after each event to include.
 %        - dt: Bin size (time resolution of histogram, in seconds).
 %        - graph: Flag (0 or 1) to plot the raster and PSTH.
+% 
+% Outputs:
+%        - mfr: Mean firing rate across trials (Hz).
+%        - sfr: Standard error of firing rate across trials (Hz).
+%        - t: Time vector (excluding the first and last bin).
+%        - fr: Firing rate matrix (trials × time bins).
+%        - frspk: Vector of spike times aligned to events (all trials concatenated).
+%        - trialspk: Trial numbers for each spike in frspk.
 
 
+% initializing variables 
+    t = [-tpre:dt:tpost]; % vector of time bins centered on the event time
+    N = length(evt);      % Number of events/trials
+    Nt = length(t);       % Number of time bins
+    fr = zeros(N,Nt);     % Firing rate matrix
+    frspk = cell(1,N);    % Cell array to hold aligned spikes per trial
+    trialspk = cell(1,N); % Trial index for each spike
 
-t = [-tpre:dt:tpost];
-N = length(evt);
-Nt = length(t);
-fr = zeros(N,Nt);
-frspk = cell(1,N);
-trialspk = cell(1,N);
+
+    
 for n = 1:N
      temp = tsp(find((tsp>evt(n)-tpre)&(tsp<(evt(n)+tpost))))-evt(n);
      frspk{n} = temp;
      fr(n,:) = hist(temp,t)/dt; 
      trialspk{n} = n*ones(length(temp),1);
 end
+
 frspk = vertcat(frspk{:});
 trialspk = vertcat(trialspk{:});
 t = t(2:end-1);

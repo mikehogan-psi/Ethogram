@@ -10,7 +10,6 @@ A = fread(fid_read, '*int16');
 fwrite(fid_write, A, 'int16');
 fclose(fid_read);
 
-
 fid_read = fopen([path2 'continuous.dat']);
 A = fread(fid_read, '*int16');
 fwrite(fid_write, A, 'int16');

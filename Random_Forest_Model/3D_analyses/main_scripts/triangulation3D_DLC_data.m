@@ -35,12 +35,12 @@
   save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\triangulated_data\';
 
   % define likelihood treshold (only markers which exeed this threshold will be used)
-  TH = 0.8; % 
+  TH = 0.9; % 
 
 %% A: test for single mouse
 
 % define mouse file name
-  base_name = ['mouse1_' sesh '_p1'];
+  base_name = ['mouse2_' sesh '_p2'];
   
 
 % extract filenames from different cameras
@@ -65,7 +65,7 @@
 %% B - for all mice
 
 % get a list of all filenames in the folder
-  file_list = dir([dlc_folder_path '/camera*']);
+  file_list = dir([dlc_folder_path '/camera*_mouse2']);
   file_names = cell(1,length(file_list));
 
   for n = 1: length(file_list)

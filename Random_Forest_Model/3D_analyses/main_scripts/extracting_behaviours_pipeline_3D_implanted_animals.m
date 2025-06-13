@@ -55,14 +55,14 @@
 
      % D: define which name generated models shall be given
             SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_3'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            RFM_model_name = ['RFM_' behaviour '_4'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
 % 2. Define directories to where specific data can be accessed/saved 
      % A: folder containing 'raw' data from all mice (data before any behaviours predicted)  
             common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction'; % Laptop
-           % common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
+          %  common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
 
      % subdirectories containing video and DLC data (must be already defined) + folder where SSM fitted data shall be saved 
             % ! make sure these folders already exist and contain correct data prior to starting analysis !
@@ -189,7 +189,7 @@ end
   'Xfit(4,3,frame_idx)'                                  % Feature 24: z-value of nose
   'max(T_window(3, :))'                                  % Feature 25: max vertical translation
   'Xfit(1,3,frame_idx)'                                  % Feature 26: z-value of cable tip
-  'Xfit(4,3,frame_idx)-Xfit(7,3,frame_idx)'              % Feature 27: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11)
+  'Xfit(4,3,frame_idx)-Xfit(7,3,frame_idx)'              % Feature 27: z-difference between nose (body-marker 4) and tail-anterior (body-marker 11) - implanted animals
 
  };
 
@@ -199,7 +199,7 @@ end
    % feature_selectection_indx = [21, 24, 25, 26, 27];  % feature selection RFM_rearing_5
 
     %feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
-    feature_selectection_indx = [10,13,14,16];  % feature selection RFM_darting_3
+    feature_selectection_indx = [2, 5, 6, 11, 12, 13, 14, 23 ];  % feature selection RFM_darting_4
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
@@ -207,7 +207,7 @@ end
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
        % window_size = 30; % time window for RFM_rearing_1 & 2
        % window_size = 4; % time window for RFM_rearing_4
-         window_size = 26; % darting_2
+         window_size = 20; % darting_2
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
@@ -438,7 +438,7 @@ for i = 1:length(file_list_pred_labels) % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-          % duration_threshold = 8;  % for darting
+            duration_threshold = 10;  % for darting
             duration_threshold = 7;  % for rearing
 
     % Iterate over detected darting sequences
@@ -461,7 +461,7 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = ['mouse1_' sesh '_p1'];
+base_name = ['mouse1_' sesh '_p2'];
 
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));

@@ -62,6 +62,9 @@ evt_p2    = readNPY([p2_path_TTL  'timestamps.npy']);
 states_p2 = readNPY([p2_path_TTL  'states.npy']);
 cont_p2   = readNPY([p2_path_cont 'timestamps.npy']);
 
+
+%% concatinating triggers timeline (not alined to cont/sampling data timestamps)
+
 % put all data into joined variabes (for loop)
     evt{1} = evt_hab; 
     evt{2} = evt_p1;
@@ -73,49 +76,162 @@ cont_p2   = readNPY([p2_path_cont 'timestamps.npy']);
     cont{2} = cont_p1;
     cont{3} = cont_p2;
 
+% initialize variables
+t_start = 0;
+evt_concat = [];
 
-%% Step 2: Aligning trigger timestamps relative to recording start
-
-cont0 = 0; % set start 
-
-evt_hab = evt_hab-cont_hab(1)+cont0;     % Subtract the first continuous timestamp to set continuous start at zero
-evt_hab = evt_hab(states_hab==1);        % filters out valid events
-evt_hab = evt_hab(2:end);                % remove first trigger which is an artefact
-cont0 = cont0+numel(cont_hab);
-
-
-evt_p1 = evt_p1-cont_p1(1)+cont0;     % Subtract the first continuous timestamp to set continuous start at zero
-evt_p1 = evt_p1(states_p1==1);        % filters out valid events
-evt_p1 = evt_p1(2:end);             % remove first trigger which is an artefact
-cont0 = cont0+numel(cont);
-
-evt_p2 = evt_p2-cont_p1(1)+cont0;     % Subtract the first continuous timestamp to set continuous start at zero
-evt_p2 = evt_p2(states_p1==1);        % filters out valid events
-evt_p2 = evt_p2(2:end);             % remove first trigger which is an artefact
-cont0 = cont0+numel(cont);
-
-%% Step 2: Aligning trigger timestamps relative to recording start (loop)
-
-
-cont0 = 0; % set start recording time to 0
-
+%conactinate evt data
 for s = 1:3
 
-evt{s} = evt-cont{1}(1) +cont0;
+evt{s} = evt{s}(states{s}==1);
+evt{s} = evt{s}(2:end); 
+evt{s} = evt{s} - evt{s}(1) + t_start;
+t_start = evt{s}(end) + 30;
+evt_concat = [evt_concat; evt{s}]; 
 
-evt{s} = evt(states{s}==1);
-evt{s} = evt_p2(2:end); 
-cont0 = cont0+numel(cont);
+end
+
+%% concatinating triggers from extrinction only (excluding habituation)
+
+% put all data into joined variabes (for loop)
+    evt{1} = evt_hab; 
+    evt{2} = evt_p1;
+    evt{3} = evt_p2;
+    states{1} = states_hab; 
+    states{2} = states_p1;
+    states{3} = states_p2;
+    cont{1} = cont_hab; 
+    cont{2} = cont_p1;
+    cont{3} = cont_p2;
+
+% initialize variables
+t_start = 0;
+evt_extinction = [];
+
+%conactinate evt data
+for s = 2:3
+
+evt{s} = evt{s}(states{s}==1);
+evt{s} = evt{s}(2:end); 
+evt{s} = evt{s} - evt{s}(1) + t_start;
+t_start = evt{s}(end) + 30;
+evt_extinction  = [evt_extinction ; evt{s}]; 
 
 end
 
 
-%% Step 3: concatinating data
+%% concatinating triggers timeline (alined to cont/sampling data timestamps)
+
+% put all data into joined variabes (for loop)
+    evt{1} = evt_hab; 
+    evt{2} = evt_p1;
+    evt{3} = evt_p2;
+    states{1} = states_hab; 
+    states{2} = states_p1;
+    states{3} = states_p2;
+    cont{1} = cont_hab; 
+    cont{2} = cont_p1;
+    cont{3} = cont_p2;
+
+evt_concat_cont = [];
+
+for s = 1:3
+
+evt{s} = evt{s}(states{s}==1);
+evt{s} = evt{s}(2:end); 
+evt_concat_cont = [evt_concat_cont; evt{s}]; 
+
+end
+
+
+%% Step 2: Aligning trigger timestamps relative to recording start 
+
+% put all data into joined variabes (for loop)
+    evt{1} = evt_hab; 
+    evt{2} = evt_p1;
+    evt{3} = evt_p2;
+    states{1} = states_hab; 
+    states{2} = states_p1;
+    states{3} = states_p2;
+    cont{1} = cont_hab; 
+    cont{2} = cont_p1;
+    cont{3} = cont_p2;
+
+evt_concat_rec_start = [];
+cont0 = 0; % set start recording time to 0
+
+for s = 1:3
+
+evt{s} = evt{s}(states{s}==1);
+evt{s} = evt{s}(2:end); 
+
+evt{s} = evt{s}-cont{s}(1) +cont0;
+cont0 = cont{s}(end);
+
+evt_concat_rec_start = [evt_concat_rec_start; evt{s}]; 
+
+end
 
 %% Step 3: saving data
+% 
+save([filepath_out mouse '_' sesh 'concatinated_timestamps'],'evt_concat', 'evt_concat_cont', 'evt_concat_rec_start');
+save([filepath_out mouse '_' sesh 'raw_data'],'evt_hab', 'evt_p1','evt_p2', 'cont_hab', 'cont_p1','cont_p2' , 'states_hab', 'states_p1', 'states_p2');
 
-save([filepath_out mouse '_' sesh 'event_timestamps'],'evt_hab' 'evt_p1' 'evt_p2');
 
-save([filepath_out mouse '_' sesh 'raw_data'],'evt', 'cont', 'states' );
+%% Plotting trigger timestamps
 
+% Create a new figure
+figure;
+hold on;
 
+% Set y-axis limits for the vertical lines
+y_limits = [0 1];  % You can change this to fit your data context
+
+% Loop through each event and plot a vertical line
+for i = 1:length(evt_concat)
+    x = evt_concat(i);
+    line([x x], y_limits, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1);
+end
+
+% Label axes
+xlabel('Time (s)');
+ylabel('Trigger Marker');
+title('Trigger Event Times');
+
+% Improve appearance
+ylim(y_limits);
+xlim([min(evt_concat)-1, max(evt_concat)+1]);  % Add a bit of padding
+grid on;
+
+%%
+% Convert evt_concat (in seconds) to minutes
+evt_minutes = evt_concat / 60;
+
+% Create a new figure
+figure;
+hold on;
+
+% Split into first 4500 events (habituation) and the rest
+n_events = length(evt_concat);
+cutoff = min(4500, n_events);  % In case there are fewer than 4500 events
+
+% Plot first 4500 triggers in red
+xline(evt_minutes(1:cutoff), 'r');
+
+% Plot remaining triggers (if any) in blue
+if cutoff < n_events
+    xline(evt_minutes(cutoff+1:end), 'b');
+end
+
+% Format plot
+xlabel('Time (minutes)');
+ylabel('Trigger Marker');
+title('Trigger Event Times (Red: First 4500, Blue: After)');
+
+% Set x-axis ticks every minute
+xlim([0, ceil(max(evt_minutes)) + 1]);
+xticks(0:1:ceil(max(evt_minutes)));
+grid on;
+
+% Optional aesthetic y-limits
+ylim([0 1]);
