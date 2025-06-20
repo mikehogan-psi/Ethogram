@@ -19,12 +19,16 @@ Nt = length(t);
 fr = zeros(N,Nt);
 frspk = cell(1,N);
 trialspk = cell(1,N);
+
+
 for n = 1:N
      temp = tsp(find((tsp>evt(n)-tpre)&(tsp<(evt(n)+tpost))))-evt(n);
      frspk{n} = temp;
      fr(n,:) = hist(temp,t)/dt; 
      trialspk{n} = n*ones(length(temp),1);
 end
+
+spikes_per_trial = frspk;
 frspk = vertcat(frspk{:});
 trialspk = vertcat(trialspk{:});
 t = t(2:end-1);

@@ -1,95 +1,109 @@
-% Load data
-% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
-% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
-%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
-%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
+%% Neural Logistic regression analyis 
 
-% Define decay period
-decay_period = 233:502;
-psi_loom_data_freeze_decay = psi_loom_data(:, decay_period, :);
-veh_loom_data_freeze_decay = veh_loom_data(:, decay_period, :);
+% This script fits a generalized linear mixed-effects model (GLMM) in the from of a logistic function 
+% to the firing patterns of individual neurons
 
-% Define parameters
-num_trials = 20;
-num_frames = 270;
-num_mice = 20; % mice per group (change as needed)
-time_bin_size = 30; % 2 seconds = 30 frames at 15 FPS
-num_bins = floor(num_frames / time_bin_size);
+% The goal is to identify which factors are most influencing the neurons firing pattersn
+% the ivestigated factors are: 
+%       - 1. timebin (i.e. time within each trial)
+%       - 2. trials number 
 
-% Preallocate arrays for binned data
-freezing_psi_binned = zeros(num_bins * num_trials * num_mice, 1);
-freezing_veh_binned = zeros(num_bins * num_trials * num_mice, 1);
-time_bins = repmat((1:num_bins)', num_trials * num_mice, 1); % Time bin indices
-trials_binned = repmat(repelem((1:num_trials)', num_bins), num_mice, 1); % Trial numbers
-psi_mouse_ids = 2:2:20;  % Original even-numbered mice (change total as needed)
-veh_mouse_ids = 1:2:19;  % Original odd-numbered mice (change total as needed)
-mice_binned_psi = repelem(psi_mouse_ids', num_trials * num_bins);
-mice_binned_veh = repelem(veh_mouse_ids', num_trials * num_bins);
-group_psi = ones(num_bins * num_trials * num_mice, 1);
-group_veh = zeros(num_bins * num_trials * num_mice, 1);
+%       - 3. behaviours: freezing, darting rearing
+%       - 4. treatment groups: psilocybin or vehicle
 
-% Process psilocybin data
-idx = 1;
-for mouse = 1:num_mice
-    for trial = 1:num_trials
-        current_trial = squeeze(psi_loom_data_freeze_decay(trial, :, mouse));
-        for bin = 1:num_bins
-            start_idx = (bin - 1) * time_bin_size + 1;
-            end_idx = start_idx + time_bin_size - 1;
-            freezing_psi_binned(idx) = mean(current_trial(start_idx:end_idx));
-            idx = idx + 1;
-        end
-    end
-end
+%% Directory Setup
 
-% Process vehicle data
-idx = 1;
-for mouse = 1:num_mice
-    for trial = 1:num_trials
-        current_trial = squeeze(veh_loom_data_freeze_decay(trial, :, mouse));
-        for bin = 1:num_bins
-            start_idx = (bin - 1) * time_bin_size + 1;
-            end_idx = start_idx + time_bin_size - 1;
-            freezing_veh_binned(idx) = mean(current_trial(start_idx:end_idx));
-            idx = idx + 1;
-        end
-    end
-end
+% Define folder path that contains neronal spiking data 
+% (i.e. firing rate matrices and response groups obtained from neural_data_analysis_pipeline.m)
 
-% Combine data into a single table
-data_psi_binned = table(freezing_psi_binned, time_bins, trials_binned, group_psi, mice_binned_psi, ...
-    'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
-data_veh_binned = table(freezing_veh_binned, time_bins, trials_binned, group_veh, mice_binned_veh, ...
-    'VariableNames', {'Freezing', 'TimeBin', 'Trial', 'Group', 'Mouse'});
+  neuronal_data_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\spiking_data\';
 
-full_data_binned = [data_psi_binned; data_veh_binned];
+% Define folder path that contains kilosorted dats of this session
+    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\'; % 
 
-% Binarise freezing (>= 0.5 frozen = frozen)
-full_data_binned.Freezing = full_data_binned.Freezing >= 0.5;
 
-% Standardise continuous predictors
-full_data_binned.TimeBinStd = zscore(full_data_binned.TimeBin);
-full_data_binned.TrialStd = zscore(full_data_binned.Trial);
+    triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
 
-% Create a categorical variable for Group (0 = veh, 1 = psi)
-full_data_binned.Group = categorical(full_data_binned.Group);
+%% Load data
 
-% Fit Generalised Linear Mixed Model (GLMM)
-glme = fitglme(full_data_binned, ...
-    'Freezing ~ TimeBinStd + TrialStd + Group + TimeBinStd:Group + TrialStd:Group + (1|Mouse)', ...
-    'Distribution', 'Binomial', ...
-    'Link', 'Logit');
+% get important variables
+  N_neurons = 202; % total number of neurons
+  N_trials  = 20; % total number of trials
+  fs = 30000;  % neuronal data sampling rate  
+  tpre = 10;        % Time before each event to include in the window (i.e. pre-stimulus time)
+  tpost = 20;       % Time after each event to include.               (i.e. post-stimulus time)
 
-% Display model summary
-disp(glme);
 
-% % Calculate raw probability values from log odds values (if you want)
-% log_odds = dataset2table(glme.Coefficients(:,2));
-% log_odds = table2array(log_odds);
-% convert_log_odds(log_odds);
-% disp(raw_probability);
+% neuronal data - converting kilosort python output files into matlab format
+    clu = readNPY([kilosort_dir '\spike_clusters.npy']); % loads cluster number of each detected spike
+    spk = readNPY([kilosort_dir '\spike_times.npy']);    % loads sample number of each detected spike 
+
+    spk = double(spk)/fs;   % converts sample number (by dividing through sampling rate) into seconds
+    clu_val = unique(clu);  % removes doubles (so gets list of all individual clusters i.e. potential neuronal cells - starts with 0)
+    Ncell = numel(clu_val); % get number of detected clusters 
+
+% load list of Loom-response-types 
+  load([neuronal_data_path 'mouse2_extinction_LOOMresp_neurons'], 'resp_duringLOOM_nr', 'resp_postLOOM_nr')
+
+% load extracted loom and flash (i.e. stimuli onset) events
+load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom')
+
+
+  %% Fit logistic regression for each neuron
+
+for n = 1:N_neurons % loop trough each neuron
+
+    if ismember(n,resp_duringLOOM_nr)
+        
+     % get binsize depending on how many bins you want
+       num_bins = 10;             % define number of bins
+       bin_size = 50/num_bins;      % stim period 50 frames
+       bin_size = bin_size/15; % gets binsize in seconds (15fps)
+
+       tsp = spk(clu==clu_val(n)); % extracts all spikes from current cluster/neuron
+      
+     % extract the spikes that are occuring in each timebin fo each trial
+       [~, ~, t_loom, fr, spikes]   = raster_NM(tsp,evt_loom,tpre,tpost,bin_size,false);
+
+     % extact firing rates in time_bins that are occuring within stim-period
+       idx_during = find(t_loom >= 0 & t_loom <= 3.3);
+       fr_during_loom = fr(:, idx_during, :);
+
+     % convert firing rates into binary data (to use as logistic regression oucome variable)
+       binary_firing = fr_during_loom > 0; % 0 = no spikes in this timebin
+                                           % 1 = one or more spikes in this timebin
+       binary_firing = reshape(binary_firing', [], 1);  % concatinates all trials behind each other into single column                                 
+                                            
+     % get time bin and trial indecees
+       time_bins = repmat((1:num_bins)', N_trials, 1);  % Time bin indices
+       trials_binned = repelem((1:N_trials)', num_bins); % Trial numbers
+
+   
+    % Combine data into a single table
+    data_binned = table(binary_firing, time_bins, trials_binned, ...
+        'VariableNames', {'Firing', 'TimeBin', 'Trial'});
+   
+    % Standardise continuous predictors
+    full_data_binned.TimeBinStd = zscore(full_data_binned.TimeBin);
+    full_data_binned.TrialStd = zscore(full_data_binned.Trial);
+    
+    % Create a categorical variable for Group (0 = veh, 1 = psi)
+    full_data_binned.Group = categorical(full_data_binned.Group);
+    
+    % Fit Generalised Linear Mixed Model (GLMM)
+    glme = fitglme(full_data_binned, 'Firing ~ TimeBinStd + TrialStd', 'Distribution', 'Binomial', ...
+            'Link', 'Logit');
+    
+    % Display model summary
+    disp(glme);
+    
+    % % Calculate raw probability values from log odds values (if you want)
+    % log_odds = dataset2table(glme.Coefficients(:,2));
+    % log_odds = table2array(log_odds);
+    % convert_log_odds(log_odds);
+    % disp(raw_probability);
+
+end    
 
 %% Plot: Actual vs Predicted Freezing Across Trials
 

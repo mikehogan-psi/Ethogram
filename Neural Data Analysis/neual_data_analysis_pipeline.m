@@ -3,15 +3,15 @@
 %% Directoty setup
 
 % Define folder path that contains raw neuropixel data (open ephyis output) of this session
-    %ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\'; 
-     ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\'; 
+    ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\'; 
+    % ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\'; 
 
 % Define folder path that contains kilosorted dats of this session
-    %kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\'; % 
-    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\kilosort4\'; % 
+    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\'; % 
+   % kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\kilosort4\'; % 
 
 % create output folders where processed data will be saved
-    filepath_out   = 'Z:\Abi\neuronal_data\mouse_2\processed_data_renewal\';  
+    filepath_out   = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\';  
     triggers_path =  [filepath_out 'concatinated_triggers\'];
     spikes_path    = [filepath_out 'spiking_data\'];
     figures_path   = [filepath_out 'spiking_data\figures\'];
@@ -31,12 +31,12 @@
    mouse = 'mouse2';
 
 % define which session
-  %  sesh = 'extinction';
-   sesh = 'renewal';
+    sesh = 'extinction';
+  % sesh = 'renewal';
 
 % define different session parts which are included in the continuous recording
-    % sesh_parts = {'hab', 'p1', 'p2'}; 
-    sesh_parts = {'hab', 'p1', 'p2', 'checker'}; 
+     sesh_parts = {'hab', 'p1', 'p2'}; 
+    %sesh_parts = {'hab', 'p1', 'p2', 'checker'}; 
 
 % general options
     fs = 30000;  % neuronal data sampling rate   
@@ -106,7 +106,8 @@ for p = 1:length(sesh_parts) % loop through all seshion parts
 end 
 
 % save extracted events
-  save([triggers_path mouse '_' sesh '_extracted_events'],'evt_hab', "evt_loom", "evt_flash", "evt_checker");
+  save([triggers_path mouse '_' sesh '_extracted_events'],'evt_hab', "evt_loom", "evt_flash");
+  %save([triggers_path mouse '_' sesh '_extracted_events'],'evt_hab', "evt_loom", "evt_flash", "evt_checker");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ======================================================================================================================================
@@ -131,7 +132,7 @@ load([triggers_path mouse '_' sesh '_extracted_events'],'evt_loom', 'evt_flash')
 % raster options (all in seconds)
     tpre = 10;        % Time before each event to include in the window (i.e. pre-stimulus time)
     tpost = 20;       % Time after each event to include.               (i.e. post-stimulus time)
-    bin_size = 0.2;   % Bin size (time resolution of histogram)
+    bin_size = 5/15;   % Bin size (time resolution of histogram)
 
 
 % initialize variables of spike data to be saved matrices to hold firing rates [trials x times x cell] 
@@ -156,8 +157,8 @@ for n = 1:Ncell
 end
 
 % save variables 
-  save([spikes_path mouse '_' sesh '_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
-  save([spikes_path mouse '_' sesh '_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+  save([spikes_path mouse '_' sesh '_loom_glmm_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
+  save([spikes_path mouse '_' sesh '_flash_glmm_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
 
 
 %% comparing mean firing rates before, during and after stimulus (LOOM trials)
