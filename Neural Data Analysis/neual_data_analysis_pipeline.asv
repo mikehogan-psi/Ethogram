@@ -451,25 +451,3 @@ end
   save([spikes_path mouse '_' sesh '_hab_data' ],'mfr_hab', 'sfr_hab', 't_hab', 'fr_hab')
 
 
-%% Plott Rasters and PSTHs (habituation firing rates) for any cluser/neuron
-
-cluster = 1:10:100; % change
-
-for n = 1: length(cluster)
-    
-    clu_nr = cluster(n);
-
-    tsp = spk(clu==clu_val(clu_nr)); % extracts spike from this cluster
-
-    [mfr_loom, ~, ~, fr_loom] = raster_NM(tsp, evt_hab, tpre, tpost, bin_size, true);
-    fig_loom = gcf;  
-    sgtitle(sprintf([sesh ' cluster %d — HABITUATION'], clu_val(clu_nr)));
-    %savefig(fig_loom, fullfile(figures_path, sprintf('Cluster_%d_LOOM.fig', clu_val(n))));
-    %saveas(fig_loom, fullfile(figures_path, sprintf('Cluster_%d_LOOM.png', clu_val(n))));
-    
-    ginput(1); close all;
-
-end
-
-
-

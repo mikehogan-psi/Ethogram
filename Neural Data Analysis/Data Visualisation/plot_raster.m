@@ -38,4 +38,6 @@ for n = 1:Ncell
     ginput(1); close all;
 end
 
+
+
 %note abi: use fr and t from raster_NM
