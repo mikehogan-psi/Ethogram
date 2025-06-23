@@ -27,12 +27,10 @@
 %% Load data
 
 % get important variables
-  N_neurons = 202; % total number of neurons
   N_trials  = 20; % total number of trials
   fs = 30000;  % neuronal data sampling rate  
   tpre = 10;        % Time before each event to include in the window (i.e. pre-stimulus time)
-  tpost = 20;       % Time after each event to include.               (i.e. post-stimulus time)
-
+  tpost = 24;       % Time after each event to include.               (i.e. post-stimulus time)
 
 % neuronal data - converting kilosort python output files into matlab format
     clu = readNPY([kilosort_dir '\spike_clusters.npy']); % loads cluster number of each detected spike
@@ -40,49 +38,63 @@
 
     spk = double(spk)/fs;   % converts sample number (by dividing through sampling rate) into seconds
     clu_val = unique(clu);  % removes doubles (so gets list of all individual clusters i.e. potential neuronal cells - starts with 0)
-    Ncell = numel(clu_val); % get number of detected clusters 
+    N_neurons = numel(clu_val); % get number of detected clusters i.e neurons
 
 % load list of Loom-response-types 
   load([neuronal_data_path 'mouse2_extinction_LOOMresp_neurons'], 'resp_duringLOOM_nr', 'resp_postLOOM_nr')
 
 % load extracted loom and flash (i.e. stimuli onset) events
-load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom')
+  load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom')
 
 
-  %% Fit logistic regression for each neuron
+  %% Fit logistic regression of during and post-stim periods for each neuron
+
+  % define time variables to fit glmm for duing stim and post stim periods
+           period = ["during", "post"]; % -> first emement during stim, secodn post-stim 
+    period_length = [50,300];           % stim period is 50 frames, post-stim is period 300 frames
+          t_start = [0, 3.3];           % starts at 0 sec,  starts at 3.3 sec            
+          t_end = [3.3, 23.3];          % ends at 3.3 sec, ends at 23.3 sec
+  
+  % initialise output matrix to hold glmm results
+    glmm_output = NaN(N_neurons, 6); % 6 columns -> hold beta values for Intercept, TimeBinStd, TrialStd for during (1-3) and post (4-6) glmm
 
 for n = 1:N_neurons % loop trough each neuron
+    
+    disp(['computing GLMM of neuron: ' num2str(n)]);
 
-    if ismember(n,resp_duringLOOM_nr)
-        
+   for m = 1:2 % run GLMM for 1 -> during stim period, 2 -> post-stim period  
+
+     disp([period(m) ' stimulus period' ]);
+
      % get binsize depending on how many bins you want
-       num_bins = 10;             % define number of bins
-       bin_size = 50/num_bins;      % stim period 50 frames
-       bin_size = bin_size/15; % gets binsize in seconds (15fps)
+       num_bins = 20;                           % define number of bins
+       bin_size = period_length(m) / num_bins;  % get binside dependent on length of investigated period (if longer, greater bin size required)
+       bin_size = bin_size/15;                  % gets binsize in seconds (15fps)
+       disp(['Binsize is ' num2str(bin_size) ' seconds'])  % display binsize
 
-       tsp = spk(clu==clu_val(n)); % extracts all spikes from current cluster/neuron
+     % extracts all spikes from current cluster/neuron
+       tsp = spk(clu==clu_val(n)); 
       
      % extract the spikes that are occuring in each timebin fo each trial
        [~, ~, t_loom, fr, spikes]   = raster_NM(tsp,evt_loom,tpre,tpost,bin_size,false);
 
-     % extact firing rates in time_bins that are occuring within stim-period
-       idx_during = find(t_loom >= 0 & t_loom <= 3.3);
-       fr_during_loom = fr(:, idx_during, :);
+     % extact firing rates in time_bins that are occuring within neuronal response period
+       idx_during = find(t_loom >= t_start(m) & t_loom <= t_end(m));
+       fr_period = fr(:, idx_during, :);
 
      % convert firing rates into binary data (to use as logistic regression oucome variable)
-       binary_firing = fr_during_loom > 0; % 0 = no spikes in this timebin
-                                           % 1 = one or more spikes in this timebin
+       binary_firing = fr_period > 0; % 0 = no spikes in this timebin
+                                      % 1 = one or more spikes in this timebin
        binary_firing = reshape(binary_firing', [], 1);  % concatinates all trials behind each other into single column                                 
                                             
      % get time bin and trial indecees
-       time_bins = repmat((1:num_bins)', N_trials, 1);  % Time bin indices
+       time_bins = repmat((1:num_bins)', N_trials, 1);   % Time bin indices
        trials_binned = repelem((1:N_trials)', num_bins); % Trial numbers
-
    
     % Combine data into a single table
-    data_binned = table(binary_firing, time_bins, trials_binned, ...
-        'VariableNames', {'Firing', 'TimeBin', 'Trial'});
-   
+       data_binned = table(binary_firing, time_bins, trials_binned, ...
+            'VariableNames', {'Firing', 'TimeBin', 'Trial'});
+       
     % Standardise continuous predictors
     data_binned.TimeBinStd = zscore(data_binned.TimeBin);
     data_binned.TrialStd = zscore(data_binned.Trial);
@@ -92,14 +104,17 @@ for n = 1:N_neurons % loop trough each neuron
             'Link', 'Logit');
     
     % Display model summary
+    disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
     disp(glme);
     
-    % % Calculate raw probability values from log odds values (if you want)
-    % log_odds = dataset2table(glme.Coefficients(:,2));
-    % log_odds = table2array(log_odds);
-    % convert_log_odds(log_odds);
-    % disp(raw_probability);
+    % load results for this neuron into output vector
+    if m == 1
+       glmm_output(n, 1:3) = glme.Coefficients.Estimate'; % load beta values for during-stim glmm
+    else
+       glmm_output(n, 4:6) = glme.Coefficients.Estimate'; % load beta values for post-stim glmm
+    end
 
+   end     
 end    
 
 %% Plot: Actual vs Predicted Freezing Across Trials
