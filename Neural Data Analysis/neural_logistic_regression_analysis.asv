@@ -24,6 +24,10 @@
 
     triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
 
+% Define filepath to save processed data to and name of saved data
+    savefile_name = 'extinction_neuronal_cofficients.mat';
+    save_folder = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\';
+    save_path = fullfile(save_folder, savefile_name);
 %% Load data
 
 % get important variables
@@ -85,7 +89,7 @@ for n = 1:N_neurons % loop trough each neuron
      % convert firing rates into binary data (to use as logistic regression oucome variable)
        binary_firing = fr_period > 0; % 0 = no spikes in this timebin
                                       % 1 = one or more spikes in this timebin
-       binary_firing = reshape(binary_firing', [], 1);  % concatinates all trials behind each other into single column                                 
+       binary_firing = reshape(binary_firing', [], 1);  % concatenates all trials behind each other into single column                                 
                                             
      % get time bin and trial indecees
        time_bins = repmat((1:num_bins)', N_trials, 1);   % Time bin indices
@@ -105,7 +109,7 @@ for n = 1:N_neurons % loop trough each neuron
     
     % Display model summary
     disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
-    disp(glme);
+    % disp(glme);
     
     % load results for this neuron into output vector
     if m == 1
@@ -116,6 +120,8 @@ for n = 1:N_neurons % loop trough each neuron
 
    end     
 end    
+
+save(save_path, 'glmm_output')
 
 %% Plot: Actual vs Predicted Freezing Across Trials
 
