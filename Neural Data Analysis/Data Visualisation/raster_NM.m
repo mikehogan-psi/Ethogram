@@ -1,4 +1,4 @@
-function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
+function[mfr,sfr,t,fr,frspk,trialspkm] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
 
 % General: this function creates raster plots and peri-stimulus time histograms (PSTHs) 
 %          for spike trains aligned to a set of events
@@ -19,12 +19,16 @@ Nt = length(t);
 fr = zeros(N,Nt);
 frspk = cell(1,N);
 trialspk = cell(1,N);
+
+
 for n = 1:N
      temp = tsp(find((tsp>evt(n)-tpre)&(tsp<(evt(n)+tpost))))-evt(n);
      frspk{n} = temp;
      fr(n,:) = hist(temp,t)/dt; 
      trialspk{n} = n*ones(length(temp),1);
 end
+
+spikes_per_trial = frspk;
 frspk = vertcat(frspk{:});
 trialspk = vertcat(trialspk{:});
 t = t(2:end-1);
@@ -57,3 +61,4 @@ if graph&length(frspk)
     ylabel('FR(Hz)','FontSize',14,'FontName','Arial');
     xlim([t(1) t(end)]);ylim([minfr maxfr]);
 end
+

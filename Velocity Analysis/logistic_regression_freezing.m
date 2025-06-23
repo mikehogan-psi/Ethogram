@@ -14,7 +14,7 @@ veh_loom_data_freeze_decay = veh_loom_data(:, decay_period, :);
 % Define parameters
 num_trials = 20;
 num_frames = 270;
-num_mice = 10; % mice per group (change as needed)
+num_mice = 20; % mice per group (change as needed)
 time_bin_size = 30; % 2 seconds = 30 frames at 15 FPS
 num_bins = floor(num_frames / time_bin_size);
 
