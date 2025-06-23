@@ -78,7 +78,7 @@ kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\conactenated_data\kilos
 evt_flash = [];
 evt_loom = [];
 
-for p = 1:length(sesh_parts) % loop through all session parts
+for p = 1:length(sesh_parts) % loop through all seshion parts
 
     load([triggers_path mouse '_' sesh '_' sesh_parts{p}],'evt'); 
     evt = double(evt)/fs;
