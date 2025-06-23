@@ -58,6 +58,7 @@
     period_length = [50,300];           % stim period is 50 frames, post-stim is period 300 frames
           t_start = [0, 3.3];           % starts at 0 sec,  starts at 3.3 sec            
           t_end = [3.3, 23.3];          % ends at 3.3 sec, ends at 23.3 sec
+          num_bins = [20, 20];          % adapt nr of bins a wanted
   
   % initialise output matrix to hold glmm results
     glmm_output = NaN(N_neurons, 6); % 6 columns -> hold beta values for Intercept, TimeBinStd, TrialStd for during (1-3) and post (4-6) glmm
@@ -71,8 +72,8 @@ for n = 1:N_neurons % loop trough each neuron
      disp([period(m) ' stimulus period' ]);
 
      % get binsize depending on how many bins you want
-       num_bins = 20;                           % define number of bins
-       bin_size = period_length(m) / num_bins;  % get binside dependent on length of investigated period (if longer, greater bin size required)
+       num_bins = num_bins(m);                  % define number of bins
+       bin_size = period_length(m) / num_bins;  % get binsize dependent on length of investigated period (if longer, greater bin size required)
        bin_size = bin_size/15;                  % gets binsize in seconds (15fps)
        disp(['Binsize is ' num2str(bin_size) ' seconds'])  % display binsize
 
