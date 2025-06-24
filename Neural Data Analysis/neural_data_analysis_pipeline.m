@@ -11,13 +11,8 @@
    % kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\kilosort4\'; % 
 
 % create output folders where processed data will be saved
-<<<<<<< HEAD
     filepath_out   = 'Z:\Abi\neuronal_data\mouse_2\processed_data\';  
     triggers_path =  [filepath_out 'concatenated_triggers\'];
-=======
-    filepath_out   = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\';  
-    triggers_path =  [filepath_out 'concatinated_triggers\'];
->>>>>>> c913671f35a7f1fa1279b30ec57e66abfb1c3ac2
     spikes_path    = [filepath_out 'spiking_data\'];
     figures_path   = [filepath_out 'spiking_data\figures\'];
      
