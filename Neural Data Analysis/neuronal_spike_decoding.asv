@@ -61,43 +61,15 @@ end
 % Flatten time X_trials into a 2D feature matrix (trials × features):    
    [n_trials, n_bins, n_cells] = size(X_trials);
    X = reshape(X_trials, [n_trials, n_bins * n_cells]);  % [n_trials × (n_bins × n_cells)]
+   X = zscore(X, 0, 1);  % z-score across trials (column-wise)
+
 
 % create labels to train classifier
     y = [ones(Ntrial,1); zeros(Ntrial,1)];  % 1 = loom, 0 = flash
 
-%% train and test classifier (whith standardizing between trials)
-
-cv = cvpartition(y, 'KFold', 5);
-accuracy = zeros(cv.NumTestSets, 1);
-
-for i = 1:cv.NumTestSets
-    trainIdx = training(cv, i);
-    testIdx = test(cv, i);
-
-    % Compute mean and std only from training data
-    mu = mean(X(trainIdx,:), 1);
-    sigma = std(X(trainIdx,:), [], 1);
-    
-    % Avoid division by zero in case of zero variance
-    sigma(sigma == 0) = 1;
-
-    % Standardize
-    X_train = (X(trainIdx,:) - mu) ./ sigma;
-    X_test  = (X(testIdx,:)  - mu) ./ sigma;
-
-    % Train and test SVM
-    model = fitcsvm(X_train, y(trainIdx), 'KernelFunction', 'linear');
-    y_pred = predict(model, X_test);
-    
-    accuracy(i) = mean(y_pred == y(testIdx));
-end
 
 
-mean_acc = mean(accuracy);
-
-fprintf('Mean decoding accuracy: %.2f%%\n', mean_acc*100);
-
-%% train and test classifier (whithout standardizing between trials)
+%% train and test classifier
 
 cv = cvpartition(y, 'KFold', 5);
 accuracy = zeros(cv.NumTestSets, 1);
@@ -112,7 +84,7 @@ for i = 1:cv.NumTestSets
     accuracy(i) = mean(y_pred == y(testIdx));
 end
 
-mean_acc = mean(acc);
+mean_acc = mean(accuracy);
 
 fprintf('Mean decoding accuracy: %.2f%%\n', mean_acc*100);
 
@@ -121,15 +93,30 @@ fprintf('Mean decoding accuracy: %.2f%%\n', mean_acc*100);
 
 w = model.Beta;  % Weight vector from linear SVM
 W = reshape(w, [size(X_trials,2), size(X_trials,3)]);  % [time_bin × neuron]
-figure 
-imagesc(W);
-xlabel('Neuron'); ylabel('Time Bin');
+
+% Sort neurons by max weight or sum of weights to order by importance
+[~, order] = sort(max(W,[],1), 'descend');
+W_signif_sorted = W(:, order);
+
+figure;
+imagesc(W_signif_sorted);
+xlabel('Neuron (sorted by max weight)');
+ylabel('Time Bin');
 title('Decoding weights');
 colorbar;
 
-%%
+%% filter out sigificant ne
+
+
+
+
+
+
+
+
+%% Filter out neurons that push decision towards loom
 % Define threshold for significance (e.g., > 0 to push towards loom)
-thresh = 0.0005;
+thresh = 0.00025;
 
 % Find neurons with any time bin weight > threshold
 signif_neurons = any(W > thresh, 1); % 1 x neurons logical vector
