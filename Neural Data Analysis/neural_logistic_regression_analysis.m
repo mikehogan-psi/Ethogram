@@ -109,8 +109,7 @@ for n = 1:N_neurons % loop trough each neuron
             'Link', 'Logit');
     
     % Display model summary
-    disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
-    % disp(glme);
+    % disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
     
     % load results for this neuron into output vector
     if m == 1
@@ -122,7 +121,7 @@ for n = 1:N_neurons % loop trough each neuron
    end     
 end    
 
-save(save_path, 'glmm_output')
+% save(save_path, 'glmm_output')
 
 %% Plot: Actual vs Predicted Freezing Across Trials
 

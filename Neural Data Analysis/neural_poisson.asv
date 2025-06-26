@@ -84,13 +84,13 @@ for n = 1:length(current_group) % loop through each neuron
 
      disp([period(m) ' stimulus period' ]);
        
+       neuron_number = repelem(idx, N_trials * num_bins_current);
+       
      % get binsize depending on how many bins you want
        num_bins_current = num_bins(m);                  % define number of bins
        bin_size = period_length(m) / num_bins_current;  % get binsize dependent on length of investigated period (if longer, greater bin size required)
        bin_size = bin_size/15;                  % gets binsize in seconds (15fps)
        % disp(['Binsize is ' num2str(bin_size) ' seconds'])  % display binsize
-
-       neuron_number = repelem(idx, N_trials * num_bins_current)';
 
      % extracts all spikes from current cluster/neuron
        tsp = spk(clu==clu_val(idx)); 
