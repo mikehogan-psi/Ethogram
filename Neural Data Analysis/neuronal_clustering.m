@@ -1,6 +1,6 @@
 %% Load coefficient matrix 
 
-load("Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\extinction_neuronal_cofficients.mat")
+load("Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\extinction_neuronal_cofficients_poisson.mat")
 feature_vectors = glmm_output;
 clearvars("glmm_output");
 
@@ -44,7 +44,7 @@ xticks(1:8)
 xticklabels(feature_labels)
 
 ylabel('Cluster')
-yticks(1:5)
+yticks(1:8)
 colorbar
 
 cells_per_cluster = zeros(1, k);
@@ -58,7 +58,6 @@ bar(cells_per_cluster);
 ylabel('Number of Cells')
 xlabel('Cluster')
 %%
-
 figure;
 for f = 1:length(feature_labels)
     subplot(2, 3, f)

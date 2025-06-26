@@ -25,7 +25,7 @@
     triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
 
 % Define filepath to save processed data to and name of saved data
-    savefile_name = 'extinction_neuronal_cofficients.mat';
+    savefile_name = 'extinction_neuronal_cofficients_poisson.mat';
     save_folder = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\';
     save_path = fullfile(save_folder, savefile_name);
 %% Load data
@@ -87,29 +87,22 @@ for n = 1:N_neurons % loop trough each neuron
        idx_during = find(t_loom >= t_start(m) & t_loom <= t_end(m));
        fr_period = fr(:, idx_during, :);
 
-     % convert firing rates into binary data (to use as logistic regression oucome variable)
-       binary_firing = fr_period > 0; % 0 = no spikes in this timebin
-                                      % 1 = one or more spikes in this timebin
-       binary_firing = reshape(binary_firing', [], 1);  % concatenates all trials behind each other into single column                                 
+       spike_count = reshape(fr_period', [], 1); 
                                             
      % get time bin and trial indecees
        time_bins = repmat((1:num_bins_current)', N_trials, 1);   % Time bin indices
        trials_binned = repelem((1:N_trials)', num_bins_current); % Trial numbers
    
-    % Combine data into a single table
-       data_binned = table(binary_firing, time_bins, trials_binned, ...
-            'VariableNames', {'Firing', 'TimeBin', 'Trial'});
-       
-    % Standardise continuous predictors
+    data_binned = table(spike_count, time_bins, trials_binned, ...
+                'VariableNames', {'Firing', 'TimeBin', 'Trial'});
     data_binned.TimeBinStd = zscore(data_binned.TimeBin);
     data_binned.TrialStd = zscore(data_binned.Trial);
    
-    % Fit Generalised Linear Mixed Model (GLMM)
-    glme = fitglme(data_binned, 'Firing ~ TimeBinStd + TrialStd', 'Distribution', 'Binomial', ...
-            'Link', 'Logit');
+    glme = fitglm(data_binned, 'Firing ~ TimeBinStd + TrialStd', ...
+              'Distribution', 'poisson');
     
     % Display model summary
-    disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
+    % disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
     % disp(glme);
     
     % load results for this neuron into output vector
