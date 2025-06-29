@@ -282,35 +282,143 @@ colorbar;
 
 for n = 1:n_sig 
 
+% extract decoding accuracy for current neuron
 sig_neuron_idx = n;
 neuron_acc = bin_acc(sig_neuron_idx,:);
 smoothed_acc = movmean(neuron_acc, 10);  % smoothing
 
+% convert time-bins back into seconds
+time = (1:length(neuron_acc)) * bin_size - tpre;  % Align to stimulus time
+
+% plot figure
 figure;
 hold on
-plot(neuron_acc, 'LineWidth', 0.5);
-plot(smoothed_acc, 'LineWidth', 2);
-yline(0.5, '--k');  % Chance level
-xlabel('Time Bin');
-ylabel('Decoding Accuracy');
-title(sprintf('Time-Resolved Decoding (Neuron %d)', signif_neurons(sig_neuron_idx)));
-legend('raw', 'smoothed')
-grid on
+    plot(time, neuron_acc, 'LineWidth', 0.5);
+    plot(time, smoothed_acc, 'LineWidth', 2);
+    xline(0, '-k');     % stimulus start
+    yline(0.5, '--k');  % Chance level
+    xlabel('Time (s)');
+    ylabel('Decoding Accuracy');
+    title(sprintf('Time-Resolved Decoding (Neuron %d)', signif_neurons(sig_neuron_idx)));
+    legend('raw', 'smoothed')
+    grid on
 hold off
 
-fig = gcf; 
-saveas(fig, fullfile('Z:\Abi\neuronal_data\mouse_2\spike_decoding_analysis\figures\single_neuron_time_res_decoding', ...
-            sprintf('Neuron_%d.png', signif_neurons(sig_neuron_idx))));
- 
-
-close
+%save figure
+% fig = gcf; 
+% saveas(fig, fullfile('Z:\Abi\neuronal_data\mouse_2\spike_decoding_analysis\figures\single_neuron_time_res_decoding', ...
+%             sprintf('Neuron_%d.png', signif_neurons(sig_neuron_idx))));
+% close
 
 end
 
 
+%% Computing statistical significance of time-bins
+
+% Settings
+neuron = 2; 
+n_perms = 1000;
+chance_level = 0.5;
+alpha = 0.05;  % Significance threshold
+
+% Extract time-resolved features for the neuron
+X_neuron = squeeze(X_trials(:,:,neuron));  % [trials × time-bins]
+[n_trials, n_bins] = size(X_neuron);
+
+% Real accuracies
+real_acc = zeros(1, n_bins);
+null_acc = zeros(n_perms, n_bins);
+
+for t = 1:n_bins
+    real_acc(t) = mean(crossval(@(Xtrain,Ytrain,Xtest,Ytest) ...
+        mean(predict(fitcsvm(Xtrain,Ytrain,'KernelFunction','linear'), Xtest) == Ytest), ...
+        X_neuron(:,t), y, 'KFold', 5));
+    
+    for p = 1:n_perms
+        y_perm = y(randperm(length(y)));
+        null_acc(p,t) = mean(crossval(@(Xtrain,Ytrain,Xtest,Ytest) ...
+            mean(predict(fitcsvm(Xtrain,Ytrain,'KernelFunction','linear'), Xtest) == Ytest), ...
+            X_neuron(:,t), y_perm, 'KFold', 5));
+    end
+end
+
+% Compute p-values
+p_vals = mean(null_acc >= real_acc, 1);  % one-tailed test
+significant_bins = p_vals < alpha;
+
+% Plot
+time = (1:n_bins)*bin_size - tpre;  % adjust to actual time axis
+figure;
+plot(time, real_acc, 'b', 'LineWidth', 2); hold on;
+plot(time(significant_bins), real_acc(significant_bins), 'ro', 'MarkerFaceColor','r');
+yline(chance_level, '--k', 'Chance');
+xlabel('Time (s)');
+ylabel('Decoding Accuracy');
+title(sprintf('Time-Resolved Decoding w/ Significance (Neuron %d)', sig_neuron_idx));
+legend('Accuracy', 'Significant Bin');
+grid on;
+
+%% Computing statistical significance of time-bins (faster)
+
+% Settings
+neuron_idx = 2; 
+n_perms = 1000;
+chance_level = 0.5;
+alpha = 0.05;  % Significance threshold
 
 
+X_neuron = squeeze(X_trials(:,:,neuron_idx));
+[n_trials, n_bins] = size(X_neuron);
+real_acc = zeros(1, n_bins);
+null_acc = zeros(n_perms, n_bins);
+
+cv = cvpartition(y, 'KFold', 5);
+folds = arrayfun(@(i) struct('trainIdx', training(cv,i), 'testIdx', test(cv,i)), 1:cv.NumTestSets);
+
+y_perms = zeros(length(y), n_perms);
+for p = 1:n_perms
+    y_perms(:,p) = y(randperm(length(y)));
+end
+
+parfor t = 1:n_bins
+    X_t = X_neuron(:, t);
+
+    % Real accuracy
+    acc_real = zeros(1, cv.NumTestSets);
+    for i = 1:cv.NumTestSets
+        mdl = fitcsvm(X_t(folds(i).trainIdx), y(folds(i).trainIdx), 'KernelFunction', 'linear');
+        yhat = predict(mdl, X_t(folds(i).testIdx));
+        acc_real(i) = mean(yhat == y(folds(i).testIdx));
+    end
+    real_acc(t) = mean(acc_real);
+
+    % Null distribution
+    for p = 1:n_perms
+        acc_perm = zeros(1, cv.NumTestSets);
+        for i = 1:cv.NumTestSets
+            y_perm = y_perms(:,p);
+            mdl = fitcsvm(X_t(folds(i).trainIdx), y_perm(folds(i).trainIdx), 'KernelFunction', 'linear');
+            yhat = predict(mdl, X_t(folds(i).testIdx));
+            acc_perm(i) = mean(yhat == y_perm(folds(i).testIdx));
+        end
+        null_acc(p,t) = mean(acc_perm);
+    end
+end
 
 
+% Compute p-values
+p_vals = mean(null_acc >= real_acc, 1);  % one-tailed test
+significant_bins = p_vals < alpha;
 
+% Plot
+time = (1:n_bins)*bin_size - tpre;  % adjust to actual time axis
+figure;
+plot(time, real_acc, 'b', 'LineWidth', 2); hold on;
+plot(time(significant_bins), real_acc(significant_bins), 'ro', 'MarkerFaceColor','r');
+yline(chance_level, '--k', 'Chance');
+xlabel('Time (s)');
+ylabel('Decoding Accuracy');
+title(sprintf('Time-Resolved Decoding w/ Significance (Neuron %d)', sig_neuron_idx));
+legend('Accuracy', 'Significant Bin');
+grid on;
 

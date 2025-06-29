@@ -208,7 +208,7 @@ end
     %feature_selectection_indx = [2,3,5,6,8,9,10,12,16]; % freezing 2;
     % feature_selectection_indx = [2,5,6,10,11,12,13,14,16,21]; % freezing 3;
 
-     feature_selectection_indx = [1:21];
+     feature_selectection_indx = [1:];
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
@@ -448,7 +448,7 @@ for i = 1:length(file_list_pred_labels) % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-            %duration_threshold = 10;  % for darting_8
+            duration_threshold = 10;  % for darting_8
             %duration_threshold = 7;  % for rearing
             duration_threshold = 15;   % for freezing 1
 

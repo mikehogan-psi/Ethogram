@@ -22,17 +22,17 @@
 %% General Setup
 
 % define session 
-  sesh = 'extinction';
-  %sesh = 'renewal';
+ % sesh = 'extinction';
+  sesh = 'renewal';
 
 % load camera projection matrix (P)
   load('C:\Users\Abi Hogan\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P');
  
 % define folder path to folder that contains dlc data from all cameras
-  dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\DLC_data\';
+  dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\';
 
 % define folder path to where triangulated data files shall be saved
-  save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\triangulated_data\';
+  save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\triangulated_data\camera_8_included\';
 
   % define likelihood treshold (only markers which exeed this threshold will be used)
   TH = 0.9; % 
@@ -40,7 +40,7 @@
 %% A: test for single mouse
 
 % define mouse file name
-  base_name = ['mouse2_' sesh '_p2'];
+  base_name = ['mouse1_' sesh '_p1'];
   
 
 % extract filenames from different cameras
@@ -65,7 +65,7 @@
 %% B - for all mice
 
 % get a list of all filenames in the folder
-  file_list = dir([dlc_folder_path '/camera*_mouse2']);
+  file_list = dir([dlc_folder_path '/camera*_mouse*']);
   file_names = cell(1,length(file_list));
 
   for n = 1: length(file_list)
