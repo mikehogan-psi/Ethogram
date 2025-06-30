@@ -198,7 +198,7 @@ predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\be
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
     video_file_path = [video_path '\' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['xfit_053_freezing_', base_name, '*.mat']));
+    predicted_file_path = dir(fullfile(predicted_labels_path, ['DLC_freezing_', base_name, '*.mat']));
     predicted_file_path = [predicted_labels_path '\' predicted_file_path.name];
     
     % fun validate predcitions function
