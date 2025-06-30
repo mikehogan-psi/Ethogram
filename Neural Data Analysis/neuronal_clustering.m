@@ -13,7 +13,7 @@ neuron_numbers = feature_vectors(:,end);
 feature_vectors = feature_vectors(:, 1:end-1);
 
 % Detect neurons with any feature > n SD from mean
-is_outlier = any(abs(feature_vectors) > 3, 2);  % Returns logical vector of outliers
+is_outlier = any(abs(feature_vectors) > 5, 2);  % Returns logical vector of outliers
 
 % Remove them
 features_clean = feature_vectors(~is_outlier, :);
@@ -60,7 +60,7 @@ neuron_cluster_assignments = [neuron_numbers, cluster_idx];
 % Creates c x f matrix with mean of cofficients for each cluster, where c
 % is the clusters and f is the features
 cluster_means = grpstats(features_clean_z, cluster_idx); 
-feature_labels = ["TimeBin (Stim)", "Trial (Stim)", "TimeBin (Post)", "Trial (Post)"];
+feature_labels = ["TimeBin (Stim)", "Trial (Stim)", "TimeBin (Post)", "Trial (Post)", "Freezing (Stim)", "Freezing (Post)"];
 
 figure;
 imagesc(cluster_means);
