@@ -1,5 +1,5 @@
 % Specify the folder containing your .mat files
-folderPath = 'D:\PhD 2nd Year\dlc_data_cohort2\camera_5 (Extinction)';
+folderPath = 'D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5';
 
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*.csv'));
@@ -13,7 +13,7 @@ for i = 1:length(fileList)
     filePath = fullfile(folderPath, fileList(i).name);
      % load the .mat file
     data = readmatrix(filePath); 
-    T_matrices{i} = data(:, [14, 15])'; 
+    T_matrices{i} = data(:, [23, 24])'; % Change to 23/24 if tracking implanted animals
     % stores body_anterior x and y positional data in T_matrices array
     file_names{i} = fileList(i).name;
     % stores file names for sorting later
@@ -47,7 +47,7 @@ T_matrices = T_matrices_paired;
 
 num_frames = 502; % 502 frames per trial
 num_trials = 40; % 40 trials
-num_mice = 30; % change as needed
+num_mice = 1; % change as needed
 all_velocity_data = zeros(num_trials, num_frames, num_mice);
 
 for mouse_idx = 1:length(T_matrices)
