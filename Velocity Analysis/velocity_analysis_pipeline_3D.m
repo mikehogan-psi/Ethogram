@@ -142,7 +142,7 @@ end
 %% Defining freezing behaviour
 
 % freezing_velocity_threshold = 1.1; % pixels per frame, change as needed (*0.048*15 to get cm/s value)
-freezing_velocity_threshold = 0.0528; % cm per frame (use this for xfit data because triangulation transforms to cm)
+freezing_velocity_threshold = 0.053; % cm per frame (use this for xfit data because triangulation transforms to cm)
 
 freezing_duration_threshold = 1*15; % convert seconds to frames (1 second × 15 FPS)
 
@@ -183,10 +183,10 @@ freezing_mouse2 = validated_freeze_matrix(:,:,2);
 predicted_labels_all = reshape(freezing_mouse2', [], 1);
 
 predicted_labels = predicted_labels_all(1:10040);
-save([save_dir 'xfit_freezing_mouse2_extinction_p1'], "predicted_labels")
+save([save_dir 'xfit_053_freezing_mouse2_extinction_p1'], "predicted_labels")
 
 predicted_labels = predicted_labels_all(10041:end);
-save([save_dir 'xfit_freezing_mouse2_extinction_p2'], "predicted_labels")
+save([save_dir 'xfit_053_freezing_mouse2_extinction_p2'], "predicted_labels")
 
 
 %% STEP 8: Manual check predicted label accuracy and correct labels  
@@ -198,7 +198,7 @@ predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\be
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
     video_file_path = [video_path '\' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['xfit_freezing_', base_name, '*.mat']));
+    predicted_file_path = dir(fullfile(predicted_labels_path, ['xfit_053_freezing_', base_name, '*.mat']));
     predicted_file_path = [predicted_labels_path '\' predicted_file_path.name];
     
     % fun validate predcitions function

@@ -136,7 +136,8 @@ hold off;
 
 %%
 
-all_velocity_data_real_units = all_velocity_data*0.048*15;
+%all_velocity_data_real_units = all_velocity_data*0.048*15;
+all_velocity_data_real_units = all_velocity_data;
 
 % Assuming log_velocity_data is your log-transformed velocity data:
 log_v_data_real_units = log10(all_velocity_data_real_units(:)); % Flatten to column vector
