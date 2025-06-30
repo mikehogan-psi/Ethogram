@@ -2,6 +2,19 @@
 
 %  sqrt(sum(diff(T_window(1:2,:), 1, 2).^2
 
+% DLC_landmarks: 1. cable tip
+%                2. back left courner (of implant)
+%                3. back right courner (of implant)
+%                4. nose
+%                5. left ear
+%                6. right ear
+%                7. neck base
+%                8. body anteriour
+%                9. body posteriour
+%                10. tail base
+%                11. tail anteriour
+%                12. tail posteriour
+%                13. tail tip
 
 %% Setup
 
@@ -11,28 +24,37 @@
 
 % Setup directories   
     % folderpath to dlc data 
-        folderPath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\'; 
+        folderPath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\';
+    % folderpath to ssm fitted data 
+        %folderPath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\SSM_fitted_data\';
+
+
     % directory to folder to save analysed data in
-        save_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis\';
+        save_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D\';
     % directory to folder to save figures in
      %   fig_dir =  [ common_dir sesh '_analysis\figures\'];     
 
 
+    video_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\video_data';
+
+
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*camera5_mouse*_extinction*'));
+%fileList = dir(fullfile(folderPath, ['mouse*_' sesh '*']));
 
 % Initialise a cell arrays to store data information
 T_matrices = cell(1, length(fileList)); % for each mouse (2 cells - part 1 and part 2) x and y coordinates (row) of body anterior body marker for each frame (colums)
 file_names = cell(length(fileList), 1); % for each mouse (2 cells - part 1 and part 2)  filename
 
-%% Extracting data 
+
+%% Extracting data (using DLC coordinates)
 
 % iterate over each file, load it, and extract the T variable
 for i = 1:length(fileList)
     filePath = fullfile(folderPath, fileList(i).name);
      % load the .mat file
     data = readmatrix(filePath); 
-    T_matrices{i} = data(:, [22, 23])'; 
+    T_matrices{i} = data(:, [23, 24])'; 
     % stores body_anterior x and y positional data in T_matrices array
     file_names{i} = fileList(i).name;
     % stores file names for sorting later
@@ -41,6 +63,24 @@ end
 %% Delete 15 extra frames in mouse 1 extinxtion p2
 
 T_matrices{2} = T_matrices{2}(:, [1:3514,3530:end]);
+
+%% Extracting data (using SSM fitted data)
+
+% iterate over each file, load it, and extract the T variable
+
+for i = 1:length(fileList)
+    filePath = fullfile(folderPath, fileList(i).name);
+
+     % load T(Translation Vector) 
+    load(filePath, 'Xfit'); 
+
+    % extract x and y coordinates of anteriour body landmark
+    T_matrices{i} = squeeze(Xfit(8,1:2,:));  
+
+    % stores body_anterior x and y positional data in T_matrices array
+    file_names{i} = fileList(i).name;
+    % stores file names for sorting later
+end
 
 %% Sorting velocity matrix into mouse/part order
 
@@ -82,10 +122,14 @@ for mouse_idx = 1:num_mice
     dist = zeros(num_trials, num_frames);
     
     for trial_ix = 1:num_trials
+
         dx = [0, diff(x_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
         dy = [0, diff(y_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
+
         % calculating dx and dy for all frames for each trial (e.g., 1:502,
         % 503:1004 etc. and adds a 0 at start to maintain correct trial length)
+
+
         dist(trial_ix, :) = sqrt(dx.^2 + dy.^2);
         % calcuting Euclidian distance and adding values to columns of each
         % trial row
@@ -98,7 +142,10 @@ end
 %% Defining freezing behaviour
 
 freezing_velocity_threshold = 1.1; % pixels per frame, change as needed (*0.048*15 to get cm/s value)
+
+
 freezing_duration_threshold = 1*15; % convert seconds to frames (1 second × 15 FPS)
+
 
 freeze_counter_matrix = all_velocity_data < freezing_velocity_threshold;
 
@@ -125,34 +172,37 @@ for mouse_ix = 1:num_mice
 end
 
 % Saving Data 
-save([save_dir '\validated_freeze_matrix_' sesh], 'validated_freeze_matrix');
+save([save_dir 'validated_freeze_matrix_xfit_' sesh], 'validated_freeze_matrix_xfit');
 
-clearvars -except validated_freeze_matrix common_dir save_dir fig_dir num_mice sesh 
+%clearvars -except validated_freeze_matrix common_dir save_dir fig_dir num_mice sesh 
 
-%% 
+%% Saving in same format as other behaviours (predicted by RFM)
 
-freezing_mouse2 = validated_freeze_matrix(:,:,1);
+freezing_mouse2 = validated_freeze_matrix(:,:,2);
 
-predicted_labels = reshape(freezing_mouse2', [], 1);
+predicted_labels_all = reshape(freezing_mouse2', [], 1);
 
-predicted_labels = predicted_labels(10041:end);
+predicted_labels = predicted_labels_all(1:10040);
+save([save_dir 'xfit_freezing_mouse2_extinction_p1'], "predicted_labels")
 
-save('C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis\freezing_mouse2_extinction_p2', "predicted_labels")
+predicted_labels = predicted_labels_all(10041:end);
+save([save_dir 'xfit_freezing_mouse2_extinction_p2'], "predicted_labels")
+
 
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = 'mouse2_extinction_p1';
-predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis'
+base_name = 'mouse2_extinction_p2';
+predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D';
 
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
-    video_file_path = [video_path '/' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
-    predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
+    video_file_path = [video_path '\' video_file_path.name];
+    predicted_file_path = dir(fullfile(predicted_labels_path, ['xfit_freezing_', base_name, '*.mat']));
+    predicted_file_path = [predicted_labels_path '\' predicted_file_path.name];
     
     % fun validate predcitions function
-         validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
+         validate_predictions(base_name, video_file_path, predicted_file_path, save_dir);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it
     
     % repeat this for a couple of videos to generate enough verified_labels data to update model (to increase its accuracy)     
@@ -160,7 +210,7 @@ predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\be
 
 %% Splitting into treatment groups, stim types and trial periods
 
-psilocybin_freezing_data = validated_freeze_matrix(:, :, 2:2:end);
+psilocybin_freezing_data = validated_freeze_matri x(:, :, 2:2:end);
 vehicle_freezing_data = validated_freeze_matrix(:, :, 1:2:end);
 
 % 2 stimsets -> each 20 stimuli (0 = flash, 1 = loom) -> each trial

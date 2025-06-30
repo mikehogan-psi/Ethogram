@@ -66,87 +66,82 @@ spk = readNPY([kilosort_dir '\spike_times.npy']);    % loads sample number of ea
     % concatinate part 1 and part 2
         labels = [labels_p1;labels_p2]; % [20080x1] - contains behaviour label (0 = no behaviour, 1 = behaviour) for every frame
 
-%% Extracting number of spikes per neuron in each frame
+%% Extracting number of spikes per neuron in loom and flash trials
 
-% Define window duration per frame 
-frame_duration = median(diff(evt));  % ~0.0667 sec for 15 Hz framerate
+% time window options
+    tpre = 10;         % Time before each event to include in the window (i.e. pre-stimulus time)
+    tpost = 23.3;       % Time after each event to include.               (i.e. post-stimulus time)
+    bin_size = 0.1;     % Bin size (time resolution of histogram)
 
-% Pre-allocate
-X = zeros(length(evt), Ncell);  % Rows = frames, Cols = neurons
-y = labels;  % Already aligned to evt
 
-% For each frame, count spikes per neuron
-for i = 1:length(evt)
-    t_start = evt(i);
-    t_end = t_start + frame_duration;
+% initialize variables to hold spikecounts [trials x time-bins x cell] 
+    binned_skp_counts_loom  = [];  % Nr of spikes in each time-bin of loom  trials 
+    binned_skp_counts_flash = [];  % Nr of spikes in each time-bin of loom  trials 
+   
+
+for n = 1:Ncell
+    tsp = spk(clu == clu_val(n));
+
+    [~, ~, ~, ~, ~, ~, ~, binned_skp_counts_loom(:,:,n)]  = raster_NM(tsp, evt_loom, tpre, tpost, bin_size, false);
+    [~, ~, ~, ~, ~, ~, ~, binned_skp_counts_flash(:,:,n)] = raster_NM(tsp, evt_flash, tpre, tpost, bin_size, false);
     
-    % Get spikes in this window
-    in_window = spk >= t_start & spk < t_end;
-    spikes_now = clu(in_window);
-    
-    % Count spikes per neuron
-    counts = histcounts(spikes_now, [clu_val; max(clu_val)+1]);
-    
-    X(i, :) = counts;
 end
 
-%% Train and test classifier: behavior vs. no-behavior
+% Trim edges (Removes the first and last bins of the histogram to  avoid edge effects)
+    binned_skp_counts_loom = binned_skp_counts_loom(:,2:end-1,:);
+    binned_skp_counts_flash = binned_skp_counts_flash(:,2:end-1,:);
+    
+%% Create Classifier input 
 
-% Balance the data
-inds_darting = find(y == 1);
-inds_nodarting = find(y == 0);
-n = min(numel(inds_darting), numel(inds_nodarting));
+% concatinate loom and flash matrices to combines binned population spike matrices 
+    X_trials = cat(1, binned_skp_counts_loom, binned_skp_counts_flash);  % [40 × n_bins × n_cells]
 
-% Subsample to balance
-inds_use = [inds_darting(randperm(numel(inds_darting), n)); ...
-            inds_nodarting(randperm(numel(inds_nodarting), n))];
+% Flatten time X_trials into a 2D feature matrix (trials × features):    
+   [n_trials, n_bins, n_cells] = size(X_trials);
+   X = reshape(X_trials, [n_trials, n_bins * n_cells]);  % [n_trials × (n_bins × n_cells)]
+   X = zscore(X, 0, 1);  % z-score across trials (column-wise)
 
-% Shuffle
-inds_use = inds_use(randperm(numel(inds_use)));
 
-% Extract balanced data
-X_bal = X(inds_use, :);
-y_bal = y(inds_use);
+% create labels to train classifier
+    y = [ones(Ntrial,1); zeros(Ntrial,1)];  % 1 = loom, 0 = flash
 
-% Create 5-fold cross-validation on balanced labels
-cv = cvpartition(y_bal, 'KFold', 5);
+
+
+%% train and test classifier
+
+cv = cvpartition(y, 'KFold', 5);
 accuracy = zeros(cv.NumTestSets, 1);
 
 for i = 1:cv.NumTestSets
     trainIdx = training(cv, i);
     testIdx = test(cv, i);
     
-    % Train linear SVM
-    model = fitcsvm(X_bal(trainIdx,:), y_bal(trainIdx), 'KernelFunction', 'linear');
+    model = fitcsvm(X(trainIdx,:), y(trainIdx), 'KernelFunction', 'linear');
     
-    % Predict on test set
-    y_pred = predict(model, X_bal(testIdx,:));
+    y_pred = predict(model, X(testIdx,:));
     
-    % Compute accuracy
-    accuracy(i) = mean(y_pred == y_bal(testIdx));
+    accuracy(i) = mean(y_pred == y(testIdx));
 end
 
-% Mean accuracy across folds
 mean_acc = mean(accuracy);
+
 fprintf('Mean decoding accuracy: %.2f%%\n', mean_acc*100);
 
-%% Visualize SVM Feature Weights
+% Visualiz Feature Weights
 
-% Get weights (only valid for linear SVM)
-w = model.Beta;  % [neurons x 1]
+w = model.Beta;  % Weight vector from linear SVM
+W = reshape(w, [size(X_trials,2), size(X_trials,3)]);  % [time_bin × neuron]
 
-% % Sort neurons by absolute weight
-% [~, order] = sort(abs(w), 'descend');
-% w_sorted = w(order);
+% Sort neurons by max weight or sum of weights to order by importance
+[~, order] = sort(max(W,[],1), 'descend');
+W_sorted = W(:, order);
 
-% Plot
 figure;
-bar(w);
-xlabel('Neuron');
-ylabel('SVM Weight');
-title('Neuron Importance for Decoding Darting');
-
-
+imagesc(W_sorted);
+xlabel('Neuron (sorted by max weight)');
+ylabel('Time Bin');
+title('Decoding weights - Radial Basis Function Kernel svm');
+colorbar;
 
 %% Permutation Test to Identify Significant decoding weights
 
