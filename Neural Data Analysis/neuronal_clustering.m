@@ -1,4 +1,5 @@
 %% Load coefficient matrix 
+rng(42);
 
 load("Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\extinction_neuronal_cofficients_poisson_resp_LOOM_nr.mat")
 feature_vectors = glmm_output;
@@ -35,7 +36,7 @@ avg_silhouette = zeros(max_K, 1);
 
 % Find silhouette score for each possible cluster value in range 2:max_K 
 for k = 2:max_K % silhouette doesn't make sense for K=1
-    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100);
+    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100, 'Display', 'final');
     s = silhouette(features_clean_z, cluster_idx);
     avg_silhouette(k) = mean(s);
 end
