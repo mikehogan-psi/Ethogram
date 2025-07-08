@@ -47,22 +47,22 @@ T_matrices = cell(1, length(fileList)); % for each mouse (2 cells - part 1 and p
 file_names = cell(length(fileList), 1); % for each mouse (2 cells - part 1 and part 2)  filename
 
 
-%% Extracting data (using DLC coordinates)
-
-% iterate over each file, load it, and extract the T variable
-for i = 1:length(fileList)
-    filePath = fullfile(folderPath, fileList(i).name);
-     % load the .mat file
-    data = readmatrix(filePath); 
-    T_matrices{i} = data(:, [23, 24])'; 
-    % stores body_anterior x and y positional data in T_matrices array
-    file_names{i} = fileList(i).name;
-    % stores file names for sorting later
-end
-
-%% Delete 15 extra frames in mouse 1 extinxtion p2
-
-T_matrices{2} = T_matrices{2}(:, [1:3514,3530:end]);
+% %% Extracting data (using DLC coordinates)
+% 
+% % iterate over each file, load it, and extract the T variable
+% for i = 1:length(fileList)
+%     filePath = fullfile(folderPath, fileList(i).name);
+%      % load the .mat file
+%     data = readmatrix(filePath); 
+%     T_matrices{i} = data(:, [23, 24])'; 
+%     % stores body_anterior x and y positional data in T_matrices array
+%     file_names{i} = fileList(i).name;
+%     % stores file names for sorting later
+% end
+% 
+% %% Delete 15 extra frames in mouse 1 extinxtion p2
+% 
+% T_matrices{2} = T_matrices{2}(:, [1:3514,3530:end]);
 
 %% Extracting data (using SSM fitted data)
 
@@ -139,10 +139,12 @@ all_velocity_data(:, :, mouse_idx) = dist;
 
 end
 
+save([save_dir 'X_all_velocity_data_' sesh], 'all_velocity_data');
+
 %% Defining freezing behaviour
 
-% freezing_velocity_threshold = 1.1; % pixels per frame, change as needed (*0.048*15 to get cm/s value)
-freezing_velocity_threshold = 0.053; % cm per frame (use this for xfit data because triangulation transforms to cm)
+%freezing_velocity_threshold = 1.1; % pixels per frame, change as needed (*0.048*15 to get cm/s value)
+freezing_velocity_threshold = 0.0528; % cm per frame (use this for xfit data because triangulation transforms to cm)
 
 freezing_duration_threshold = 1*15; % convert seconds to frames (1 second × 15 FPS)
 
@@ -183,22 +185,22 @@ freezing_mouse2 = validated_freeze_matrix(:,:,2);
 predicted_labels_all = reshape(freezing_mouse2', [], 1);
 
 predicted_labels = predicted_labels_all(1:10040);
-save([save_dir 'xfit_053_freezing_mouse2_extinction_p1'], "predicted_labels")
+save([save_dir 'Xfit_freezing_mouse2_extinction_p1'], "predicted_labels")
 
 predicted_labels = predicted_labels_all(10041:end);
-save([save_dir 'xfit_053_freezing_mouse2_extinction_p2'], "predicted_labels")
+save([save_dir 'Xfit_freezing_mouse2_extinction_p2'], "predicted_labels")
 
 
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = 'mouse2_extinction_p2';
+base_name = 'mouse2_extinction_p1';
 predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D';
 
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
     video_file_path = [video_path '\' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['DLC_freezing_', base_name, '*.mat']));
+    predicted_file_path = dir(fullfile(predicted_labels_path, ['Xfit_freezing_', base_name, '*.mat']));
     predicted_file_path = [predicted_labels_path '\' predicted_file_path.name];
     
     % fun validate predcitions function
@@ -210,7 +212,7 @@ predicted_labels_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\be
 
 %% Splitting into treatment groups, stim types and trial periods
 
-psilocybin_freezing_data = validated_freeze_matri x(:, :, 2:2:end);
+psilocybin_freezing_data = validated_freeze_matrix(:, :, 2:2:end);
 vehicle_freezing_data = validated_freeze_matrix(:, :, 1:2:end);
 
 % 2 stimsets -> each 20 stimuli (0 = flash, 1 = loom) -> each trial

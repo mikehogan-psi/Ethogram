@@ -1,0 +1,191 @@
+%% Analysis of Behaviour encoding neurons
+% this script .... (give summary)
+
+%% Directory Setup
+
+% Define folder path that contains neronal spiking data 
+% (i.e. firing rate matrices and response groups obtained from neural_data_analysis_pipeline.m)
+
+  neuronal_data_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\spiking_data\';
+
+% Define folder path that contains kilosorted dats of this session
+    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\';  
+
+% Define folder path that contains loom and flash event trigger timnestamps
+    triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';   
+
+% Define folder path that contains behavioural labels
+    behaviour_path = 'Z:\Abi\behavioral_analysis\Implanted_mice\mouse_2_behaviours\';
+
+% Define folder path results shall be saved
+    savepath = 'Z:\Abi\neuronal_data\mouse_2\spike_decoding_analysis\';
+
+
+
+%% define variables
+
+ % define target behaviour that shall be analysed
+      behaviour = 'freezing';
+
+ % define session 
+      sesh = 'extinction';
+  %   sesh = 'renewal';
+
+ % define mouse
+      mouse = '2';
+
+%% Loading neuronal spike, trial and behavioural data
+
+% converting kilosort python output files into matlab format
+clu = readNPY([kilosort_dir '\spike_clusters.npy']); % loads cluster number of each detected spike
+spk = readNPY([kilosort_dir '\spike_times.npy']);    % loads sample number of each detected spike 
+
+    spk = double(spk)/30000;% converts sample number (by dividing through sampling rate) into seconds
+    clu_val = unique(clu);  % removes doubles (so gets list of all individual clusters i.e. potential neuronal cells - starts with 0)
+    Ncell = numel(clu_val); % get number of detected clusters 
+
+% load extracted loom and flash (i.e. stimuli onset) events
+load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom', 'evt_flash')
+
+    Ntrial = length(evt_loom);
+
+% load and format behavioural labels 
+    % load part 1
+      load([ behaviour_path behaviour '_labels_mouse2_' sesh '_p1.mat'], 'predicted_labels');
+            labels_p1 = predicted_labels;
+    % load part 2        
+      load([ behaviour_path behaviour '_labels_mouse2_' sesh '_p2.mat'], 'predicted_labels');
+            labels_p2 = predicted_labels;
+    % concatinate part 1 and part 2
+      behaviour_labels = [labels_p1;labels_p2]; % [20080x1] - contains behaviour label (0 = no behaviour, 1 = behaviour) for every frame
+    % reshape into [trials x frames]
+      behaviour_labels = reshape(behaviour_labels, 502, 40)';  % Transpose to get [40 x 502]
+ 
+
+%% Sepparating behaviour into loom and flash trials
+%  make sure you know which stimset the mouse you are analysis received!
+
+stim_set_1 = [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
+    0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1];
+
+stim_set_1 = stim_set_1(:);  % Ensure it's a column vector
+
+% Get logical indices
+loom_idx = stim_set_1 == 1;
+flash_idx = stim_set_1 == 0;
+
+% Extract trials
+loom_labels = behaviour_labels(loom_idx, :);   % [20 x 502]
+flash_labels = behaviour_labels(flash_idx, :); % [20 x 502]
+
+%% Generating Firing rate matrices (spikes per frame aligned with stimulus onset)
+
+% pre_stim_period = 2:152;
+% during_stim_period = 153:201;
+% post_stim_period = 202:502;
+
+
+% raster options (all in seconds)
+    tpre = 153/15;        % Time before each event to include in the window (i.e. pre-stimulus time)
+    tpost = 350/15;       % Time after each event to include.               (i.e. post-stimulus time)
+    bin_size = 1/15;   % Bin size (time resolution of histogram)
+
+
+% initialize variables of spike data to be saved matrices to hold firing rates [trials x times x cell] 
+    fr_loom   = [];  % firing rates (Hz) over loom  trials [trials x time-bins x cell] 
+    fr_flash  = [];  % firing rates (Hz) over flash trials [trials x time-bins x cell] 
+    mfr_loom  = [];  % Mean firing rate (Hz) across  loom  trials [cell x time-bins]
+    mfr_flash = [];  % Mean firing rate (Hz) across  flash trials [cell x time-bins]
+    t_loom    = [];  % Time vector of all histogram timebins (excluding the first and last bin) - same foor loom and flash trials
+    t_flash   = [];  % Time vector of all histogram timebins (excluding the first and last bin) 
+    sfr_loom  = [];  % Standard error of firing rate across loom  trials [cell x time-bins]
+    sfr_flash = [];  % Standard error of firing rate across  flash trials [cell x time-bins]
+
+
+% loop though all clusters to compute firing rated and load matrices
+for n = 1:Ncell
+
+    tsp = spk(clu==clu_val(n)); % extracts spike from one cluster/neuron
+ 
+    [mfr_loom(n,:), sfr_loom(n,:), t_loom, fr_loom(:,:,n),  ~]   = raster_NM(tsp,evt_loom,tpre,tpost,bin_size,false);
+    [mfr_flash(n,:),sfr_flash(n,:),t_flash,fr_flash(:,:,n), ~]   = raster_NM(tsp,evt_flash,tpre,tpost,bin_size,false);
+
+end
+
+% save variables 
+  save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
+  save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+
+%% Plotting rasterplots of Loom trials with freezing behavior and firing rate (colormap version)
+
+% Inputs
+n = 5;  % Neuron index to plot
+[nTrials, nFrames] = size(loom_labels);
+gapSize = 1;  % We'll insert 1 color-coded row between each trial
+
+% Extract firing rate for selected neuron [trials x bins]
+fr_data = squeeze(fr_loom(:,:,n));  % now [trials x bins]
+
+% Normalize firing rate to [0,1] for colormap
+fr_norm = fr_data - min(fr_data(:));
+fr_norm = fr_norm ./ max(fr_data(:));
+
+% Ensure behavior and firing have same time resolution
+minFrames = min(size(loom_labels, 2), size(fr_norm, 2));
+loom_labels = loom_labels(:, 1:minFrames);
+fr_norm = fr_norm(:, 1:minFrames);
+
+% Prepare stacked matrix with behavior + firing rate rows
+spacedMatrix = [];  % Will hold [behavior; firing; behavior; firing; ...]
+rowType = [];       % Track row type: 0 = behavior, 1 = firing
+
+for t = 1:nTrials
+    spacedMatrix = [spacedMatrix; loom_labels(t, :)];
+    rowType = [rowType; 0];  % behavior
+    
+    if t < nTrials
+        spacedMatrix = [spacedMatrix; fr_norm(t, :) + 2];  % offset firing rows
+        rowType = [rowType; 1];  % firing
+    end
+end
+
+% Initialize RGB image
+RGBimage = zeros(size(spacedMatrix,1), size(spacedMatrix,2), 3);
+
+% --- Behavior Rows ---
+behaviorRows = rowType == 0;
+freezeMask = spacedMatrix == 1 & behaviorRows;
+moveMask   = spacedMatrix == 0 & behaviorRows;
+RGBimage(:,:,3) = freezeMask;  % Blue
+RGBimage(:,:,1) = moveMask;    % Red
+
+% --- Firing Rows (blue to red colormap) ---
+firingRows = rowType == 1;
+firingMask = spacedMatrix > 2 & firingRows;
+
+% Extract normalized firing values back from spacedMatrix
+firingVals = spacedMatrix(firingMask) - 2;  % [0,1]
+
+% Map to colormap
+cmap = jet(256);  % jet goes blue->green->red
+idx = round(firingVals * 255) + 1;
+rgbVals = cmap(idx, :);  % RGB triplets for each value
+
+% Assign RGB values to image
+[rIdx, cIdx] = find(firingMask);  % row/col indices
+for i = 1:length(rIdx)
+    RGBimage(rIdx(i), cIdx(i), :) = rgbVals(i, :);
+end
+
+% --- Plot ---
+figure;
+image(RGBimage);
+axis tight;
+xlabel('Time Bin');
+ylabel('Trial');
+title(sprintf('Freezing and Firing Rate (Neuron %d, Loom Trials)', n));
+
+% Y-axis ticks for each trial (behavior rows only)
+trialTicks = find(rowType == 0);
+set(gca, 'YTick', trialTicks);
+set(gca, 'YTickLabel', 1:nTrials);

@@ -48,11 +48,11 @@
             % which_part = 'tail';   % for behaviours that entail changes in tail movements e.g. tail rattling 
 
      % B: define target behaviour that shall be analysed
-            behaviour = 'freezing'; 
+            behaviour = 'rearing'; 
     
      % C: define session 
-          sesh = 'extinction';
-        %    sesh = 'renewal';
+       %   sesh = 'extinction';
+           sesh = 'renewal';
 
 
      % D: define which name generated models shall be given

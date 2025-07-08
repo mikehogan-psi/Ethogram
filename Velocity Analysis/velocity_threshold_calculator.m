@@ -1,6 +1,6 @@
 %% Extract individual frame from  video and use it to measure width of arena
 % Load the video
-obj = VideoReader("D:\PhD 2nd Year\Cohort 3 Videos Temp\camera5_mouse1_renewal_habituation_p1_2025-04-10-124958-0000.avi"); % Replace with your video file path
+obj = VideoReader("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort_4_06_05_25 (SC PAG Implanted Animals)\Extinction\Mouse 2\Video Data\camera5_mouse2_extinction_p1_2025-06-06-132222-0000.avi"); % Replace with your video file path
 
 % Specify the frame number you want to save
 frame_number = 100; % Replace with your desired frame number
@@ -25,13 +25,47 @@ title('Click two points to measure the width');
 arena_width_pixels = sqrt((x(2) - x(1))^2 + (y(2) - y(1))^2);
 disp(['Arena width in pixels: ', num2str(arena_width_pixels)]);
 %% Plotting log of velocity data to find appropriate freezing velocity
+
+% Transform trianguled data (cm) back into px
+  % all_velocity_data = all_velocity_data / 0.048;
+
+
+
 log_v_data = log10(all_velocity_data);
 figure;
-histogram(log_v_data); 
+histogram(log_v_data, 60); 
 xlabel('Log Velocity (pix/frame)');
+xlim([-5 1]);
+ylim([0 2200]);
 ylabel('Frequency (Frames)');
-title('Velocity Distribution');
+title('Velocity Distribution - X data');
+%print(gcf, 'velocity_distribution.png', '-dpng', '-r300');
+
+%% Plotting (linear) velocity data
+figure;
+histogram(all_velocity_data); 
+xlabel('Velocity (pix/frame)');
+ylabel('Frequency (Frames)');
+title('Velocity Distribution - X data');
 print(gcf, 'velocity_distribution.png', '-dpng', '-r300');
+
+%%
+% Flatten and remove NaNs (if applicable)
+vX = all_velocity_data(:);
+vX = vX(~isnan(vX));
+
+vXfit = all_velocity_data(:);
+vXfit = vXfit(~isnan(vXfit));
+
+mean_X = mean(vX);
+median_X = median(vX);
+
+mean_Xfit = mean(vXfit);
+median_Xfit = median(vXfit);
+
+fprintf('Original X Data:  Mean = %.4f cm/frame, Median = %.4f cm/frame\n', mean_X, median_X);
+fprintf('Fitted Xfit Data: Mean = %.4f cm/frame, Median = %.4f cm/frame\n', mean_Xfit, median_Xfit);
+
 
 %% Plotting two guassian curves over histogram of velocity data
 

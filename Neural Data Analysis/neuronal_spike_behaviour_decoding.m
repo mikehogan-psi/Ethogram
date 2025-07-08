@@ -15,7 +15,7 @@
     triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';   
 
 % Define folder path that contains behavioural labels
-    behaviour_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\darting_analyses\RFM_darting_9\manually_labeled_data\';
+    behaviour_path = 'Z:\Abi\behavioral_analysis\Implanted_mice\mouse_2_behaviours\';
 
 % Define folder path in which decoding results shall be saved
     savepath = 'Z:\Abi\neuronal_data\mouse_2\spike_decoding_analysis\';
@@ -23,7 +23,7 @@
 %% define variables
 
  % define target behaviour that shall be analysed
-      behaviour = 'darting';
+      behaviour = 'freezing';
 
  % define session 
       sesh = 'extinction';
@@ -58,18 +58,21 @@ spk = readNPY([kilosort_dir '\spike_times.npy']);    % loads sample number of ea
 
 % load behavioural labels 
     % load part 1
-    load([ behaviour_path 'mouse2_' sesh '_p1_labels.mat'],'all_frames_labels');
-            labels_p1 = all_frames_labels;
+    load([ behaviour_path behaviour '_labels_mouse2_' sesh '_p1.mat'], 'predicted_labels');
+            labels_p1 = predicted_labels;
     % load part 2        
-    load([ behaviour_path 'mouse2_' sesh '_p2_labels.mat'],'all_frames_labels');
-            labels_p2 = all_frames_labels;
+    load([ behaviour_path behaviour '_labels_mouse2_' sesh '_p2.mat'], 'predicted_labels');
+            labels_p2 = predicted_labels;
     % concatinate part 1 and part 2
         labels = [labels_p1;labels_p2]; % [20080x1] - contains behaviour label (0 = no behaviour, 1 = behaviour) for every frame
+
+% clear unecessary variables
+clearvars evt_p1 evt_p2  labels_p1 labels_p2 predicted_labels 
 
 %% Extracting number of spikes per neuron in each frame
 
 % Define window duration per frame 
-frame_duration = median(diff(evt));  % ~0.0667 sec for 15 Hz framerate
+frame_duration = median(diff(evt));  % ~0.0667 sec for 15 Hz sampling rate
 
 % Pre-allocate
 X = zeros(length(evt), Ncell);  % Rows = frames, Cols = neurons
@@ -87,19 +90,112 @@ for i = 1:length(evt)
     % Count spikes per neuron
     counts = histcounts(spikes_now, [clu_val; max(clu_val)+1]);
     
-    X(i, :) = counts;
+    % load into firing rate matrix
+    X(i, :) = counts; % [20080 x Nneurons]
+
 end
 
+%% identify which neurons can significantly decode behaviour
+%  Neuron-by-Neuron Decoding with Permutation to test decoding accuracy
+
+% Parameters
+n_perm = 1000;             % Number of permutations for significance testing
+alpha = 0.05;              % Significance threshold
+n_neurons = size(X, 2);    % Total number of neurons
+real_acc = zeros(n_neurons, 1);
+perm_acc = zeros(n_neurons, n_perm);
+
+fprintf('Running single-neuron decoding and permutation test...\n');
+
+for n = 4:n_neurons
+
+    fprintf('Running single-neuron decoding and permutation test for neuron %d\n', n);
+
+    % Extract spike counts for neuron n
+    Xn = X(:, n);  % [frames x 1]
+    
+    % Normalize (optional, but may help SVM performance)
+    Xn = zscore(Xn);
+
+    % 5-fold cross-validation accuracy on real data
+    cv = cvpartition(y, 'KFold', 5); % s
+    acc_cv = zeros(cv.NumTestSets, 1);
+
+    for fold = 1:cv.NumTestSets
+        trainIdx = training(cv, fold);
+        testIdx = test(cv, fold);
+
+        mdl = fitcsvm(Xn(trainIdx), y(trainIdx), 'KernelFunction', 'linear');
+        y_pred = predict(mdl, Xn(testIdx));
+        acc_cv(fold) = mean(y_pred == y(testIdx));
+    end
+
+    real_acc(n) = mean(acc_cv);
+
+    % Permutation test
+    for p = 1:n_perm
+
+        fprintf('Running permutation %d\n', p);
+
+
+        y_perm = y(randperm(length(y)));
+        acc_p = zeros(cv.NumTestSets, 1);
+
+        for fold = 1:cv.NumTestSets
+            trainIdx = training(cv, fold);
+            testIdx = test(cv, fold);
+
+            mdl = fitcsvm(Xn(trainIdx), y_perm(trainIdx), 'KernelFunction', 'linear');
+            y_pred = predict(mdl, Xn(testIdx));
+            acc_p(fold) = mean(y_pred == y_perm(testIdx));
+        end
+
+        perm_acc(n, p) = mean(acc_p);
+    end
+end
+
+% Compute p-values
+p_vals = mean(bsxfun(@ge, perm_acc, real_acc), 2);  % For each neuron
+
+% Find significant neurons
+signif_neurons = find(p_vals < alpha);
+
+fprintf('\n%d out of %d neurons decode behaviour significantly (p < %.2f)\n', ...
+        numel(signif_neurons), n_neurons, alpha);
+
+% save p-values and significant neurons idexes
+   save([savepath behaviour '_signle_neuron_freezing_decoding'], 'real_acc', 'perm_acc', 'p_vals', 'signif_neurons');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Train and test classifier: behavior vs. no-behavior
 
 % Balance the data
-inds_darting = find(y == 1);
-inds_nodarting = find(y == 0);
-n = min(numel(inds_darting), numel(inds_nodarting));
+inds_behaviour = find(y == 1);
+inds_nobehaviour = find(y == 0);
+n = min(numel(inds_behaviour), numel(inds_nobehaviour));
 
 % Subsample to balance
-inds_use = [inds_darting(randperm(numel(inds_darting), n)); ...
-            inds_nodarting(randperm(numel(inds_nodarting), n))];
+inds_use = [inds_behaviour(randperm(numel(inds_behaviour), n)); ...
+            inds_nobehaviour(randperm(numel(inds_nobehaviour), n))];
 
 % Shuffle
 inds_use = inds_use(randperm(numel(inds_use)));
@@ -142,9 +238,9 @@ w = model.Beta;  % [neurons x 1]
 % Plot
 figure;
 bar(w);
-xlabel('Neuron');
+xlabel('Kilosort cluster');
 ylabel('SVM Weight');
-title('Neuron Importance for Decoding Darting');
+title(['Neuron Importance for Decoding ' behaviour]);
 
 
 
@@ -186,7 +282,7 @@ title('Decoding Weights (Significant Neurons Only)');
 colorbar;
 
 % save p-values and significant neurons idexes
-   save([savepath 'population_decoding'], 'W_signif', 'signif_neurons_idx' );
+   save([savepath 'population_decoding_' behaviour], 'W_signif', 'signif_neurons_idx' );
 
 
 %% Neuron-by-Neuron Decoding with Permutation to test decoding accuracy

@@ -14,7 +14,12 @@
             behaviour = 'rearing'; % !!!CHANGE THIS!!!
 
 % define the name of model that was used to predict the data
-            model_name = ['RFM_' behaviour '_5'];  % !!!CHANGE THIS!!!
+            model_name = ['RFM_' behaviour '_6'];  % !!!CHANGE THIS!!!
+
+% define session 
+         sesh = 'extinction';
+       %    sesh = 'renewal';
+
 
 % Setup directories
 
@@ -29,7 +34,7 @@
 %% Extracting data 
 
 % Get a list of all predicted_labels files in the specified folder
-fileList = dir(fullfile(predicted_labels_path, '*mouse*'));
+fileList = dir(fullfile(predicted_labels_path, ['*mouse*' sesh '*']));
 
 % Initialise a cell arrays to store data information
 labels_all_mice = cell(1, length(fileList)); % for each mouse (2 cells - part 1 and part 2) x and y coordinates (row) of body anterior body marker for each frame (colums)
@@ -105,7 +110,7 @@ for mouse_idx = 1:num_mice % loop through all mice
     end
 end
 
-save([common_dir '\' model_name '_data_matrix' ], 'behavioral_data_matrix'); % save the matrix encase data shall be further analysed at later timepoints
+save([common_dir '\' model_name '_data_matrix_' sesh ], 'behavioral_data_matrix'); % save the matrix encase data shall be further analysed at later timepoints
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PART 3 - Splitting Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Splitting into treatment groups and stim types 
@@ -185,8 +190,8 @@ veh_late_post_stim_flash = veh_flash_data(:, late_post_stim_period, :);
         addpath(fig_path); % add figured folder to matlab path
 
 % clear all unnecessary variables for better overview
-clearvars -except common_dir fps fig_path behavioral_data_matrix behaviour model_name ...
-                  psilocybin_data vehicle_data psi_loom_data psi_flash_data veh_loom_data veh_flash_data
+% clearvars -except common_dir fps fig_path behavioral_data_matrix behaviour model_name ...
+%                   psilocybin_data vehicle_data psi_loom_data psi_flash_data veh_loom_data veh_flash_data
 
 % defining constants 
 
@@ -209,7 +214,7 @@ colors = [1 0 0;  % Red
 
 %% FIGURE 1: total time exhibiting behaviour over all trials and entire trial period
 
-% Calculating total freezing time (in seconds) and SEM (mean over all trials and entire trial preriod) -> then averaged across all mice
+% Calculating total behaviour time (in seconds) and SEM (mean over all trials and entire trial preriod) -> then averaged across all mice
 
 psi_loom_trial_mean =  mean(squeeze(sum(sum(psi_loom_data, 1), 2)) / fps);
 psi_flash_trial_mean = mean(squeeze(sum(sum(psi_flash_data,1), 2)) / fps);
