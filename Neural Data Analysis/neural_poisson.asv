@@ -143,6 +143,11 @@ for n = 1:length(current_group) % loop through each neuron
     % disp(['GLMM results of neuron' num2str(n) 'for' period(m) 'stimulus period'])
     % disp(glme);
     
+ % Fit null model (intercept only)
+    null_model = fitglm(data_binned, 'Firing ~ 1', ...
+                    'Distribution', 'poisson');
+
+
     % load results for this neuron into output vector
     if m == 1
        glmm_output(n, 1:3) = glme.Coefficients.Estimate(2:4)'; % load beta values for during-stim glmm
@@ -151,28 +156,39 @@ for n = 1:length(current_group) % loop through each neuron
     end
     
    % Store neuron number for clustering later
-    glmm_output(n, 7) = n;
+    glmm_output(n, 7) = idx-1;
 
     all_data_tables{n, m} = data_binned;
 
-     % -------- Goodness of fit metrics --------
+   % -------- Goodness of fit metrics --------
 
-    % % Store deviance and pseudo-R²
-    % model_deviance = glme.Deviance;
-    % null_deviance = null_model.Deviance;
-    % pseudo_R2 = 1 - (model_deviance / null_deviance);
-    % 
-    % % Store deviance and pseudo-R²
-    % model_deviances(n, m) = model_deviance;
-    % pseudo_R2_vals(n, m) = pseudo_R2;
+    % Store deviance and pseudo-R²
+    model_deviance = glme.Deviance;
+    null_deviance = null_model.Deviance;
+    pseudo_R2 = 1 - (model_deviance / null_deviance);
+
+    % Store deviance and pseudo-R²
+    model_deviances(n, m) = model_deviance;
+    pseudo_R2_vals(n, m) = pseudo_R2;
 
    end
    
 
 end    
 
-% save(save_path, 'glmm_output')
 
+
+%% Find neurons with bad model fit
+
+bad_fit_idx = pseudo_R2_vals(:,1) < 0.01 & pseudo_R2_vals(:,2) < 0.01;
+good_fit_neurons = glmm_output(:, 7);
+good_fit_neurons = good_fit_neurons(~bad_fit_idx);
+
+% Exclude these from clustering
+all_data_tables = all_data_tables(~bad_fit_idx, :);
+glmm_output = glmm_output(~bad_fit_idx, :);
+
+save(save_path, 'glmm_output')
 %% Plot: Actual vs Predicted Freezing Across Trials
 
 trial_val = unique(data_binned.Trial);
