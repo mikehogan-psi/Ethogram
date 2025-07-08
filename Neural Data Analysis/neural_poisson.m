@@ -25,8 +25,9 @@
     triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
 
 % Define filepath to save processed data to and name of saved data
-    savefile_name = 'extinction_neuronal_cofficients_poisson_';
-    save_folder = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\';
+    savefile_name_glmm = 'extinction_neuronal_cofficients_poisson_';
+    savefile_name_data_tables = 'extinction_data_tables_';
+    save_folder = 'Z:\Abi\neuronal_data\mouse_2\Mike processed data\';
 %% Load data
 
 % get important variables
@@ -63,10 +64,12 @@ resp_LOOM_nr = unique(resp_LOOM_nr);
     current_group = resp_LOOM_nr;
     append_to_save = 'resp_LOOM_nr.mat';
 
-% Generates filepath    
-    savefile_name = [savefile_name,  append_to_save];
-    save_path = fullfile(save_folder, savefile_name);
-
+% Generates filepaths for saving   
+    savefile_name_glmm = [savefile_name_glmm,  append_to_save];
+    save_path_glmm = fullfile(save_folder, savefile_name_glmm);
+    
+    savefile_name_data_tables = [savefile_name_data_tables, append_to_save];
+    save_path_data_tables = fullfile(save_folder, savefile_name_data_tables);
   %% Fit logistic regression of during and post-stim periods for each neuron
 
   % define time variables to fit glmm for duing stim and post stim periods
@@ -188,7 +191,8 @@ good_fit_neurons = good_fit_neurons(~bad_fit_idx);
 all_data_tables = all_data_tables(~bad_fit_idx, :);
 glmm_output = glmm_output(~bad_fit_idx, :);
 
-save(save_path, 'glmm_output')
+save(save_path_glmm, 'glmm_output')
+save(save_path_data_tables, "all_data_tables")
 %% Plot: Actual vs Predicted Freezing Across Trials
 
 trial_val = unique(data_binned.Trial);

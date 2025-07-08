@@ -123,7 +123,7 @@ end
 %%
 
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 1});
+T_post = vertcat(all_data_tables{:, 2});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -152,11 +152,11 @@ for i = 1:num_clusters
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis scaling
 end
 
-sgtitle('During-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
+sgtitle('Post-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
 
 %%
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 1});
+T_post = vertcat(all_data_tables{:, 2});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -179,7 +179,7 @@ for i = 1:num_clusters
     subplot(n_rows, n_cols, i);
     plot(1:length(mean_FR), mean_FR, 'LineWidth', 2);
     title("Cluster " + string(c));
-    xlabel('Time Bin (0.16s)');
+    xlabel('Time Bin (1s)');
     ylabel('Mean FR');
     xlim([1 20])
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis
