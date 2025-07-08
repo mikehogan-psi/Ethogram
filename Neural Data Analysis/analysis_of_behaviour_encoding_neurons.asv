@@ -111,30 +111,29 @@ end
 
 % initialize variables of spike data to be saved matrices to hold firing rates [trials x times x cell] 
     fr_behav   = [];  % firing rates (Hz) over loom  trials [trials x time-bins x cell] 
-    mfr_behav   = [];  % Mean firing rate (Hz) across  loom  trials [cell x time-bins]
-    t_behav     = [];  % Time vector of all histogram timebins (excluding the first and last bin) - same foor loom and flash trials
-    sfr_behav   = [];  % Standard error of firing rate across loom  trials [cell x time-bins]
+    fr_flash  = [];  % firing rates (Hz) over flash trials [trials x time-bins x cell] 
+    mfr_loom  = [];  % Mean firing rate (Hz) across  loom  trials [cell x time-bins]
+    mfr_flash = [];  % Mean firing rate (Hz) across  flash trials [cell x time-bins]
+    t_loom    = [];  % Time vector of all histogram timebins (excluding the first and last bin) - same foor loom and flash trials
+    t_flash   = [];  % Time vector of all histogram timebins (excluding the first and last bin) 
+    sfr_loom  = [];  % Standard error of firing rate across loom  trials [cell x time-bins]
+    sfr_flash = [];  % Standard error of firing rate across  flash trials [cell x time-bins]
 
 
 % loop though all clusters to compute firing rated and load matrices
-for n = 69
+for n = 1:Ncell
 
-    clu_nr = cluster(n);
-
-    tsp = spk(clu==clu_val(clu_nr)); % extracts spike from this cluster
-
+    tsp = spk(clu==clu_val(n)); % extracts spike from one cluster/neuron
  
-    [mfr_loom(n,:), sfr_loom(n,:), t_loom, fr_loom(:,:,n),  ~]   = raster_NM(tsp,valid_onset_times,tpre,tpost,bin_size,true);
-
-    fig = gcf;  
-    sgtitle(sprintf(['mouse' mouse ': ' behaviour ' ' sesh ' neuron %d'], clu_val(clu_nr)));
+    [mfr_loom(n,:), sfr_loom(n,:), t_loom, fr_loom(:,:,n),  ~]   = raster_NM(tsp,evt_loom,tpre,tpost,bin_size,false);
+    [mfr_flash(n,:),sfr_flash(n,:),t_flash,fr_flash(:,:,n), ~]   = raster_NM(tsp,evt_flash,tpre,tpost,bin_size,false);
 
 end
 
-% % save variables 
-%   save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
-%   save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
-% 
+% save variables 
+  save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
+  save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+
 
 
 

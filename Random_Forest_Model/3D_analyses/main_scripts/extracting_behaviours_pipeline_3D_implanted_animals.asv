@@ -52,7 +52,7 @@
     
      % C: define session 
           sesh = 'extinction';
-        %    sesh = 'renewal';
+       %    sesh = 'renewal';
 
 
      % D: define which name generated models shall be given
@@ -208,7 +208,7 @@ end
     %feature_selectection_indx = [2,3,5,6,8,9,10,12,16]; % freezing 2;
     % feature_selectection_indx = [2,5,6,10,11,12,13,14,16,21]; % freezing 3;
 
-     feature_selectection_indx = [1:];
+     feature_selectection_indx = [1:21];
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
@@ -448,7 +448,7 @@ for i = 1:length(file_list_pred_labels) % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-            duration_threshold = 10;  % for darting_8
+            %duration_threshold = 10;  % for darting_8
             %duration_threshold = 7;  % for rearing
             duration_threshold = 15;   % for freezing 1
 
@@ -480,6 +480,8 @@ base_name = ['mouse2_' sesh '_p1'];
     predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
     predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
     
+ predicted_file_path =  'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D\
+
     % fun validate predcitions function
          validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it

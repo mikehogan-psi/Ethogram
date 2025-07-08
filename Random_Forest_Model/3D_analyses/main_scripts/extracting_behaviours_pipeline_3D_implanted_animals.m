@@ -48,11 +48,11 @@
             % which_part = 'tail';   % for behaviours that entail changes in tail movements e.g. tail rattling 
 
      % B: define target behaviour that shall be analysed
-            behaviour = 'rearing'; 
+            behaviour = 'freezing'; 
     
      % C: define session 
-       %   sesh = 'extinction';
-           sesh = 'renewal';
+          sesh = 'extinction';
+       %    sesh = 'renewal';
 
 
      % D: define which name generated models shall be given
@@ -477,9 +477,11 @@ base_name = ['mouse2_' sesh '_p1'];
     % Find the correct video and predicted labels file
     video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
     video_file_path = [video_path '/' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
-    predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
-    
+    % predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
+    % predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
+    % 
+ predicted_file_path =  'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D\xfit_0528_freezing_mouse2_extinction_p1.mat';
+
     % fun validate predcitions function
          validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it
