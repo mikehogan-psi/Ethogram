@@ -16,11 +16,18 @@ features_clean = feature_vectors(~is_outlier, :);
 % Save neuron numbers
 neuron_numbers = features_clean(:, end);
 
+% Remove them for z-scoring
 features_only_clean = features_clean(:, 1:end-1);
-features_clean_z = zscore(features_only_clean);
-%%
 
+% Z-score each period separately
+features_only_during = features_only_clean(:, 1:3);
+features_only_post   = features_only_clean(:, 4:6);
 
+features_during_z = zscore(features_only_during); 
+features_post_z   = zscore(features_only_post);   
+
+% Put back together
+features_clean_z = [features_during_z, features_post_z];
 %% Cluster data and plot clusters
 max_K = 10; % Change number of clusters as needed
 
@@ -28,7 +35,7 @@ avg_silhouette = zeros(max_K, 1);
 
 % Find silhouette score for each possible cluster value in range 2:max_K 
 for k = 2:max_K % silhouette doesn't make sense for K=1
-    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 1000);
+    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100);
     s = silhouette(features_clean_z, cluster_idx);
     avg_silhouette(k) = mean(s);
 end
@@ -218,3 +225,5 @@ figure;
 [best_cluster_idx, ~] = kmeans(features_clean_z, K, 'Replicates', 50);
 [~, sort_idx] = sort(best_cluster_idx);
 imagesc(coassign(sort_idx, sort_idx)); colorbar;
+
+%%

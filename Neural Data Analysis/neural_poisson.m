@@ -49,7 +49,7 @@
 % load extracted loom and flash (i.e. stimuli onset) events
   load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom')
 
-% load freezing data
+% Load freezing data
   load("D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5\mouse2_loom_freezing.mat")  
   freeze_matrix = mouse2_freeze_loom;
 
@@ -77,12 +77,12 @@ resp_LOOM_nr = unique(resp_LOOM_nr);
           num_bins = [20, 20];          % adapt nr of bins a wanted
   
   % initialise output matrix to hold glmm results and input tables
-    glmm_output = zeros(size(current_group,1), 6); % 6 columns -> hold beta values for Intercept, TimeBinStd, TrialStd for during (1-3) and post (4-6) glmm
+    glmm_output = zeros(size(current_group,1), 6); % 6 columns -> hold beta values for TimeBinStd, TrialStd and Freezing for during (1-3) and post (4-6) glmm
     all_data_tables = cell(size(current_group,1), 2);
 
 for n = 1:length(current_group) % loop through each neuron
     idx = current_group(n);
-    disp(['computing GLMM of neuron: ' num2str(idx)]);
+    disp(['computing GLMM of neuron: ' num2str(idx-1)]);
 
    for m = 1:2 % run GLMM for 1 -> during stim period, 2 -> post-stim period  
 
@@ -128,7 +128,7 @@ for n = 1:length(current_group) % loop through each neuron
     % get time bin and trial indices
      time_bins = repmat((1:num_bins_current)', N_trials, 1);   % Time bin indices
      trials_binned = repelem((1:N_trials)', num_bins_current); % Trial numbers
-     neuron_number = repelem(idx, N_trials * num_bins_current)'; % Neuron numbers
+     neuron_number = repelem(idx-1, N_trials * num_bins_current)'; % Neuron numbers
 
      data_binned = table(spike_count, time_bins, trials_binned, binned_freezing, ...
                 'VariableNames', {'Firing', 'TimeBin', 'Trial', 'Freezing'});
@@ -155,8 +155,8 @@ for n = 1:length(current_group) % loop through each neuron
        glmm_output(n, 4:6) = glme.Coefficients.Estimate(2:4)'; % load beta values for post-stim glmm
     end
     
-   % Store neuron number for clustering later
-    glmm_output(n, 7) = idx;
+   % Store neuron number for clustering later (-1 to match kilosort IDs)
+    glmm_output(n, 7) = idx-1;
 
     all_data_tables{n, m} = data_binned;
 
@@ -176,7 +176,7 @@ for n = 1:length(current_group) % loop through each neuron
 
 end    
 
-save(save_path, 'glmm_output')
+
 
 %% Find neurons with bad model fit
 
@@ -184,6 +184,11 @@ bad_fit_idx = pseudo_R2_vals(:,1) < 0.01 & pseudo_R2_vals(:,2) < 0.01;
 good_fit_neurons = glmm_output(:, 7);
 good_fit_neurons = good_fit_neurons(~bad_fit_idx);
 
+% Exclude these from clustering
+all_data_tables = all_data_tables(~bad_fit_idx, :);
+glmm_output = glmm_output(~bad_fit_idx, :);
+
+save(save_path, 'glmm_output')
 %% Plot: Actual vs Predicted Freezing Across Trials
 
 trial_val = unique(data_binned.Trial);

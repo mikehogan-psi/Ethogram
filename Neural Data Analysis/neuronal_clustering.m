@@ -35,7 +35,7 @@ avg_silhouette = zeros(max_K, 1);
 
 % Find silhouette score for each possible cluster value in range 2:max_K 
 for k = 2:max_K % silhouette doesn't make sense for K=1
-    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 1000);
+    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100);
     s = silhouette(features_clean_z, cluster_idx);
     avg_silhouette(k) = mean(s);
 end
@@ -122,7 +122,7 @@ end
 %%
 
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 2});
+T_post = vertcat(all_data_tables{:, 1});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -151,11 +151,11 @@ for i = 1:num_clusters
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis scaling
 end
 
-sgtitle('Post-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
+sgtitle('During-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
 
 %%
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 2});
+T_post = vertcat(all_data_tables{:, 1});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -178,13 +178,13 @@ for i = 1:num_clusters
     subplot(n_rows, n_cols, i);
     plot(1:length(mean_FR), mean_FR, 'LineWidth', 2);
     title("Cluster " + string(c));
-    xlabel('Time Bin (1s)');
+    xlabel('Time Bin (0.16s)');
     ylabel('Mean FR');
     xlim([1 20])
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis
 end
 
-sgtitle('Post-stimulus: Mean Firing Rate across Time Bins by Cluster');
+sgtitle('During-stimulus: Mean Firing Rate across Time Bins by Cluster');
 %%
 Nrep = 100;   % number of k-means runs
 N_neurons = length(neuron_numbers);
@@ -225,3 +225,5 @@ figure;
 [best_cluster_idx, ~] = kmeans(features_clean_z, K, 'Replicates', 50);
 [~, sort_idx] = sort(best_cluster_idx);
 imagesc(coassign(sort_idx, sort_idx)); colorbar;
+
+%%
