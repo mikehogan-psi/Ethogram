@@ -1,6 +1,8 @@
 %% Load coefficient matrix 
+rng(42);
 
-load("Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\extinction_neuronal_cofficients_poisson_resp_LOOM_nr.mat")
+%load("Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\logistic_regression_data\extinction_neuronal_cofficients_poisson_resp_LOOM_nr.mat")
+load('Z:\Abi\neuronal_data\mouse_2\Mike processed data\extinction_poisson_ONLYfreezing_FLASHvsLOOM_signif_neurons.mat')
 feature_vectors = glmm_output;
 clearvars("glmm_output");
 
@@ -20,8 +22,8 @@ neuron_numbers = features_clean(:, end);
 features_only_clean = features_clean(:, 1:end-1);
 
 % Z-score each period separately
-features_only_during = features_only_clean(:, 1:3);
-features_only_post   = features_only_clean(:, 4:6);
+features_only_during = features_only_clean(:, 1);
+features_only_post   = features_only_clean(:, 2);
 
 features_during_z = zscore(features_only_during); 
 features_post_z   = zscore(features_only_post);   
@@ -35,7 +37,7 @@ avg_silhouette = zeros(max_K, 1);
 
 % Find silhouette score for each possible cluster value in range 2:max_K 
 for k = 2:max_K % silhouette doesn't make sense for K=1
-    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100);
+    [cluster_idx] = kmeans(features_clean_z, k, 'Replicates', 100, 'Display', 'final');
     s = silhouette(features_clean_z, cluster_idx);
     avg_silhouette(k) = mean(s);
 end
@@ -63,12 +65,15 @@ end
 hold off
 %% Save neuron number with cluster assignment
 neuron_cluster_assignments = [neuron_numbers, cluster_idx];
+
+save('Z:\Abi\neuronal_data\mouse_2\Mike processed data\extinction_poisson_ONLYfreezing)
 %% Calculate means for each cluster
 
 % Creates c x f matrix with mean of cofficients for each cluster, where c
 % is the clusters and f is the features
 cluster_means = grpstats(features_clean_z, cluster_idx); 
-feature_labels = ["Freezing (Stim)", "TimeBin (Stim)", "Trial (Stim)", "Freezing (Post)", "TimeBin (Post)", "Trial (Post)"];
+%feature_labels = ["Freezing (Stim)", "TimeBin (Stim)", "Trial (Stim)", "Freezing (Post)", "TimeBin (Post)", "Trial (Post)"];
+feature_labels = ["Freezing (Stim)", "Freezing (Post)"];
 
 figure;
 imagesc(cluster_means);
@@ -92,7 +97,8 @@ xlabel('Cluster')
 %%
 figure;
 for f = 1:length(feature_labels)
-    subplot(2, 3, f)
+    %subplot(2, 3, f)
+    subplot(1, 2, f)
     boxplot(features_clean_z(:, f), cluster_idx)
     title(feature_labels(f))
     xlabel('Cluster')
@@ -105,10 +111,10 @@ figure;
 scatter(score(:,1), score(:,2), 20, cluster_idx, 'filled');
 
 %%
-load("D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5\all_data_tables.mat")
+% load("D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5\all_data_tables.mat")
+load("Z:\Abi\neuronal_data\mouse_2\Mike processed data\extinction_freezing_data_tables_FLASHvsLOOM_signif_neurons.mat")
 
 all_data_tables = all_data_tables(~is_outlier, :);
-
 
 for row = 1:size(all_data_tables, 1)
     for col = 1:size(all_data_tables,2)
@@ -119,10 +125,16 @@ for row = 1:size(all_data_tables, 1)
     end
 end
 
-%%
+%% Plotting Mean Firing Rate across Trials by Cluster 
+
+period{1} = 'during';
+period{2} = 'post';
+
+for p = 1:2
+
 
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 2});
+T_post = vertcat(all_data_tables{:, p});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -151,11 +163,18 @@ for i = 1:num_clusters
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis scaling
 end
 
-sgtitle('Post-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
+sgtitle([period{p} '-stimulus: Mean Firing Rate across Trials by Cluster']);  % overall title
 
-%%
+end 
+
+%% Plotting Mean Firing Rate across Time Bins by Cluster
+
+period{1} = 'during';
+period{2} = 'post';
+
+for p = 1:2
 % Combine post-stimulus tables
-T_post = vertcat(all_data_tables{:, 2});
+T_post = vertcat(all_data_tables{:, p});
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -184,7 +203,10 @@ for i = 1:num_clusters
     ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis
 end
 
-sgtitle('Post-stimulus: Mean Firing Rate across Time Bins by Cluster');
+sgtitle([period{p} '-stimulus: Mean Firing Rate across Time Bins by Cluster']);
+
+end 
+
 %%
 Nrep = 100;   % number of k-means runs
 N_neurons = length(neuron_numbers);

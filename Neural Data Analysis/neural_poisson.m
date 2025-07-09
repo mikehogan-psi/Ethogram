@@ -1,4 +1,4 @@
-%% Neural Logistic regression analyis 
+%% Neural Poisson mixed-effects model (GLMM) analyis 
 
 % This script fits a generalized linear mixed-effects model (GLMM) in the from of a logistic function 
 % to the firing patterns of individual neurons
@@ -7,8 +7,9 @@
 % the ivestigated factors are: 
 %       - 1. timebin (i.e. time within each trial)
 %       - 2. trials number 
+%       - 3. behaviours: freezing, darting or rearing
 
-%       - 3. behaviours: freezing, darting rearing
+% later 
 %       - 4. treatment groups: psilocybin or vehicle
 
 %% Directory Setup
@@ -25,7 +26,7 @@
     triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
 
 % Define filepath to save processed data to and name of saved data
-    savefile_name_glmm = 'extinction_neuronal_cofficients_poisson_';
+    savefile_name_glmm = 'mouse2ext_poisson_freezing_';
     savefile_name_data_tables = 'extinction_data_tables_';
     save_folder = 'Z:\Abi\neuronal_data\mouse_2\Mike processed data\';
 %% Load data
