@@ -41,8 +41,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% % !!! CHANGE/ ADJUST THESE AS NECCECSARY !!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % 1. Define which session you are analysing
-      session = 'extinction';
-    %   session = 'extinction_habituation';
+      session = 'renewal';
+     %  session = 'extinction';
 
 % 2. Define variables that remain concistent throughout entire analyses
 
@@ -70,9 +70,9 @@
                 SSM_data_path = [common_raw_dir '\SSM_fitted_data\' session '\'];     % SSM fitted data (2D-Upper generated data - corrected body marker positions and mean/eigenpose data)
            
      % B: folder where data labeled with desired behaviour shall be saved 
-           common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\RFM_analyses\extinction_analysis'; 
-         %  common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\habituation_analysis'; 
-        %   common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\renewal_analysis'; 
+        %   common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\extinction_analysis'; 
+        %    common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\habituation_analysis'; 
+           common_behav_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\renewal_analysis'; 
                 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% % ! will be automatically created for each new analyses (based on the previous definitions !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -192,8 +192,7 @@ end
    % feature_selectection_indx = [10,2,5,6,11,12,13,14];  % featureselection for RFM_darting_12 [17,18,20,15]
    %  feature_selectection_indx = [2,5,6,11,10,12,13,14]; % RFM_darting_13
     % feature_selectection_indx = [13,14,22,23];  % RFM_darting_16  
-    feature_selectection_indx = [13,14,22,23,24,25];  % RFM_darting_17 
-%    feature_selectection_indx = [12,14,22,23,24,25];  % RFM_darting_18
+     feature_selectection_indx = [13,14,22,23,24,25];  % RFM_darting_17 [13,14,22,23,24,25];
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
@@ -441,13 +440,13 @@ for i = 1:num_files
 end
 
 
-%% STEP 7a: Post-processing - Remove false positive labels below (and above) velocity threshold
-%  OLNY FOR DARTING: remove false positives where mouse is below velocity threshold (to slow to be darting)
+%% STEP 7a: Post-processing - Remove false positive labels below velocity threshold
+%  OLNY FOR FARTING: remove false positives where mouse is below velocity threshold (to slow to be darting)
 
 % Load predicted labels files for all mice
 file_list_pred_labels = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_*'])); % change if body or tail data needed
 
-for i = 1: length(file_list_pred_labels) % loop through all files
+for i = 1: num_files % loop through all files
 
     % load predicted labels variable
     load([predicted_labels_path file_list_pred_labels(i).name]);
@@ -468,7 +467,7 @@ for i = 1: length(file_list_pred_labels) % loop through all files
     predicted_labels_TH(falsePositives) = 0;
        
     % diplay progress
-    disp(['velocity threshold <' num2str(velocity_threshold) 'filtered for ' file_list_pred_labels(i).name ])
+    disp(['velocity threshold <' num2str(velocity_threshold) 'filtered for' file_list_pred_labels(i).name ])
 
     % save the filtered predicted labels variable to replace original file
       save([predicted_labels_path file_list_pred_labels(i).name], 'predicted_labels_TH', 'velocity_threshold', '-append'); 
@@ -483,7 +482,7 @@ end
 % Load predicted labels files for all mice
 file_list_pred_labels = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_*'])); % change if body or tail data needed
 
-for i = 1:length(file_list_pred_labels) % loop through all files
+for i = 1:num_files % loop through all files
 
     % load predicted labels variable
     load([predicted_labels_path file_list_pred_labels(i).name]);
@@ -516,7 +515,7 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-  base_name = ['mouse29_' session '_p1'];
+  base_name = ['mouse30_' session '_p1'];
  %base_name = ['mouse27_' session]; % For habituation
 
  % darting = find(predicted_labels_TH == 1);
