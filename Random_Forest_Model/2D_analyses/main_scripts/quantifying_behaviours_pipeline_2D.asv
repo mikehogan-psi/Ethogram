@@ -11,7 +11,7 @@
 %% Setup
 
 % define session
-  session = 'renewal'; % !!!CHANGE THIS!!!
+  session = 'extinction'; % !!!CHANGE THIS!!!
 
 % define target behaviour that was predicted and shall now be anlysed
   behaviour = 'darting'; % !!!CHANGE THIS!!!
@@ -30,7 +30,7 @@
 
     % save directory
       save_dir = [common_dir 'quantifying_behaviours\' behaviour];
-      fig_path = [save_dir '\figures\' session '\'];
+      fig_path = [save_dir '\figures\' session];
                  mkdir(fig_path); 
 
 

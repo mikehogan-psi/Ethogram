@@ -1,4 +1,4 @@
-function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, manual_labels_path, video_file_path, frame_features_strings, window_size)
+function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, manual_labels_path, base_name, frame_features_strings, window_size)
 
 % labeled_data_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\extinction_analysis\rearing_data\corrected_labels_data\mouse13_extinction_p2_2024-10-16-131736-0000_verified_labels.mat';
 % mat_file_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\data_all_mice\SSM_fitted_data\SSM_fitted_data_extinction\mouse13_extinction_p2_2024-10-16-131736-0000DLC_resnet50_Fear Extinction No ImplantOct15shuffle1_500000_body_fit.mat';
@@ -11,9 +11,14 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
     % Load data
     data = load(SSM_file_path);
     b = data.b;
-    R = data.R;
+    A = data.A;
     T = data.T;
     missing = data.missing; 
+    Xfit = data.Xfit;
+    
+    % get body anteriour coordinates
+    bAnt = squeeze(Xfit(5,:,:));
+
 
     % Initialise feature matrix 
     num_frames = length(data.A);
@@ -26,7 +31,7 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
 
         % select non-behaviour frames (want eg. 5x more than behaviour frames)
         num_behaviour = numel(behaviour_indices);
-        num_non_behaviour_to_sample = min(5 * num_behaviour, numel(non_behaviour_indices)); % to have a 5-to-1 non-behaviour/behaviour ratio
+        num_non_behaviour_to_sample = min(7 * num_behaviour, numel(non_behaviour_indices)); % to have a 7-to-1 non-behaviour/behaviour ratio
                                                                                             % OR if not enough non-behaviour frames to reach ratio -> just takes all non-behaviour frames
         selected_non_behaviour_indices = datasample(non_behaviour_indices, num_non_behaviour_to_sample, 'Replace', false);
 
@@ -53,8 +58,7 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
         end
 
         % Create the full path for saving the file
-        [~, video_name, ~] = fileparts(video_file_path);
-        save_path = [manual_labels_path, video_name, '_labels.mat']; 
+        save_path = [manual_labels_path, base_name, '_labels.mat']; 
 
         try     
             save(save_path, 'labels', 'features', 'all_frames_labels');
@@ -75,6 +79,30 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
         b_window = b(:, start_idx:end_idx);
         T_window = T(:, start_idx:end_idx);
         A_window = A(start_idx:end_idx);
+        bAnt_window = bAnt(:, start_idx:end_idx);
+
+        % Compute forward shifted indices for bAnt_window_post (Feature 22)
+        start_post = start_idx + 20;
+        end_post   = end_idx + 20;
+        
+        % Check for bounds before indexing
+        if end_post <= num_frames
+            bAnt_window_post = bAnt(:, start_post:end_post);
+        elseif end_post > num_frames
+                bAnt_window_post = bAnt(:, start_post:end);
+        end
+
+        % Compute backward shifted indices for bAnt_window_prior (Feature 23)
+        start_prior = start_idx - 20;
+        end_prior   = end_idx - 20;
+        
+        % Check for bounds before indexing
+        if start_prior <= 0
+            bAnt_window_prior = bAnt(:, 1:end_prior);
+        else
+            bAnt_window_prior = bAnt(:, start_prior:end_prior);
+        end
+
 
         % find how many frames are missing datapoints
         miss_window = missing(start_idx:end_idx);
@@ -88,6 +116,8 @@ function feature_extractor_already_labeled(all_frames_labels, SSM_file_path, man
             b_window = b_window(:, valid_cols);
             T_window = T_window(:, valid_cols);
             A_window = A_window(valid_cols);
+            bAnt_window = bAnt_window(:, valid_cols);
+
         end   
         
         % compute all features for this frame  
