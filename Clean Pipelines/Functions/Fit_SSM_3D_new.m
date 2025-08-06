@@ -66,8 +66,8 @@ Xtf = generate_X(btf,Rtf,Ttf,template,eignV3D);
 
 
 %save
-disp(sprintf('Saving results'));
-save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], ...
+fprintf('Saving results\n');
+save(SSM_data_path, ...
     'X', 'Xtf', 'Ttf', 'Rtf', 'btf', 'good_trials', ...
     'Xfit', 'T', 'R', 'b', "missing");
 

@@ -1,26 +1,12 @@
-function[] = SSM_est_mike_abi_implanted(triangulated_data_path, SSM_model_name_path) 
-
-% this script had been adapted to the DLC model used to track implanted mice
-% DLC_landmarks: 1. cable tip
-%                2. back left courner (of implant)
-%                3. back right courner (of implant)
-%                4. nose
-%                5. left ear
-%                6. right ear
-%                7. neck base
-%                8. body anteriour
-%                9. body posteriour
-%                10. tail base
-%                11. tail anteriour
-%                12. tail posteriour
-%                13. tail tip
+function[] = SSM_est_mike_abi()
 
 %options
-options_SSM.good_landm = [1:11];
-options_SSM.ind_head = [1:7];      % including implant markers (1:3)
-options_SSM.ind_body = [8:13];
-options_SSM.K = 3;                 % number of eigenvectors to be included in SSM
-options_SSM.TH_Eigen = 0.8;        % threshold for how much varianve eigenvectors need to explain
+options_SSM.num_best_head = 3;
+options_SSM.good_landm = [1:8];
+options_SSM.ind_head = [1:4];
+options_SSM.ind_body = [5:8];
+options_SSM.K = 3;
+options_SSM.TH_Eigen = 0.8;
 
 %load data
 filepath = triangulated_data_path;
@@ -28,7 +14,7 @@ fname = dir(filepath);
 fname = fname(3:end);
 X = []; W = [];
 for n = 1:numel(fname)
-    temp = load([filepath '\' fname(n).name]);
+    temp = load([filepath fname(n).name]);
     X = cat(3,X,temp.X);
     W = cat(2,W,temp.W);
 end

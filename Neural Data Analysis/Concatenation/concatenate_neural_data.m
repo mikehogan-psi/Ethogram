@@ -1,10 +1,14 @@
+% Provide path you want concantenated data to be saved to
+savepath = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data';
 
-fid_write = fopen('mouse2_concatenated_data_full.dat', 'w');
+cd(savepath)
 
-path1 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Renewal\Neural Data\mouse2_renewal_habituation_2025-06-12_11-56-40\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
-path2 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Renewal\Neural Data\mouse2_renewal_p1_2025-06-12_12-04-58\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
-path3 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Renewal\Neural Data\mouse2_renewal_p2_2025-06-12_12-28-14\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
-path4 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Renewal\Neural Data\mouse2_renewal_checkerboard_2025-06-12_12-52-28\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+fid_write = fopen('mouse3_concatenated_data_full.dat', 'w');
+
+path1 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_habituation\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+path2 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p1\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+path3 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p2\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+% path4 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Renewal\Neural Data\mouse2_renewal_checkerboard_2025-06-12_12-52-28\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
 
 fid_read = fopen([path1 'continuous.dat']);
 A = fread(fid_read, '*int16');
@@ -20,10 +24,10 @@ fid_read = fopen([path3 'continuous.dat']);
 A = fread(fid_read, '*int16');
 fwrite(fid_write, A, 'int16');
 fclose(fid_read);
-
-fid_read = fopen([path4 'continuous.dat']);
-A = fread(fid_read, '*int16');
-fwrite(fid_write, A, 'int16');
-fclose(fid_read);
+ 
+% fid_read = fopen([path4 'continuous.dat']);
+% A = fread(fid_read, '*int16');
+% fwrite(fid_write, A, 'int16');
+% fclose(fid_read);
 
 fclose(fid_write);

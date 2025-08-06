@@ -1,25 +1,30 @@
-function[] = Fit_SSM_3D_new(current_3Ddata_file, SSM_data_path, SSM_model_name_path)
+function[] = Fit_SSM_tail_3D(current_3Ddata_file, SSM_data_path, SSM_model_name_path)
 
 options.Ltrial = 502;
 options.wind = [0.2 0.6 0.2];
-options.good_landm = [1:11];
-options.ind_head = [1:7];      % including implant markers (1:3)
-options.ind_body = [8:13];
+
+% Only tail landmarks
+options.good_landm = 10:13;
+options.ind_head = [];   % not used
+options.ind_body = [];   % not used
+
 options.alpha_reg = 0.1;
-options.TH_missing = 0.5;
+options.TH_missing = 0.3;
 options.Lwind_missing = [1:3];
 
-%
-load(current_3Ddata_file, 'X', 'W')
+% Load current 3D data (13 landmarks × coordinates × frames)
+load(current_3Ddata_file, 'X', 'W');
 
-%remove bad landmarks
+% Keep only tail landmarks
 X = X(options.good_landm,:,:);
 W = W(options.good_landm,:);
-%load SSM
-load(SSM_model_name_path,'lambda','template','eignV3D','sigma2');
-%fit SSM
-disp(sprintf('Fit SSM'));
-[b,Xfit,R,T] = fit_SSM_Neuropix1_v2(X,W,template,lambda,eignV3D,options.alpha_reg,sigma2,options);
+
+% Load tail-only SSM model
+load(SSM_model_name_path, 'lambda', 'template', 'eignV3D', 'sigma2');
+
+disp('Fitting tail-only SSM...');
+[b,Xfit,R,T] = fit_SSM_Neuropix1_v2_body_and_tail_TEST(X, W, template, lambda, eignV3D, options.alpha_reg, sigma2, options);
+
 %load('so_far');
 %separate into trials
 disp(sprintf('Dividing data into trials'));

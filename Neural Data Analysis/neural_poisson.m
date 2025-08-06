@@ -17,18 +17,18 @@
 % Define folder path that contains neronal spiking data 
 % (i.e. firing rate matrices and response groups obtained from neural_data_analysis_pipeline.m)
 
-  neuronal_data_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\spiking_data\';
+  neuronal_data_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\processed_data\spiking_data\';
 
 % Define folder path that contains kilosorted dats of this session
-    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\'; % 
+    kilosort_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\kilosort4\'; % 
 
 
-    triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';
+    triggers_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Triggers\';
 
 % Define filepath to save processed data to and name of saved data
     savefile_name_glmm = 'mouse2ext_poisson_freezing_';
     savefile_name_data_tables = 'extinction_data_tables_';
-    save_folder = 'Z:\Abi\neuronal_data\mouse_2\Mike processed data\';
+    save_folder = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\processed_data\';
 %% Load data
 
 % get important variables
@@ -46,14 +46,14 @@
     N_neurons = numel(clu_val); % get number of detected clusters i.e neurons
 
 % load list of Loom-response-types 
-  load([neuronal_data_path 'mouse2_extinction_LOOMresp_neurons'], 'resp_duringLOOM_nr', 'resp_postLOOM_nr')
+  load([neuronal_data_path 'mouse3_extinction_LOOMresp_neurons'], 'resp_duringLOOM_nr', 'resp_postLOOM_nr')
 
 % load extracted loom and flash (i.e. stimuli onset) events
-  load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom')
+  load([triggers_path 'mouse3_extinction_extracted_events'],'evt_loom')
 
 % Load freezing data
-  load("D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5\mouse2_loom_freezing.mat")  
-  freeze_matrix = mouse2_freeze_loom;
+  load('C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\freezing_looms_mouse3.mat')  
+  freeze_matrix = freezing_looms;
 
 % Create variable with all responsive neurons
 resp_LOOM_nr = [resp_duringLOOM_nr; resp_postLOOM_nr];
@@ -71,7 +71,7 @@ resp_LOOM_nr = unique(resp_LOOM_nr);
     
     savefile_name_data_tables = [savefile_name_data_tables, append_to_save];
     save_path_data_tables = fullfile(save_folder, savefile_name_data_tables);
-  %% Fit logistic regression of during and post-stim periods for each neuron
+  %% Fit poisson model for during and post-stim periods for each neuron
 
   % define time variables to fit glmm for duing stim and post stim periods
            period = ["during", "post"]; % -> first emement during stim, secodn post-stim 

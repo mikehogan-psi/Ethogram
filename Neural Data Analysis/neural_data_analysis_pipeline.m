@@ -3,15 +3,15 @@
 %% Directory setup
 
 % Define folder path that contains raw neuropixel data (open ephyis output) of this session
-    ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\'; 
+    ephys_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\'; 
     % ephys_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\'; 
 
-% Define folder path that contains kilosorted dats of this session
-    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\'; % 
+% Define folder path for kilosorted data for this session
+    kilosort_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\kilosort4\'; % 
    % kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Renewal\kilosort4\'; % 
 
 % create output folders where processed data will be saved
-    filepath_out   = 'Z:\Abi\neuronal_data\mouse_2\processed_data\';  
+    filepath_out   = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\processed_data\';  
     triggers_path =  [filepath_out 'concatenated_triggers\'];
     spikes_path    = [filepath_out 'spiking_data\'];
     figures_path   = [filepath_out 'spiking_data\figures\'];
@@ -28,7 +28,7 @@
 %% Setup variables
 
 % define which mouse
-   mouse = 'mouse2';
+   mouse = 'mouse3';
 
 % define which session
     sesh = 'extinction';
@@ -48,11 +48,11 @@
 %% ======================================================================================================================================
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Processing Event triggers  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % ======================================================================================================================================
-%% concatinating event triggers
+%% concatenating event triggers
 
   cont0 = 0; % sets start at 0 triggers
     
-  for p = 1:length(sesh_parts) % loop through all seshion parts
+  for p = 1:length(sesh_parts) % loop through all session parts
 
     % get filepaths to open_ephys data   
     file_path = dir(fullfile(ephys_dir, ['*' sesh_parts{p} '*']));
@@ -74,7 +74,7 @@
  
   end
 
-%% extraxting relevant events for aligning spikes 
+%% extracting relevant events for aligning spikes 
 
 evt_flash = [];
 evt_loom = [];
@@ -164,7 +164,7 @@ end
 %% comparing mean firing rates before, during and after stimulus (LOOM trials)
 
 % load flash and loom trial mean firing rate (across trials)
-load([spikes_path mouse '_' sesh '_loom_data'], 'fr_loom', 't_loom');
+load([spikes_path mouse '_' sesh '_loom_glmm_data'], 'fr_loom', 't_loom');
 
 n_cells  = size(fr_loom, 3); % extract number of clusters
 

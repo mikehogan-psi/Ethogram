@@ -2,9 +2,9 @@ function[] = Fit_SSM_3D_new(current_3Ddata_file, SSM_data_path, SSM_model_name_p
 
 options.Ltrial = 502;
 options.wind = [0.2 0.6 0.2];
-options.good_landm = [1:11];
-options.ind_head = [1:7];      % including implant markers (1:3)
-options.ind_body = [8:13];
+options.good_landm = [1:8];
+options.ind_head = [1:4];
+options.ind_body = [5:8];
 options.alpha_reg = 0.1;
 options.TH_missing = 0.5;
 options.Lwind_missing = [1:3];
@@ -36,40 +36,9 @@ disp(sprintf('Smooth time series'));
 [Rtf,Ttf,btf] = smooth_data(Rt,Tt,bt,good_trials,options.wind);
 %regenerate X smoothed
 Xtf = generate_X(btf,Rtf,Ttf,template,eignV3D);
-
-
-%reshape to have all frames in one dimension
-    disp('Reshaping output to flatten trials');
-    
-    % Determine total number of frames
-    Ltrial = options.Ltrial;
-    Ntrial = size(btf,3);
-    Nframes_total = Ltrial * Ntrial;
-    
-    % Reshape btf: [Ltrial x Nb x Ntrial] → [Nb x total_frames]
-    b = reshape(permute(btf, [2 1 3]), size(btf,2), Nframes_total);    % [Nb x total_frames]
-    
-    % Reshape Ttf: [Ltrial x 3 x Ntrial] → [3 x total_frames]
-    T = reshape(permute(Ttf, [2 1 3]), 3, Nframes_total);              % [3 x total_frames]
-    
-    % Reshape Rtf: [3 x 3 x Ltrial x Ntrial] → [3 x 3 x total_frames]
-    R = reshape(Rtf, 3, 3, Nframes_total);                             % [3 x 3 x total_frames]
-    
-    % Reshape Xtf: [Np x 3 x Ltrial x Ntrial] → [Np x 3 x total_frames]
-    Xfit = reshape(Xtf, size(Xtf,1), 3, Nframes_total);                % [Np x 3 x total_frames]
-
-
-% find frames with missing datapoints    
-    % missing: [1 x total_frames], true if any NaNs in b for that frame
-    missing = any(isnan(b), 1);   % Check along the shape mode dimension (Nb)
-
-
-
 %save
 disp(sprintf('Saving results'));
-save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], ...
-    'X', 'Xtf', 'Ttf', 'Rtf', 'btf', 'good_trials', ...
-    'Xfit', 'T', 'R', 'b', "missing");
+save([SSM_data_path '\' current_3Ddata_file(1:end-16) 'SSM_fit'], 'X', 'Xtf','Ttf','Rtf','btf','template','eignV3D','lambda','good_trials');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%SUBFUNCTIONS%%%%%%%%%%%%%%%%%%%%%%%%%%

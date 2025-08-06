@@ -35,7 +35,7 @@ frspk = vertcat(frspk{:});
 trialspk = vertcat(trialspk{:});
 t = t(2:end-1);
 Nt = length(t);
-fr = fr(:,2:end-1);
+fr = fr(:,2:end-1); %alter original scrip to remove -1 if needed
 mfr = mean(fr);
 sfr = std(fr)/sqrt(N);
 if graph&length(frspk) 

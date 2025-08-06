@@ -1,5 +1,5 @@
 % Specify the folder containing your .mat files
-folderPath = 'D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5';
+folderPath = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\DLC Data\cam5';
 
 % Get a list of all .csv files in the specified folder
 fileList = dir(fullfile(folderPath, '*.csv'));
@@ -487,7 +487,7 @@ for i = 1:2
                   veh_loom_ss2_mean + veh_loom_ss2_sem], [], 'all')]);
 end
 
-%%
+%% Use for Prism stats tests
 first_half_psi_loom = psi_post_stim_loom(11:end, :, :);
 first_half_veh_loom = veh_post_stim_loom(11:end, :, :);
 

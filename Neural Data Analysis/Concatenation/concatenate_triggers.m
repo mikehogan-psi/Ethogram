@@ -1,15 +1,15 @@
 
-path1 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_habituation_2025-06-06_13-13-19\Record Node 101\experiment2\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
-path2 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_p1_2025-06-06_13-24-00\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
-path3 = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_p2_2025-06-06_13-48-21\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
+path1 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_habituation\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
+path2 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p1\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
+path3 = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p2\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
 % path4 = 'C:\Cohort 4 Temp Data Storage\Mouse1\Extinction\Neural Data\mouse1_extinction_p3\Record Node 101\experiment1\recording1\events\Neuropix-PXI-100.ProbeA\TTL\';
 
-path1_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_habituation_2025-06-06_13-13-19\Record Node 101\experiment2\recording1\continuous\Neuropix-PXI-100.ProbeA\';
-path2_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_p1_2025-06-06_13-24-00\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
-path3_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data\mouse2_extinction_p2_2025-06-06_13-48-21\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+path1_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_habituation\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+path2_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p1\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
+path3_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\mouse3_extinction_p2\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
 % path4_continuous = 'C:\Cohort 4 Temp Data Storage\Mouse1\Extinction\Neural Data\mouse1_extinction_p3\Record Node 101\experiment1\recording1\continuous\Neuropix-PXI-100.ProbeA\';
 
-filepath_out = 'C:\Cohort 4 Temp Data Storage\Mouse2\Extinction\Neural Data';
+filepath_out = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\';
 
 cont0 = 0;
 

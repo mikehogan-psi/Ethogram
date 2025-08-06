@@ -22,17 +22,20 @@
 %% General Setup
 
 % define session 
- % sesh = 'extinction';
-  sesh = 'renewal';
+ sesh = 'extinction';
+  % sesh = 'renewal';
 
-% load camera projection matrix (P)
-  load('C:\Users\Abi Hogan\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P');
+% % load camera projection matrix (P)
+%   load('C:\Users\Abi Hogan\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P');
+load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P')
  
 % define folder path to folder that contains dlc data from all cameras
-  dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\';
+  % dlc_folder_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\';
+  dlc_folder_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\DLC Data\';
 
 % define folder path to where triangulated data files shall be saved
-  save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\triangulated_data\camera_8_included\';
+  % save_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\triangulated_data\camera_8_included\';
+  save_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort_4_06_05_25 (SC PAG Implanted Animals)\Extinction\Mouse 3\Triangulated Data\';  
 
   % define likelihood treshold (only markers which exeed this threshold will be used)
   TH = 0.9; % 
@@ -40,7 +43,7 @@
 %% A: test for single mouse
 
 % define mouse file name
-  base_name = ['mouse1_' sesh '_p1'];
+  base_name = ['mouse3_' sesh '_p1'];
   
 
 % extract filenames from different cameras

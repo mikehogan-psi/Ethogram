@@ -26,21 +26,21 @@
     % folderpath to dlc data 
         %folderPath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\DLC_data\';
     % folderpath to ssm fitted data 
-        folderPath = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\SSM_fitted_data\';
+        folderPath = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\triangulated_data';
 
 
     % directory to folder to save analysed data in
-        save_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\velocity_analysis_same_as_2D\';
+        save_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\triangulated_data';
     % directory to folder to save figures in
      %   fig_dir =  [ common_dir sesh '_analysis\figures\'];     
 
 
-    video_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\video_data';
+    % video_path = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3\video_data';
 
 
 % Get a list of all .csv files in the specified folder
 %fileList = dir(fullfile(folderPath, '*camera5_mouse*_extinction*'));
-fileList = dir(fullfile(folderPath, ['mouse*_' sesh '*']));
+fileList = dir(fullfile(folderPath, ['mouse*_' sesh '*SSM_fit.mat']));
 
 % Initialise a cell arrays to store data information
 T_matrices = cell(1, length(fileList)); % for each mouse (2 cells - part 1 and part 2) x and y coordinates (row) of body anterior body marker for each frame (colums)
@@ -139,7 +139,7 @@ all_velocity_data(:, :, mouse_idx) = dist;
 
 end
 
-save([save_dir 'X_all_velocity_data_' sesh], 'all_velocity_data');
+% save([save_dir 'X_all_velocity_data_' sesh], 'all_velocity_data');
 
 %% Defining freezing behaviour
 
@@ -174,21 +174,22 @@ for mouse_ix = 1:num_mice
 end
 
 % Saving Data 
-%save([save_dir 'validated_freeze_matrix_xfit_' sesh], 'validated_freeze_matrix_xfit');
+predicted_labels= validated_freeze_matrix; %renaming for consistency in later analysis
+% save([save_dir 'freezing_labels_mouse3' sesh], 'predicted_labels');
 
 %clearvars -except validated_freeze_matrix common_dir save_dir fig_dir num_mice sesh 
 
 %% Saving in same format as other behaviours (predicted by RFM)
 
-freezing_mouse2 = validated_freeze_matrix(:,:,2);
-
-predicted_labels_all = reshape(freezing_mouse2', [], 1);
-
-predicted_labels = predicted_labels_all(1:10040);
-save([save_dir 'Xfit_freezing_mouse2_extinction_p1'], "predicted_labels")
-
-predicted_labels = predicted_labels_all(10041:end);
-save([save_dir 'Xfit_freezing_mouse2_extinction_p2'], "predicted_labels")
+% freezing_mouse2 = validated_freeze_matrix(:,:,2);
+% 
+% predicted_labels_all = reshape(freezing_mouse2', [], 1);
+% 
+% predicted_labels = predicted_labels_all(1:10040);
+% save([save_dir 'Xfit_freezing_mouse2_extinction_p1'], "predicted_labels")
+% 
+% predicted_labels = predicted_labels_all(10041:end);
+% save([save_dir 'Xfit_freezing_mouse2_extinction_p2'], "predicted_labels")
 
 
 %% STEP 8: Manual check predicted label accuracy and correct labels  
