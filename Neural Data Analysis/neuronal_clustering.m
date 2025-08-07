@@ -51,7 +51,7 @@ ylabel('Mean Silhouette Score');
 % Set K to value with highest silouette score
 [~, K] = max(avg_silhouette);
 
-[cluster_idx, centroids] = kmeans(features_clean_z, K, 'Replicates', 50);
+[cluster_idx, centroids] = kmeans(features_clean_z, K, 'Replicates', 50,'Distance','correlation');
 
 % Plot clusters
 figure;
@@ -111,8 +111,12 @@ figure;
 scatter(score(:,1), score(:,2), 20, cluster_idx, 'filled');
 
 %%
+
 % load("D:\PhD 2nd Year\Cohort 4 Mouse 2 DLC Data Temp\cam5\all_data_tables.mat")
 load("Z:\Abi\neuronal_data\mouse_2\Mike processed data\extinction_freezing_data_tables_FLASHvsLOOM_signif_neurons.mat")
+
+load("Z:\Abi\neuronal_data\mouse_2\Mike processed data\extinction_data_tables_resp_LOOM_nr.mat")
+
 
 all_data_tables = all_data_tables(~is_outlier, :);
 
@@ -135,6 +139,7 @@ for p = 1:2
 
 % Combine post-stimulus tables
 T_post = vertcat(all_data_tables{:, p});
+
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -160,10 +165,14 @@ for i = 1:num_clusters
     xlabel('Trial');
     xlim([1 20])
     ylabel('Mean FR (Hz)');
-    ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis scaling
+    ylim([0, 16]); % Optional: consistent y-axis scaling
 end
 
+
 sgtitle([period{p} '-stimulus: Mean Firing Rate across Trials by Cluster']);  % overall title
+
+% sgtitle('During-stimulus: Mean Firing Rate across Trials by Cluster');  % overall title
+
 
 end 
 
@@ -174,7 +183,11 @@ period{2} = 'post';
 
 for p = 1:2
 % Combine post-stimulus tables
+
 T_post = vertcat(all_data_tables{:, p});
+
+% T_post = vertcat(all_data_tables{:, 1});
+
 
 % Get unique cluster IDs
 clusters = unique(T_post.ClusterID);
@@ -197,10 +210,11 @@ for i = 1:num_clusters
     subplot(n_rows, n_cols, i);
     plot(1:length(mean_FR), mean_FR, 'LineWidth', 2);
     title("Cluster " + string(c));
-    xlabel('Time Bin (1s)');
+    xlabel('Time Bin (0.16s)');
     ylabel('Mean FR');
     xlim([1 20])
-    ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis
+    % ylim([0, max(mean_FR)*1.2]); % Optional: consistent y-axis
+    ylim([0, 16])
 end
 
 sgtitle([period{p} '-stimulus: Mean Firing Rate across Time Bins by Cluster']);

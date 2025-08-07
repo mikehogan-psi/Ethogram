@@ -11,7 +11,7 @@ master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 % confidence value will be used for triangulation) !!!
 TH = 0.9; 
 
-% !!! Provide filepath for SSM for estimating data
+% !!! Provide filepath for SSM for estimating data !!!
 SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
 
 %% Get directory for DLC datafiles for each mouse for specified session

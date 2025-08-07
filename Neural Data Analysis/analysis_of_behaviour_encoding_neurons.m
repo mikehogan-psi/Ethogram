@@ -6,21 +6,22 @@
 %% Directory Setup
 
 % Define folder path that contains neronal spiking data 
-% (i.e. firing rate matrices and response groups obtained from neural_data_analysis_pipeline.m)
-
-  neuronal_data_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\spiking_data\';
+% (i.e. firing rate matrices from raster_NM and response groups obtained from neural_data_analysis_pipeline.m)
+  neuronal_data_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\processed_data\spiking_data\';
 
 % Define folder path that contains kilosorted dats of this session
-    kilosort_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction\kilosort4\';  
+    kilosort_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Concatenated data\kilosort4\';  
 
-% Define folder path that contains loom and flash event trigger timnestamps
-    triggers_path = 'Z:\Abi\neuronal_data\mouse_2\processed_data_extinction\concatinated_triggers\';   
+% Define folder path that contains loom and flash event trigger timestamps
+% (extracted events from triggers via neural_data_analysis pipeline)
+    triggers_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\Neural Data\Triggers\';   
 
-% Define folder path that contains behavioural labels
-    behaviour_path = 'Z:\Abi\behavioral_analysis\Implanted_mice\mouse_2_behaviours\';
+% Define folder path that contains behavioural labels (1x 20800 flattened
+% freeze vector)
+    behaviour_path = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\';
 
 % Define folder path results shall be saved
-    savepath = 'Z:\Abi\neuronal_data\mouse_2\spike_decoding_analysis\';
+    savepath = 'C:\Cohort 4 Temp Data Storage\Mouse3\Extinction\';
 
 
 
@@ -34,7 +35,10 @@
   %   sesh = 'renewal';
 
  % define mouse
+
       mouse_nr = '2';
+
+
 
 %% Loading neuronal spike, trial and behavioural data
 
@@ -47,11 +51,13 @@ spk = readNPY([kilosort_dir '\spike_times.npy']);    % loads sample number of ea
     Ncell = numel(clu_val); % get number of detected clusters 
 
 % load extracted loom and flash (i.e. stimuli onset) events
-load([triggers_path 'mouse2_extinction_extracted_events'],'evt_loom', 'evt_flash')
+% Format: e.g. mouse3_extinction_extracted_events
+load([triggers_path 'mouse' mouse '_' sesh '_' 'extracted_events'],'evt_loom', 'evt_flash')
 
     Ntrial = length(evt_loom);
 
 % load and format behavioural labels 
+
     % load part 1
       load([ behaviour_path behaviour '_labels_mouse' mouse_nr '_' sesh '_p1.mat'], 'predicted_labels');
             labels_p1 = predicted_labels;
@@ -86,6 +92,12 @@ durations_seconds = durations_frames / fps;
 mean_duration = mean(durations_seconds);
 
 fprintf('Mean behavioural event duration: %.2f seconds\n', mean_duration);
+
+
+ load([ behaviour_path behaviour '_labels_mouse' mouse '_' sesh '.mat'], 'predicted_labels');
+ behaviour_labels = predicted_labels;
+ behaviour_labels = reshape(behaviour_labels', [], 1);
+    
 
 
 %% identify behaviour onsets
@@ -145,13 +157,22 @@ end
 cluster = neuron_cluster_assignments(:,1); % MAKE CLUSTER VALUES STARTING FROM 0!!!  
                                         
 % loop though all clusters to compute firing rated and load matrices
+
 for n = 1: length(cluster)
+=======
+
+cluster = double(clu_val)+1;
+
+for n = 1:length(cluster)
 
     clu_nr = cluster(n);
 
     tsp = spk(clu==clu_nr); % extracts spikes from this cluster
- 
+
     [mfr_behav(n,:), sfr_behav(n,:), t_behav, fr_behav(:,:,n),  ~]   = raster_NM(tsp,valid_onset_times,tpre,tpost,bin_size,true,false);
+
+    [mfr_loom(n,:), sfr_loom(n,:), t_loom, fr_loom(:,:,n),  ~]   = raster_NM(tsp,valid_onset_times,tpre,tpost,bin_size,false);
+
 
     fig = gcf;  
     sgtitle(sprintf(['mouse' mouse_nr ': ' behaviour ' ' sesh ' neuron %d'], clu_nr));
@@ -161,18 +182,21 @@ for n = 1: length(cluster)
 
     ginput(1); close all;
 
+    % disp('Press any key or click to show next neuron...');
+    % waitforbuttonpress;
+    % close(fig);  % Optional: close current figure
 end
 
 % % save variables 
-%   save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
-%   save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+  save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom', 'valid_onset_times');
+  % save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
 % 
 
 
 
 
 
-%% Sepparating behaviour into loom and flash trials
+%% Separating behaviour into loom and flash trials
 %  make sure you know which stimset the mouse you are analysis received!
 
 stim_set_1 = [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
@@ -222,9 +246,15 @@ for n = 1:Ncell
 
 end
 
+
 % save variables 
   save([savepath 'mouse_' mouse_nr '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
   save([savepath 'mouse_' mouse_nr '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+
+% % save variables 
+%   save([savepath 'mouse_' mouse '_' sesh '_spikes_per_frame_loom_data' ],'mfr_loom', 'sfr_loom', 't_loom', 'fr_loom');
+%   save([savepath 'mouse_' mouse '_' sesh 'spikes_per_frame_flash_data' ],'mfr_flash', 'sfr_flash', 't_flash', 'fr_flash');
+
 
 %% Plotting rasterplots of Loom trials with freezing behavior and firing rate (colormap version)
 
