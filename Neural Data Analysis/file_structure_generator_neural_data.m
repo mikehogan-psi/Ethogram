@@ -3,10 +3,12 @@ root_dir = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG 
 
 % Define folder names
 mice = {'Mouse 1', 'Mouse 2', 'Mouse 3'};
-sessions = {'Acquisition', 'Extinction', 'Retention'};
+sessions = {'Acquisition', 'Extinction', 'Renewal'};
 data_types = {'Behavioural Data', 'Neural Data'};
-processed_unprocessed_b = {'SSM Fitted Data', 'Triangulated Data', 'Raw DLC Data', 'Video Data'};
+processed_unprocessed_b = {'Extracted Behaviours', 'SSM Fitted Data',...
+    'Triangulated Data', 'Raw DLC Data', 'Video Data'};
 processed_unprocessed_n = {'Raw Data', 'Concatenated Data', 'Triggers'};
+extracted_behaviours = {'Freezing', 'Darting', 'Grooming', 'Rearing'};
 
 % Create folder structure
 for i = 1:length(mice)
@@ -24,6 +26,16 @@ for i = 1:length(mice)
                     sub_path_b = fullfile(base_path, processed_unprocessed_b{m});
                     if ~exist(sub_path_b, 'dir')
                         mkdir(sub_path_b);
+                    end
+                    
+                    % If this is the Extracted Behaviours folder, add behaviour subfolders
+                    if strcmp(processed_unprocessed_b{m}, 'Extracted Behaviours')
+                        for eb = 1:length(extracted_behaviours)
+                            eb_path = fullfile(sub_path_b, extracted_behaviours{eb});
+                            if ~exist(eb_path, 'dir')
+                                mkdir(eb_path);
+                            end
+                        end
                     end
                 end
             end
