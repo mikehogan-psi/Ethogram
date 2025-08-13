@@ -1,0 +1,56 @@
+%% Setup 
+
+% !!! Specify which session is to be analysed !!!
+% Acquisition, Extinction, or Renewal
+session = 'Extinction';
+
+% !!! Provide directory with all data in !!!
+master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
+
+%% Get directory for .dat files for each mouse for specified session and concatenate
+% Select only mouse data folders
+mouse_files = dir(fullfile(master_directory, 'Mouse*'));
+
+
+% Get neural data folders for specified session
+for mouse = 1:length(mouse_files)
+    mouse_name = mouse_files(mouse).name;
+    mouse_path = mouse_files(mouse).folder;
+    current_raw_neural_data_folder = fullfile(mouse_path, mouse_name,...
+        session, 'Neural Data', 'Raw Data');
+
+    raw_folder_dir = dir(fullfile(current_raw_neural_data_folder, 'mouse*'));
+    raw_folder_list = cell(length(raw_folder_dir), 1);
+
+    for part = 1:length(raw_folder_dir)
+        raw_folder_list{part} = fullfile(raw_folder_dir.folder(part),...
+            raw_folder_dir.name(part));
+    end
+
+    dat_files = cell(length(raw_folder_list), 1);
+    for parts = 1:length(raw_folder_list)
+        current_dat = fullfile(raw_folder_list, 'Record Node 101', 'experiment*', 'recording*',...
+            'continuous', 'Neuropix-PXI-100.ProbeA', 'continuous.dat');
+    dat_files{part} = current_dat;
+    end
+    
+    hab_path = dat_files{1};
+    p1_path = dat_files{2};
+    p2_path = dat_files{3};
+    if strcmp(session, 'Renewal')
+        check_path = dat_files{4};
+    end
+    
+    base_name = regexp(dat_files{1}, ['mouse\d+_' session], 'match', 'ignorecase');
+
+    save_path = fullfile(mouse_path, mouse_name, session, 'Neural Data', 'Concatenated Data');
+    save_name = ([base_name '_concatenated_neural_data']);
+
+    if strcmp(session, 'Extinction')
+        concatenate_neural_data(hab_path, p1_path, p2_path, [], save_path, save_name)
+    elseif strcmp(session, 'Renewal')
+        concatenate_neural_data(hab_path, p1_path, p2_path, check_path, save_path, save_name)
+    end
+
+end
+

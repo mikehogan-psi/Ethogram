@@ -95,16 +95,16 @@ for mouse_idx = 1:num_mice
     
     for trial_ix = 1:num_trials
 
-        dx = [0, diff(x_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
-        dy = [0, diff(y_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
-
-        % calculating dx and dy for all frames for each trial (e.g., 1:502,
+        % Calculating delta x and delta y for all frames for each trial (e.g., 1:502,
         % 503:1004 etc. and adds a 0 at start to maintain correct trial length)
 
-
-        dist(trial_ix, :) = sqrt(dx.^2 + dy.^2);
-        % calcuting Euclidian distance and adding values to columns of each
+        dx = [0, diff(x_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
+        dy = [0, diff(y_pos(((trial_ix-1)*num_frames + 1):(trial_ix*num_frames)))];
+      
+        % Calcuting Euclidian distance and adding values to columns of each
         % trial row
+        dist(trial_ix, :) = sqrt(dx.^2 + dy.^2);
+        
     end
 
 all_velocity_data(:, :, mouse_idx) = dist;
@@ -113,30 +113,31 @@ end
 
 %% Defining freezing behaviour
 
-fps = 15;
+fps = 15; % fps is always 15
 
 % cm per frame (use this for xfit data because triangulation transforms to cm)
 freezing_velocity_threshold = 0.0528; 
 
-freezing_duration_threshold = 1*fps; % convert seconds to frames (1 second × 15 FPS)
+% Convert seconds to frames (1 second × 15 FPS)
+freezing_duration_threshold = 1*fps; 
 
 freeze_counter_matrix = all_velocity_data < freezing_velocity_threshold;
 
 validated_freeze_matrix = zeros(size(freeze_counter_matrix));
 
+% Iterating over each video
 for mouse_ix = 1:num_mice
-    %iterating over each video
+    % Iterating over each trial    
     for trials = 1:num_trials 
-        % iterating over each trial
+        % Labeled_freezing is a vector same size as freeze_counter_matrix, but
+        % has a unique value for each 'blob' of consecutive trials.
+        % num_segments is as scalar representing how many 'blobs' there are
         [labeled_freezing, num_segments] = bwlabel(freeze_counter_matrix(trials, :, mouse_ix));
-        % labeled_freezing is a vector same size as freeze_counter_matrix, but
-        % has a unique value for each 'blob' of consecutive trials
-        %num_segments is as scalar representing how many 'blobs' there are
-        segment_props = regionprops(labeled_freezing, 'Area');
-        % extracts length of connected regions in labeled_freezing and stores
+        % Extracts length of connected regions in labeled_freezing and stores
         % it in segment_props.Area
+        segment_props = regionprops(labeled_freezing, 'Area');
+        % Iterating over number of consecutive segments
         for segment = 1:num_segments
-            %iterates over number of consecutive segments
             if segment_props(segment).Area >=freezing_duration_threshold
                 validated_freeze_matrix(trials, labeled_freezing == segment, mouse_ix) = 1;
             end
