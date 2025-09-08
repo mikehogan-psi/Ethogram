@@ -2,7 +2,7 @@
 
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -11,10 +11,11 @@ master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 % confidence value will be used for triangulation) !!!
 TH = 0.9; 
 
-% !!! Load camera projection matrix for triangulation !!!
+% !!! Provide filepath for camera projection matrix for triangulation !!!
 load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P')
 
 % !!! Provide filepath for SSM for estimating data !!!
+% SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_test.mat';
 SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
 %% Get directory for DLC datafiles for each mouse for specified session
 % Select only mouse data folders
@@ -50,7 +51,7 @@ disp(dlc_session_folders);
 % Master loop goes over each mouse and accesses its DLC data
 for mouse = 1:length(dlc_session_folders)
     current_dlc_folder_path = dlc_session_folders{mouse};
-    dlc_file_list = dir(fullfile(current_dlc_folder_path, 'camera*_mouse*.csv'));
+    dlc_file_list = dir(fullfile(current_dlc_folder_path, 'camera*_mouse*_p*.csv'));
     dlc_file_list = dlc_file_list(~[dlc_file_list.isdir]);
     base_names = cell(length(dlc_file_list), 1);
     dlc_file_names = cell(length(dlc_file_list), 1);
@@ -60,7 +61,7 @@ for mouse = 1:length(dlc_session_folders)
         dlc_file_names{n} =  dlc_file_list(n).name;
     end
     
-    % Loop through each filename and extract base name using regex
+    % Loop through each filename and extract base name using regexp
     for i = 1:length(dlc_file_names)
     % Match pattern: mouseX_session_pY
         tokens = regexp(dlc_file_names{i}, ['mouse\d+_' session '_p\d+'] , 'match',...
@@ -86,18 +87,9 @@ for mouse = 1:length(dlc_session_folders)
         for camera = 1:length(camera_files_struct)
             camera_files{camera} = fullfile(current_dlc_folder_path, camera_files_struct(camera).name);
             % -> each cell will contain file paths for CSV files recorded by one camera   
-        end 
+        end              
 
-        % Run load_data function 
-        disp(['Loading DLC data for ' base_names{part} '...']);
-        [x,L] = load_data_og(camera_files); % Extacts 2D coordinates and their likelihood values and loads them into x and L variables
         
-        disp(['Triangulating data for ' base_names{part} '...'])
-        % Run triangulation function 
-        [X, W] = triangulate_simple_og(x, L, P, TH); 
-          
-
-        % Save data in appropriate subfolder and with appropriate name
         % Get mouse names for file creation
         mouse_name = regexp(current_dlc_folder_path, 'Mouse\s*\d+', 'match', 'once');
 
@@ -115,8 +107,18 @@ for mouse = 1:length(dlc_session_folders)
         % Check if triangulated data already exists, skip this file if it
         % does
         if exist(triangulated_data_save_path, 'file')
-        warning([triangulated_data_save_path ' already exists, skipping save.']);
+        warning([base_names{part} '_triangulated.mat already exists, skipping triangulation.']);
         else
+        
+        % Run load_data function 
+        disp(['Loading DLC data for ' base_names{part} '...']);
+        [x,L] = load_data_og(camera_files); % Extacts 2D coordinates and their likelihood values and loads them into x and L variables
+        
+        disp(['Triangulating data for ' base_names{part} '...'])
+        % Run triangulation function 
+        [X, W] = triangulate_simple_og(x, L, P, TH); 
+        
+        % Save data in appropriate subfolder and with appropriate name
         save(triangulated_data_save_path,"W","X","x","L","TH","camera_files"); 
         disp([base_names{part} '_triangulated.mat' ' saved to ' triangulated_data_folder])
         end

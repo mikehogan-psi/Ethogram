@@ -1,9 +1,8 @@
 function [] = concatenate_neural_data_clean(hab_path, p1_path, p2_path, check_path, save_path, save_name)
 
-cd(save_path)
+fid_write = fopen(fullfile(save_path, save_name), 'w');
 
-fid_write = fopen(save_name, 'w');
-
+% Check if this is a extinction session, if so, skip checkerboard file
 if isempty(check_path)
     
     fid_read = fopen(hab_path);
@@ -22,6 +21,8 @@ if isempty(check_path)
     fclose(fid_read);
     
     fclose(fid_write);
+
+    clear A
 
 else
 
@@ -46,6 +47,8 @@ else
     fclose(fid_read);
 
     fclose(fid_write);
+
+    clear A
 
 end
 

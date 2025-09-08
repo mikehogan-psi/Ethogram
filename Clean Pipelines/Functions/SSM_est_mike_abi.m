@@ -2,9 +2,9 @@ function[] = SSM_est_mike_abi()
 
 %options
 options_SSM.num_best_head = 3;
-options_SSM.good_landm = [1:8];
+options_SSM.good_landm = [1:7];
 options_SSM.ind_head = [1:4];
-options_SSM.ind_body = [5:8];
+options_SSM.ind_body = [5:7];
 options_SSM.K = 3;
 options_SSM.TH_Eigen = 0.8;
 

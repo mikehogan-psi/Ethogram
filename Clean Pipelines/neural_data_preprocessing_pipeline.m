@@ -2,55 +2,154 @@
 
 % !!! Specify which session is to be analysed !!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!! Provide directory with all data in !!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
-%% Get directory for .dat files for each mouse for specified session and concatenate
+%% Get directories for .dat files and trigger.npy files and concantenate/extract
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
 
-
-% Get neural data folders for specified session
-for mouse = 1:length(mouse_files)
+% Get master neural data folders for specified session
+for mouse = 4%:length(mouse_files)
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;
     current_raw_neural_data_folder = fullfile(mouse_path, mouse_name,...
         session, 'Neural Data', 'Raw Data');
-
+    
+    % Construct list of filepaths for raw neural data folders for current mouse
     raw_folder_dir = dir(fullfile(current_raw_neural_data_folder, 'mouse*'));
     raw_folder_list = cell(length(raw_folder_dir), 1);
-
+      
     for part = 1:length(raw_folder_dir)
         raw_folder_list{part} = fullfile(raw_folder_dir(part).folder,...
             raw_folder_dir(part).name);
     end
+    
+    % Sort parts into correct order prior to concatenation
+    if strcmp(session, 'Extinction')
+        idx = zeros(3,1);
+        key_words = {'habituation', 'p1', 'p2'};
+        for part = 1:numel(key_words)
+            idx(contains(raw_folder_list, key_words{part})) = part;
+        end
+    elseif strcmp(session, 'Renewal')
+        idx = zeros(4,1);
+        key_words = {'habituation', 'p1', 'p2', 'checkerboard'};
+        for part = 1:numel(key_words)
+            idx(contains(raw_folder_list, key_words{part})) = part;
+        end
+    end
 
+    [~, sort_idx] = sort(idx);
+    raw_folder_list = raw_folder_list(sort_idx);
+
+
+    % Assign filepaths for .dat files in each folder to a cell array
     dat_files = cell(length(raw_folder_list), 1);
-    for parts = 1:length(raw_folder_list)
-        current_dat = fullfile(raw_folder_list, 'Record Node 101', 'experiment*', 'recording*',...
-            'continuous', 'Neuropix-PXI-100.ProbeA', 'continuous.dat');
+
+    for part = 1:length(raw_folder_list)
+        % Handle inconsistent experiment and recording numbers
+        exp_dir = dir(fullfile(raw_folder_list{part}, 'Record Node 101', 'experiment*'));
+        rec_dir = dir(fullfile(exp_dir(1).folder, exp_dir(1).name, 'recording*'));
+        current_dat = fullfile(rec_dir(1).folder, rec_dir(1).name,...
+            'continuous', 'Neuropix-PXI-100.ProbeA\');
     dat_files{part} = current_dat;
     end
     
+    % Extract file paths and assign names for concatenation function
     hab_path = dat_files{1};
     p1_path = dat_files{2};
     p2_path = dat_files{3};
+
+    % Check whether this is the renewal session (has an extra recording)
     if strcmp(session, 'Renewal')
         check_path = dat_files{4};
+    else
+        check_path = [];
     end
     
-    base_name = regexp(dat_files{1}, ['mouse\d+_' session], 'match', 'ignorecase');
+   % Assign filepaths for TTL files in each folder to a cell array
+    TTL_files = cell(length(raw_folder_list), 1);
 
-    save_path = fullfile(mouse_path, mouse_name, session, 'Neural Data', 'Concatenated Data');
-    save_name = ([base_name{1} '_concatenated_neural_data']);
-
-    if strcmp(session, 'Extinction')
-        concatenate_neural_data_clean(hab_path, p1_path, p2_path, [], save_path, save_name)
-    elseif strcmp(session, 'Renewal')
-        concatenate_neural_data_clean(hab_path, p1_path, p2_path, check_path, save_path, save_name)
+    for part = 1:length(raw_folder_list)
+        % Handle inconsistent experiment and recording numbers (can be
+        % variable)
+        exp_dir = dir(fullfile(raw_folder_list{part}, 'Record Node 101', 'experiment*'));
+        rec_dir = dir(fullfile(exp_dir(1).folder, exp_dir(1).name, 'recording*'));
+        current_TTL = fullfile(rec_dir(1).folder, rec_dir(1).name,...
+            'events', 'Neuropix-PXI-100.ProbeA', 'TTL\');
+    TTL_files{part} = current_TTL;
     end
 
+    hab_path_triggers = TTL_files{1};
+    p1_path_triggers = TTL_files{2};
+    p2_path_triggers = TTL_files{3};
+    
+    if strcmp(session, 'Renewal')
+        check_path_triggers = TTL_files{4};
+    else
+        check_path_triggers = [];
+    end    
+   
+    % Extract mouse/session basename for file save names
+    base_name = regexp(dat_files{1}, ['mouse\d+_' session], 'match', 'ignorecase');
+    
+    % Dynamically construct save paths for input into concatenation and 
+    % trigger extraction functions
+    save_path = fullfile(mouse_path, mouse_name, session, 'Neural Data', 'Concatenated Data');
+    save_name = [base_name{1} '_concatenated_neural_data.dat'];
+        
+    save_path_triggers = fullfile(mouse_path, mouse_name, session, 'Neural Data', 'Triggers');
+    save_name_triggers = [base_name{1} '_'];
+    
+    % Extract triggers (in original neural sample rate terms)
+    disp('Extracting trigger timings...')
+    if exist(save_path_triggers, 'dir')
+        if strcmp(session, 'Extinction')
+            extract_neural_data_triggers(hab_path, p1_path, p2_path,...
+        [], hab_path_triggers, p1_path_triggers, p2_path_triggers,...
+        [], save_path_triggers, save_name_triggers)
+        elseif strcmp(session, 'Renewal')
+            extract_neural_data_triggers(hab_path, p1_path, p2_path,...
+        check_path, hab_path_triggers, p1_path_triggers, p2_path_triggers,...
+        check_path_triggers, save_path_triggers, save_name_triggers)
+        end
+    else
+        warning('%s does not exist, skipping trigger extraction', save_path_triggers)
+    end
+    
+    % Check whether data for this mouse/session has already been
+    % concantenated, skip if so
+    if exist(fullfile(save_path, save_name), 'file')
+        warning('%s already exists, skipping concatenation', save_name)
+        continue
+    end
+    
+    % Check whether save folder for concatenated data exists, skip if not
+    if ~exist(save_path, 'dir')
+        warning('%s does not exist, skipping concatenation', save_path)
+        continue
+    end
+    
+    hab_path = [hab_path 'continuous.dat'];
+    p1_path = [p1_path 'continuous.dat'];
+    p2_path = [p2_path 'continuous.dat'];
+    if strcmp(session, 'Renewal')
+        check_path = [check_path 'continuous.dat'];
+    end
+
+    % Run concatenation function, checking for extra renewal recording
+    disp(['Concatenating neural data for ', base_name{1}, '...'])
+    if strcmp(session, 'Extinction')
+        concatenate_neural_data_clean(hab_path, p1_path, p2_path, [], save_path, save_name)
+        disp([save_name, ' has been saved!'])
+    elseif strcmp(session, 'Renewal')
+        concatenate_neural_data_clean(hab_path, p1_path, p2_path, check_path, save_path, save_name)
+        disp([save_name, ' has been saved!'])
+    end   
+
 end
+
 
