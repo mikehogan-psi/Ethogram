@@ -18,7 +18,7 @@ function[] = SSM_est_mike_abi_implanted(triangulated_data_path, SSM_model_name_p
 %options
 options_SSM.good_landm = [1:11];
 options_SSM.ind_head = [1:7];      % including implant markers (1:3)
-options_SSM.ind_body = [8:11];
+options_SSM.ind_body = [8:13];
 options_SSM.K = 3;                 % number of eigenvectors to be included in SSM
 options_SSM.TH_Eigen = 0.8;        % threshold for how much varianve eigenvectors need to explain
 

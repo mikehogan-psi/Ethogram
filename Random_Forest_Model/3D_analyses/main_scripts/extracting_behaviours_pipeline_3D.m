@@ -57,8 +57,8 @@
 % 2. Define directories to where specific data can be accessed/saved 
      % A: folder containing 'raw' data from all mice (data before any behaviours predicted)  
             % common_raw_dir = 'C:\Abi_Hogan\behavioral_analysis\data_all_mice\'; % Stopford PC
-            common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\pre_aquisistion_3D_analysis\data_all_mice\Extinction'; % Laptop
-
+            % common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\pre_aquisistion_3D_analysis\data_all_mice\Extinction'; % Laptop
+            common_raw_dir = 'C:\Cohort 4 Temp Data Storage\Mouse3\test_path';
      % subdirectories containing video and DLC data (must be already defined) + folder where SSM fitted data shall be saved 
             % ! make sure these folders already exist and contain correct data prior to starting analysis !
             video_path    = [common_raw_dir '\video_data'];                  % raw video data (videos of mice) 

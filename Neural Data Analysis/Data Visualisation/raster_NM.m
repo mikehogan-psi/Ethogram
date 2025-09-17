@@ -1,4 +1,4 @@
-function[mfr,sfr,t,fr,frspk,trialspk] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
+function[mfr,sfr,t,fr,frspk,trialspk,spikes_per_trial, binned_skp_counts] = raster_NM(tsp,evt,tpre,tpost,dt,graph)
 
 % General: this function creates raster plots and peri-stimulus time histograms (PSTHs) 
 %          for spike trains aligned to a set of events
@@ -17,19 +17,25 @@ t = [-tpre:dt:tpost];
 N = length(evt);
 Nt = length(t);
 fr = zeros(N,Nt);
+binned_skp_counts = zeros(N,Nt);
 frspk = cell(1,N);
 trialspk = cell(1,N);
+
+
 for n = 1:N
      temp = tsp(find((tsp>evt(n)-tpre)&(tsp<(evt(n)+tpost))))-evt(n);
      frspk{n} = temp;
-     fr(n,:) = hist(temp,t)/dt; 
+     binned_skp_counts(n,:) = hist(temp,t);
+     fr(n,:) = binned_skp_counts(n,:)/dt; 
      trialspk{n} = n*ones(length(temp),1);
 end
+
+spikes_per_trial = frspk;
 frspk = vertcat(frspk{:});
 trialspk = vertcat(trialspk{:});
 t = t(2:end-1);
 Nt = length(t);
-fr = fr(:,2:end-1);
+fr = fr(:,2:end-1); %alter original scrip to remove -1 if needed
 mfr = mean(fr);
 sfr = std(fr)/sqrt(N);
 if graph&length(frspk) 
@@ -57,3 +63,4 @@ if graph&length(frspk)
     ylabel('FR(Hz)','FontSize',14,'FontName','Arial');
     xlim([t(1) t(end)]);ylim([minfr maxfr]);
 end
+

@@ -1,10 +1,10 @@
 % Load data
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_renewal_cohort1.mat')
 % load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_renewal_cohort1.mat')
-%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
-%load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
-load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort1.mat')
+load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort1.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\psi_loom_data_extinction_cohort2.mat')
+% load('D:\PhD 2nd Year\MATLAB\Processed_freezing_data\veh_loom_data_extinction_cohort2.mat')
 
 % Define decay period
 decay_period = 233:502;
@@ -14,7 +14,7 @@ veh_loom_data_freeze_decay = veh_loom_data(:, decay_period, :);
 % Define parameters
 num_trials = 20;
 num_frames = 270;
-num_mice = 10; % mice per group (change as needed)
+num_mice = 20; % mice per group (change as needed)
 time_bin_size = 30; % 2 seconds = 30 frames at 15 FPS
 num_bins = floor(num_frames / time_bin_size);
 
@@ -52,7 +52,7 @@ for mouse = 1:num_mice
         for bin = 1:num_bins
             start_idx = (bin - 1) * time_bin_size + 1;
             end_idx = start_idx + time_bin_size - 1;
-            freezing_veh_binned(idx) = mean(current_trial(start_idx:end_idx));
+            freezing_veh_binned(idx)  =mean(current_trial(start_idx:end_idx));
             idx = idx + 1;
         end
     end
@@ -132,7 +132,7 @@ for g = 1:numel(group_val)
     end
 end
 
-% COMMENT/UNCOMMENT TO CHANGE ERROR BARS TO TOGGLE SEM ERROR BARS
+% COMMENT/UNCOMMENT TO CHANGE ERROR BARS TO SEM ERROR BARS
 figure; hold on;
 
 errorbar(trial_val, ym_actual(:,1), sem_actual(:,1), 'ko-', ...
@@ -162,7 +162,7 @@ hold off;
 
 % print(gcf, 'freezing_across_trials_Acq_ren_GLMEM.png', '-dpng', '-r300');
 
-% % COMMENT/UNCOMMENT TO CHANGE ERROR BARS TO TOGGLE SEM SHADED AREAS
+% % COMMENT/UNCOMMENT TO CHANGE ERROR BARS TO SEM SHADED AREAS
 % figure; hold on;
 % 
 % % Define colours

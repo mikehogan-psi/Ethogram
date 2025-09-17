@@ -10,19 +10,28 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PART 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Setup
 
+% define session
+  session = 'renewal'; % !!!CHANGE THIS!!!
+
 % define target behaviour that was predicted and shall now be anlysed
-            behaviour = 'darting'; % !!!CHANGE THIS!!!
+  behaviour = 'darting'; % !!!CHANGE THIS!!!
 
 % define the name of model that was used to predict the data
-            model_name = ['RFM_' behaviour '_9'];  % !!!CHANGE THIS!!!
+  model_name = ['RFM_' behaviour '_17'];  % !!!CHANGE THIS!!!
+
 
 % Setup directories
 
     % Common directory containing behavioural-label data and where anlysis outcomes shall be saved
-        common_dir = ['C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\extinction_analysis\darting_analyses\' model_name]; % !!!CHANGE THIS!!!
+      common_dir = 'Z:\Abi\behavioral_analysis\2D_behavioural analysis\'; % !!!CHANGE THIS!!!
 
     % folderpath containing behaviour-labels predicted by model
-        predicted_labels_path = [common_dir '\predicted_labels_data\'];
+      predicted_labels_path = [common_dir 'RFM_analyses\' session '_analysis\' behaviour '_analyses\' model_name '\predicted_labels_data\'];
+
+    % save directory
+      save_dir = [common_dir 'quantifying_behaviours\' behaviour];
+      fig_path = [save_dir '\figures\' session '\'];
+                 mkdir(fig_path); 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PART 2 - Loading Data %%%%%%%%% skip if data matrix already generated %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +52,7 @@ for i = 1:length(fileList)
     
     % extact prediced-labels data and load it into the matrix
     load(filePath); 
-    labels_all_mice{i} = predicted_labels'; 
+    labels_all_mice{i} = predicted_labels_TH'; 
 
     file_names{i} = fileList(i).name;
     % stores file names for sorting later
@@ -105,7 +114,7 @@ for mouse_idx = 1:num_mice % loop through all mice
     end
 end
 
-save([common_dir '\' model_name '_data_matrix' ], 'behavioral_data_matrix'); % save the matrix encase data shall be further analysed at later timepoints
+save([save_dir '\' model_name '_' session '_data_matrix' ], 'behavioral_data_matrix'); % save the matrix encase data shall be further analysed at later timepoints
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PART 3 - Splitting Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Splitting into treatment groups and stim types 
@@ -179,20 +188,12 @@ veh_late_post_stim_flash = veh_flash_data(:, late_post_stim_period, :);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PART 4 - Figures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% setup for figures
 
-% folderpath to save figures in
-        fig_path =  [common_dir '\figures\'];    
-        mkdir(fig_path); % creat figures folder if not already present
-        addpath(fig_path); % add figured folder to matlab path
-
-% clear all unnecessary variables for better overview
-clearvars -except common_dir fps fig_path behavioral_data_matrix behaviour model_name ...
-                  psilocybin_data vehicle_data psi_loom_data psi_flash_data veh_loom_data veh_flash_data
+%clear all unnecessary variables for better overview
+clearvars ans av_velocity cell_ix i mouse_idx labels_all_mice mouse_data paired_data predicted_labels predicted_labels_TH trial_ix velocity_threshold
 
 % defining constants 
-
 fps = 15; % frame rate
-
-mouse_nr = 15;
+mouse_nr = 15; % number of mice per grou[
 
 trial_nr = 20; % total trials number
 trials = 1:20; % trial numbers

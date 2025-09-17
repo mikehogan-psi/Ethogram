@@ -199,7 +199,7 @@ function feature_extractor_new(video_path, mat_file_path, output_folder, frame_f
 
         % select non-behaviour frames (want eg. 5x more than behaviour frames)
         num_behaviour = numel(behaviour_indices);
-        num_non_behaviour_to_sample = min(5 * num_behaviour, numel(non_behaviour_indices)); % to have a 5-to-1 non-behaviour/behaviour ratio
+        num_non_behaviour_to_sample = min(10 * num_behaviour, numel(non_behaviour_indices)); % to have a 5-to-1 non-behaviour/behaviour ratio
                                                                                             % OR if not enough non-behaviour frames to reach ratio -> just takes all non-behaviour frames
         selected_non_behaviour_indices = datasample(non_behaviour_indices, num_non_behaviour_to_sample, 'Replace', false);
 

@@ -34,6 +34,8 @@
     %   - running into courner of box 
     %   - average timewindow = 30s
 
+    % freezing behaviour (anxiety):
+    %   - mody completly immmobile for at least a few seconds
 
 %% Step 0: General SETUP 
 
@@ -46,24 +48,24 @@
             % which_part = 'tail';   % for behaviours that entail changes in tail movements e.g. tail rattling 
 
      % B: define target behaviour that shall be analysed
-            behaviour = 'darting'; 
+            behaviour = 'tail_rattling'; 
     
      % C: define session 
-           sesh = 'extinction';
-          % sesh = 'renewal';
+          sesh = 'extinction';
+       %    sesh = 'renewal';
 
 
      % D: define which name generated models shall be given
-            SSM_model_name = 'SSM_3D_implant_mouse1_head_fixed.mat';      % Can be left out if SSM fitted data already generated
-            RFM_model_name = ['RFM_' behaviour '_4'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
+            SSM_model_name = 'SSM_all_body_points_v1.mat';      % Can be left out if SSM fitted data already generated
+            RFM_model_name = ['RFM_' behaviour '_1'];          % this model will be used to predict behaviour -> folders in which behavioral data is stored is named after the model
                                                                % !!! make a note of all the configurations used for this model (see Random forest model configurations document)                                                                
                              
                                                                 
 % 2. Define directories to where specific data can be accessed/saved 
      % A: folder containing 'raw' data from all mice (data before any behaviours predicted)  
-            common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction'; % Laptop
-          %  common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
-
+            % common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Extinction\data_from_DLC_iteration_3'; % Laptop
+            %common_raw_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis\data_all_mice\Renewal'; % Laptop
+            common_raw_dir = 'C:\Cohort 4 Temp Data Storage\data_all_mice';
      % subdirectories containing video and DLC data (must be already defined) + folder where SSM fitted data shall be saved 
             % ! make sure these folders already exist and contain correct data prior to starting analysis !
             video_path    = [common_raw_dir '\video_data'];                  % raw video data (videos of mice) 
@@ -73,7 +75,7 @@
           
       
      % B: folder where data labeled with desired behaviour shall be saved   
-              common_behav_dir = 'C:\Users\Abi Hogan\Documents\Psychedelics_Internship\behavior_analysis\implanted_mice_analysis'; % Laptop
+              common_behav_dir = 'C:\Cohort 4 Temp Data Storage\data_all_mice'; % Laptop
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% % ! will be automatically created for each new analyses (based on the previous definitions !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,12 +139,12 @@
 % run SSM on all 3D data files to generate body shape parameters
  cd(triangulated_data_path) 
 
-for f = 1 : length(all_files) 
+for f = 1 : length(all_files) -1
 
     current_3Ddata_file = all_files(f).name;
 
     Fit_SSM_3D_new(current_3Ddata_file, SSM_data_path, SSM_model_name_path)
-
+    % Fit_SSM_tail_3D(current_3Ddata_file, SSM_data_path, SSM_model_name_path)
 end
 
 % can manually check how fitted data looks like (just load a specific SSM_fit.mat)
@@ -196,23 +198,31 @@ end
 % 2. define which features are relevant for the target behaviour
     
     % feature_selectection_indx = [5,7,8,9,17,18,19,20,21,22,23,24,25,26];  % feature selection RFM_rearing_1
-   % feature_selectection_indx = [21, 24, 25, 26, 27];  % feature selection RFM_rearing_5
+    % feature_selectection_indx = [21, 24, 25, 26, 27];  % feature selection RFM_rearing_5 and 6
 
-    %feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
-    feature_selectection_indx = [2, 5, 6, 11, 12, 13, 14, 23 ];  % feature selection RFM_darting_4
+    % feature_selectection_indx = [2,5,6,11,12,13,14];  % feature selection RFM_darting_1
+    % feature_selectection_indx = [2, 5, 6, 11, 12, 13, 14, 23 ];  % feature selection RFM_darting_4
+    % feature_selectection_indx = [11, 12, 14, 15, 16];  % feature selection RFM_darting_9
+
+    %feature_selectection_indx = [2,5,8,10,12,16]; % freezing 1;
+    %feature_selectection_indx = [2,3,5,6,8,9,10,12,16]; % freezing 2;
+    % feature_selectection_indx = [2,5,6,10,11,12,13,14,16,21]; % freezing 3;
+
+    % feature_selectection_indx = [2 5 9 24 21 27 20]; - grooming
 
     frame_features_strings = frame_features_all_strings(feature_selectection_indx); % automatically excludes all features that are not relevant for behaviour
 
 
 % 3. define the timewindow which is relevant to the target behaviour in frames (sampling rate = 15fps - e.g. 30 frames = 2s )
        % window_size = 30; % time window for RFM_rearing_1 & 2
-       % window_size = 4; % time window for RFM_rearing_4
-         window_size = 20; % darting_2
+       %  window_size = 4; % time window for RFM_rearing_5 and 6
+       %  window_size = 26; % darting_9
+        window_size = 20; % freezing_2
 
 %% STEP 4(A): Manually label frames that exibit desried behaviour (to later train model with)
 
 % define file name of raw video and mat file containing results of SSM (2D_UPPER output)
-base_name = ['mouse1_' sesh '_p2']; % !!! CHANGE THIS !!!
+base_name = ['mouse3_' sesh '_p1']; % !!! CHANGE THIS !!!
 
 % find specific camera filepaths
 all_camera_files = dir(fullfile(video_path, ['camera*' base_name, '*.avi']));
@@ -225,9 +235,9 @@ video_files_paths{4} = [video_path '\' all_camera_files(9).name];
 SSM_file_path = dir(fullfile(SSM_data_path, [base_name, '*.mat']));
 SSM_file_path = [SSM_data_path '\' SSM_file_path.name];
 
-% run freature_extractor function
+% run feature_extractor function
 feature_extractor_3D(base_name, video_files_paths, SSM_file_path , manual_labels_path, frame_features_strings, window_size); 
-% open GUI to scrap through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
+% open GUI to scrub through video and lable all frames that mouse is showing desired behaviour (eg. rearing)
 
 % Saved output files contain a lables and features variable for each mouse
     % lables: vector containing 1s for all labled frames and 0s for balanced number of non-labled frames (randomly selects x-times (e.g. 5) non-labeled frames) 
@@ -438,8 +448,9 @@ for i = 1:length(file_list_pred_labels) % loop through all files
       segment_props = regionprops(labeled_behaviour, 'Area');
     
     % Define minimum duration threshold !!! DEFINE THE CUTOFF BASED ON TYPICAL DURATION OF BEHAVIOUR !!! 
-            duration_threshold = 10;  % for darting
-            duration_threshold = 7;  % for rearing
+            %duration_threshold = 10;  % for darting_8
+            %duration_threshold = 7;  % for rearing
+            duration_threshold = 15;   % for freezing 1
 
     % Iterate over detected darting sequences
     for segment = 1:num_segments
@@ -461,14 +472,16 @@ end
 %% STEP 8: Manual check predicted label accuracy and correct labels  
 
 % choose a file you want to double-check the mouse behaviour of the frames predicted by the model to show the desired behaviour 
-base_name = ['mouse1_' sesh '_p2'];
+base_name = ['mouse1_' sesh '_p1'];
 
     % Find the correct video and predicted labels file
-    video_file_path = dir(fullfile(video_path, ['camera6_' base_name, '*.avi']));
+    video_file_path = dir(fullfile(video_path, ['camera4_' base_name, '*.avi']));
     video_file_path = [video_path '/' video_file_path.name];
-    predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
-    predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
-    
+    % predicted_file_path = dir(fullfile(predicted_labels_path, ['predicted_' behaviour '_labels_', base_name, '*.mat']));
+    % predicted_file_path = [predicted_labels_path '/' predicted_file_path.name];
+    % 
+ predicted_file_path =  'C:\Cohort 4 Temp Data Storage\data_all_mice\grooming_analyses\RFM_grooming_1\predicted_labels_data\predicted_grooming_labels_mouse1_extinction_p1.mat';
+
     % fun validate predcitions function
          validate_predictions(base_name, video_file_path, predicted_file_path, corrected_labels_path);
          % should open video in which can manually scrub through frames and see if the predicted labels match actual behaviour and if necessary correct it
@@ -478,7 +491,7 @@ base_name = ['mouse1_' sesh '_p2'];
 %% STEP 9: Assess model accuracy and sensitivity 
 
 % choose a video which you have the manual or verified labels and predicted labels for 
-base_name = ['*mouse1_' sesh '_p2'];
+base_name = ['*mouse2_' sesh '_p2'];
 
     % load the correct label variable (either from manually labelled or corrected label files)
     matFiles = dir(fullfile(corrected_labels_path, [base_name, '*.mat']));

@@ -1,0 +1,8 @@
+For Cohort 4 (SC/PAG Implanted Animals)
+
+coordinates: -0.6ML (1.35 on gui generator), 3.875DV, -4.2AP
+Automatic reference: external
+
+Reference used during recordings: tip 4
+
+SC_PAG_ChanMap used in kilsorting data

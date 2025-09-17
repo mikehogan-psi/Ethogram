@@ -37,30 +37,30 @@ common_dir = 'Z:\Abi\neuronal_data\mouse_2\Neural Data\Extinction'; % !!! CHANGE
     p2_path_TTL  = [p2_path 'events\Neuropix-PXI-100.ProbeA\TTL\'];
     p2_path_cont = [p2_path 'continuous\Neuropix-PXI-100.ProbeA\'];
 
-% create output folder where data will be saved
-filepath_out = [common_dir '\processed_triggers\'];
-    mkdir(filepath_out);
-    addpath(filepath_out);
-
-% clear unnecessary variables
-    clearvars common_dir concistent_path hab_path p1_path p2_path
+% % create output folder where data will be saved
+% filepath_out = [common_dir '\processed_triggers\'];
+%     mkdir(filepath_out);
+%     addpath(filepath_out);
+% 
+% % clear unnecessary variables
+%     clearvars common_dir concistent_path hab_path p1_path p2_path
 
 %% Step 1: converting python files into MATLAB variables
 
 % habituation data 
 evt_hab    = readNPY([hab_path_TTL  'timestamps.npy']); 
 states_hab = readNPY([hab_path_TTL  'states.npy']);
-cont_hab   = readNPY([hab_path_cont 'timestamps.npy']);
+cont_hab   = readNPY([hab_path_cont 'sample_numbers.npy']);
 
 % session part 1 data
 evt_p1    = readNPY([p1_path_TTL  'timestamps.npy']); 
 states_p1 = readNPY([p1_path_TTL  'states.npy']);
-cont_p1   = readNPY([p1_path_cont 'timestamps.npy']);
+cont_p1   = readNPY([p1_path_cont 'sample_numbers.npy']);
 
 % session part 2 data
 evt_p2    = readNPY([p2_path_TTL  'timestamps.npy']); 
 states_p2 = readNPY([p2_path_TTL  'states.npy']);
-cont_p2   = readNPY([p2_path_cont 'timestamps.npy']);
+cont_p2   = readNPY([p2_path_cont 'sample_numbers.npy']);
 
 
 %% concatinating triggers timeline (not alined to cont/sampling data timestamps)
