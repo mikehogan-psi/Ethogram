@@ -1,7 +1,7 @@
 %% Setup (input needed)
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -55,7 +55,7 @@ for mouse = 1:length(SSM_session_folders)
     [~, idx] = sort({SSM_file_list.name});
     SSM_file_list = SSM_file_list(idx);
 
-    % Extract file paths from list of triangulated files
+    % Extract file paths from list of SSM files
     for part = 1:num_parts
         SSM_file_paths{mouse, part} =  fullfile(SSM_file_list(part).folder, SSM_file_list(part).name);
     end
@@ -63,23 +63,23 @@ for mouse = 1:length(SSM_session_folders)
 end
 
 %% Extract central body landmark from Xfit and concatenate parts of videos
-% Initialise storage for Xfit data (num mice x sesion parts)
-Xfit_matrix = cell(num_mice, num_parts);
+% Initialise storage for Xfit body anterior data (num mice x sesion parts)
+Xfit_matrix_central = cell(num_mice, num_parts);
 
 for file = 1:length(SSM_file_paths)
     for part = 1:2
     load(SSM_file_paths{file}, 'Xfit');
     % Extract x and y for 8th landmark (body anterior)
-    Xfit_matrix{file, part} = squeeze(Xfit(8,1:2,:));
+    Xfit_matrix_central{file, part} = squeeze(Xfit(8,1:2,:));
     end
 end
 
 % Putting parts of videos together for each mouse
 % Initialising new cell array half the size of original (part-wise)
-Xfit_paired = cell(num_mice, num_parts/2);
+Xfit_paired_central = cell(num_mice, num_parts/2);
 
 for mouse = 1:num_mice
-    Xfit_paired{mouse} = cat(2, Xfit_matrix{mouse, 1}, Xfit_matrix{mouse, 2});
+    Xfit_paired_central{mouse} = cat(2, Xfit_matrix_central{mouse, 1}, Xfit_matrix_central{mouse, 2});
 end
 %% Getting xy positional data and calculating Euclidian distance between frames
 
@@ -88,8 +88,8 @@ num_trials = 40; % 40 trials
 all_velocity_data = zeros(num_trials, num_frames, num_mice);
 
 for mouse_idx = 1:num_mice
-    x_pos = Xfit_paired{mouse_idx}(1,:);
-    y_pos = Xfit_paired{mouse_idx}(2,:);
+    x_pos = Xfit_paired_central{mouse_idx}(1,:);
+    y_pos = Xfit_paired_central{mouse_idx}(2,:);
 
     dist = zeros(num_trials, num_frames);
     
@@ -213,3 +213,4 @@ for mouse = 1:num_mice
     end
 
 end
+

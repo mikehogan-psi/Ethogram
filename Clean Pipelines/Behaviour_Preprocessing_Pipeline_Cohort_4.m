@@ -2,7 +2,7 @@
 
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Renewal';
+session = 'Extinction';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -16,7 +16,7 @@ load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub
 
 % !!! Provide filepath for SSM for estimating data !!!
 % SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_test.mat';
-SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
+SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Models\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
 %% Get directory for DLC datafiles for each mouse for specified session
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
