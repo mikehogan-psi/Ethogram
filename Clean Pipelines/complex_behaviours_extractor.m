@@ -102,10 +102,13 @@ behaviours = {'Grooming', 'Rearing', 'Darting'};
 
 models = {grooming_model, rearing_model, darting_model};
 
+behaviour_thresholds  = [15, 7, 7]; % Minimum time in frames the behaviour lasts for
+
 
 for behaviour_idx = 1:length(behaviours)
     current_behaviour = behaviours{behaviour_idx};
     current_model = models{behaviour_idx};
+    current_threshold = behaviour_thresholds(behaviour_idx);
     extracted_features_matrix = cell(num_mice, 1); 
 
     for mouse = 1:num_mice
@@ -142,6 +145,20 @@ for behaviour_idx = 1:length(behaviours)
         % Predict frames with behaviour
         predictions = predict(current_model, extracted_features_matrix{mouse});
         predicted_labels = str2double(predictions);
+        
+        % Post-processing: remove false positives
+        % Identify continuous segments of behaviour
+        [labeled_behaviour, num_segments] = bwlabel(predicted_labels);
+        % Extract length of each segment
+        segment_props = regionprops(labeled_behaviour, 'Area');
+   
+        % Iterate over detected segments
+        for segment = 1:num_segments
+            % Replace short sequences with 0s
+            if segment_props(segment).Area < current_threshold    
+                predicted_labels(labeled_behaviour == segment) = 0; 
+            end
+        end
                
         save(save_path, 'predicted_labels');
         disp([save_name, ' has been saved!'])
