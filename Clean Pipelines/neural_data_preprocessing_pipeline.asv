@@ -2,7 +2,7 @@
 
 % !!! Specify which session is to be analysed !!!
 % Acquisition, Extinction, or Renewal
-session = 'Renewal';
+session = 'Extinction';
 
 % !!! Provide directory with all data in !!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -161,7 +161,6 @@ end
 fs = 30000;  % Neuronal data sampling rate (30kHz) 
 n_trials = 20; % Number of trials in each session part
 onset = 10; % Second of onset for stimuli
-pseudo_events = 20; % Number of events to extract from habituation
 
 % Get master neural data folders for specified session
 for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
@@ -209,12 +208,12 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
     evt_hab = [];
     evt_checkerboard = [];
     
-    save_name = [lower(mouse_name), '_', lower(session), '_extracted_events.mat'];
-    save_file = fullfile(current_trigger_folder, save_name);
+
+    save_file = fullfile(current_trigger_folder, [lower(mouse_name), '_', session, '_extracted_events.mat']);
     if exist(save_file, 'file')
         warning('%s already exists, skipping extraction', save_file)
     else
-        disp('Extracting event timings...')
+
         % Iterate over all session parts
         for part = 1:length(trigger_file_list) 
         
@@ -225,33 +224,32 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
             % Remove first event (artefact)
             evt = evt(2:end);     
             
-            % Extract arbitrary, evenly-spaced events from habituation (no stimuli)
+            % Extract random events from habituation (no stimuli)
             if part == 1
-                evt_hab = sort_evts_hab_clean(evt, pseudo_events); 
-                       
+            evt_hab = sort_evts_hab(evt, 30, 30); % define time before and after every event 
+            
             % Extract loom and flash events (i.e. triggers of stimulus onset)
             elseif part == 2 || part == 3    
-                [evt_loom1,evt_flash1] = sort_evts_clean(evt, n_trials, onset, part, ...
-                    which_stim_set);
+            [evt_loom1,evt_flash1] = sort_evts(evt, n_trials, onset, part, which_stim_set);
         
-                evt_flash = cat(1,evt_flash,evt_flash1);
-                evt_loom =  cat(1,evt_loom ,evt_loom1);
+            evt_flash = cat(1,evt_flash,evt_flash1);
+            evt_loom =  cat(1,evt_loom ,evt_loom1);
         
             elseif part == 4
-                evt_checkerboard = evt;    
-            end 
-                                 
-        end   
+            evt_checkerboard = evt;    
         
-        % Check session and save extracted events
-        if strcmp(session, 'Extinction')
-            save(save_file, 'evt_hab', 'evt_loom', 'evt_flash');
-            disp([save_name, ' has been saved!'])
-        elseif strcmp(session, 'Renewal')
-            save(save_file, 'evt_hab', 'evt_loom', 'evt_flash', 'evt_checkerboard');
-            disp([save_name, ' has been saved!'])
-        end     
-   
+            end 
+                
+           if strcmp(session, 'Extinction')
+               save(save_file, 'evt_hab', 'evt_loom', 'evt_flash');
+               disp([save_file, ' has been saved!'])
+           elseif strcmp(session, 'Renewal')
+               save(save_file, 'evt_hab', 'evt_loom', 'evt_flash', 'evt_checkerboard');
+               disp([save_file, ' has been saved!'])
+           end 
+        
+        end   
+    
     end
 
 end

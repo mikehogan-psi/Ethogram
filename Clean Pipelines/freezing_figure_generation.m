@@ -2,11 +2,13 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal';
+session = 'Extinction';
+
+trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
-received_psilocybin = [3; 5];
-received_vehicle = [1; 2; 4];
+received_psilocybin = [3; 5; 7];
+received_vehicle = [1; 2; 4; 6];
 %%
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -22,26 +24,31 @@ for mouse = 1:length(mouse_files)
         session, 'Behavioural Data', 'Extracted Behaviours', 'Freezing');
 end
 
-freeze_data_loom = cell(length(mouse_files), 1);
+freeze_data = cell(length(mouse_files), 1);
 
 for mouse = 1:length(freezing_folders)
     current_freeze_data_path = freezing_folders{mouse};
-    current_freeze_data = dir(fullfile(current_freeze_data_path, '*looms_freezing.mat'));
+    current_freeze_data = dir(fullfile(current_freeze_data_path, ['*_', trial_type, '_freezing.mat']));
     file_to_load = fullfile(current_freeze_data.folder, current_freeze_data.name);
-    load(file_to_load, 'loom_freezing');
-    freeze_data_loom{mouse} = loom_freezing;
+    if strcmp(trial_type, 'looms')
+        load(file_to_load, 'loom_freezing');
+        freeze_data{mouse} = loom_freezing;
+    elseif strcmp(trial_type, 'flashes')
+        load(file_to_load, 'flash_freezing');
+        freeze_data{mouse} = flash_freezing;
+    end
 end
 
-freeze_data_loom_psi = freeze_data_loom(received_psilocybin);
-freeze_data_loom_veh = freeze_data_loom(received_vehicle);
+freeze_data_psi = freeze_data(received_psilocybin);
+freeze_data_veh = freeze_data(received_vehicle);
 
-freeze_data_loom_psi_cat = cat(3, freeze_data_loom_psi{:});
-freeze_data_loom_veh_cat = cat(3, freeze_data_loom_veh{:});
+freeze_data_psi_cat = cat(3, freeze_data_psi{:});
+freeze_data_veh_cat = cat(3, freeze_data_veh{:});
 
 %%
 % assume these exist and are trials x frames x mice
-psi = freeze_data_loom_psi_cat;
-veh = freeze_data_loom_veh_cat;
+psi = freeze_data_psi_cat;
+veh = freeze_data_veh_cat;
 
 % basic checks
 if ndims(psi)~=3 || ndims(veh)~=3
@@ -73,10 +80,12 @@ veh_trial_sem  = std(veh_trial_per_mouse, 0, 2) ./ sqrt(n_mice_veh);
 
 % Plot trial-wise (as percent)
 figure;
-errorbar(1:n_trials, psi_trial_mean*100, psi_trial_sem*100, '-o', 'LineWidth', 1.5); hold on;
-errorbar(1:n_trials, veh_trial_mean*100,  veh_trial_sem*100,  '-o', 'LineWidth', 1.5);
-xlabel('Trial'); ylabel('Mean freezing (%)'); title('Freezing across trials (mean ± SEM)');
-legend('Psilocybin','Vehicle'); grid on;
+errorbar(1:n_trials, psi_trial_mean*100, psi_trial_sem*100, 'r-o', 'LineWidth', 1.5); hold on;
+errorbar(1:n_trials, veh_trial_mean*100,  veh_trial_sem*100,  'b-o', 'LineWidth', 1.5);
+xlabel('Trial'); ylabel('Mean freezing (%)'); title([session, ' ', trial_type, ' mean freezing across trials']);
+legend('Psilocybin (± SEM)','Vehicle (± SEM)','Location','best');
+grid on;
+ylim([0 100]);
 
 %% Frame-wise: average over trials, then compute mean +/- SEM across mice
 % per-mouse frame averages: frames x mice
@@ -100,6 +109,8 @@ psi_lo = psi_frame_mean - psi_frame_sem;
 h_fill1 = fill([x; flipud(x)], [psi_up; flipud(psi_lo)]*100, [1 .7 .7], 'LineStyle','none'); 
 set(h_fill1,'FaceAlpha',0.3);
 plot(x, psi_frame_mean*100, 'r-', 'LineWidth', 1.5);
+xlim([1 502])
+ylim([0 100])
 
 % vehicle shading
 veh_up = veh_frame_mean + veh_frame_sem;
@@ -108,7 +119,7 @@ h_fill2 = fill([x; flipud(x)], [veh_up; flipud(veh_lo)]*100, [0.7 0.7 1], 'LineS
 set(h_fill2,'FaceAlpha',0.3);
 plot(x, veh_frame_mean*100, 'b-', 'LineWidth', 1.5);
 
-xlabel('Frame'); ylabel('Mean freezing (%)'); title('Freezing across frames (mean ± SEM)');
+xlabel('Frame'); ylabel('Mean freezing (%)'); title([session, ' ', trial_type, ' mean freezing across frames']);
 legend('Psilocybin SEM','Psilocybin','Vehicle SEM','Vehicle'); grid on;
 
 %% Heatmap: mean across mice (trials x frames)
@@ -123,7 +134,9 @@ colorbar; xlabel('Frame'); ylabel('Trial'); title('Psilocybin: mean freezing (tr
 subplot(1,2,2);
 imagesc(veh_mean_over_mice); axis xy;
 colorbar; xlabel('Frame'); ylabel('Trial'); title('Vehicle: mean freezing (trial x frame)');
-
+cb2 = colorbar; 
+ylabel(cb2, 'Freezing Probability');
+sgtitle([session, ' ', trial_type])
 % Optional: smoothing across frames (uncomment to use)
 % smooth_window = 5;
 % psi_frame_mean = movmean(psi_frame_mean, smooth_window);

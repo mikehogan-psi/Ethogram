@@ -17,60 +17,53 @@ function [] = concatenate_neural_data_clean(hab_path, p1_path, p2_path, check_pa
 %
 %   Output:
 %       A concatenated binary file written to [save_path, save_name].
-%
-%   To call this function with all inputs preformatted, use
-%   neural_data_preprocessing_pipeline.mat
 
+% Open output file for writing
 fid_write = fopen(fullfile(save_path, save_name), 'w');
-
-% Check if this is a extinction session, if so, skip checkerboard file
-if isempty(check_path)
-    
-    fid_read = fopen(hab_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-    
-    fid_read = fopen(p1_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-    
-    fid_read = fopen(p2_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-    
-    fclose(fid_write);
-
-    clear A
-
-else
-
-    fid_read = fopen(hab_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-    
-    fid_read = fopen(p1_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-    
-    fid_read = fopen(p2_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);    
-
-    fid_read = fopen(check_path);
-    A = fread(fid_read, '*int16');
-    fwrite(fid_write, A, 'int16');
-    fclose(fid_read);
-
-    fclose(fid_write);
-
-    clear A
-
+if fid_write == -1
+    error('Could not open output file for writing: %s', fullfile(save_path, save_name));
 end
+
+% List all input files
+file_list = {hab_path, p1_path, p2_path};
+if ~isempty(check_path)
+    file_list{end+1} = check_path;
+end
+
+% Define chunk size (number of int16 elements to read at a time)
+chunk_size = 1e8; %200MB at a time
+
+% Loop through input files
+for f = 1:numel(file_list)
+    file_info = dir(file_list{f});
+    total_bytes = file_info.bytes;
+    processed_bytes = 0;
+    
+    fprintf('Concatenating %s (%.2f GB)...\n', file_list{f}, total_bytes/1e9);
+    
+    fid_read = fopen(file_list{f}, 'r');
+    if fid_read == -1
+        fclose(fid_write);
+        error('Could not open input file for reading: %s', file_list{f});
+    end
+    
+    while true
+        A = fread(fid_read, chunk_size, '*int16'); % read a chunk
+        if isempty(A)
+            break;
+        end
+        fwrite(fid_write, A, 'int16');             % write chunk
+        
+        % Update progress
+        processed_bytes = processed_bytes + numel(A)*2; % int16 = 2 bytes
+        percent_done = (processed_bytes / total_bytes) * 100;
+        fprintf('\r  Progress: %.1f%%', percent_done);
+    end
+    fprintf('\n'); % newline after each file finishes
+    fclose(fid_read);
+end
+
+fclose(fid_write);
+fprintf('Concatenation complete. File saved to %s\n', fullfile(save_path, save_name));
 
 end

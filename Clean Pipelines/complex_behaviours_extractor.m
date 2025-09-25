@@ -9,6 +9,10 @@ session = 'Renewal';
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Darting\darting_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Grooming\grooming_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Rearing\rearing_model_1.mat")
+
+received_stim_set_1 = [1 2 3 6 7];
+received_stim_set_2 = [4 5];
+
 %% Get directory for SSM datafiles for each mouse for specified session
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -104,6 +108,18 @@ models = {grooming_model, rearing_model, darting_model};
 
 behaviour_thresholds  = [15, 7, 7]; % Minimum time in frames the behaviour lasts for
 
+% Stim sets: 0 = flash, 1 = loom
+stim_set_1 = [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
+    0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1];
+
+stim_set_2 = [0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0,...
+    1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0 ,0 ,1 ,0];
+
+% Setting indexes for looms and flashes
+stim_set_1_looms_idx = logical(stim_set_1);
+stim_set_1_flashes_idx = ~stim_set_1_looms_idx;
+stim_set_2_looms_idx = logical(stim_set_2);
+stim_set_2_flashes_idx = ~stim_set_2_looms_idx;
 
 for behaviour_idx = 1:length(behaviours)
     current_behaviour = behaviours{behaviour_idx};
@@ -132,20 +148,27 @@ for behaviour_idx = 1:length(behaviours)
         behaviour_session_folders{mouse} = fullfile(mouse_path, mouse_name,...
             session, 'Behavioural Data', 'Extracted Behaviours', current_behaviour);
         
-        % Dynamically construct save path
-        save_name = lower(['mouse', num2str(mouse), '_', session, '_', current_behaviour]);
-        save_path = fullfile(behaviour_session_folders{mouse}, [save_name, '.mat']);
+         % Dynamically construct save path
+         save_name_looms = lower(['mouse', num2str(mouse), '_', session, '_', ...
+            current_behaviour, '_looms']);
+        save_name_scores_looms = lower(['mouse', num2str(mouse), '_', session, '_', ...
+            current_behaviour, '_probabilities_looms']);
+        save_path_looms = fullfile(behaviour_session_folders{mouse}, [save_name_looms, '.mat']);
+        save_path_scores_looms = fullfile(behaviour_session_folders{mouse}, [save_name_scores_looms, '.mat']);
         
-        if exist(save_path, 'file')
-            warning('%s already exists, skipping extraction', save_name)
-            continue
-        else
-        disp(['Making predictions for ', save_name, '...'])
+        save_name_flashes = lower(['mouse', num2str(mouse), '_', session, '_', ...
+            current_behaviour, '_flashes']);
+        save_name_scores_flashes = lower(['mouse', num2str(mouse), '_', session, '_', ...
+            current_behaviour, '_probabilities_flashes']);
+        save_path_flashes = fullfile(behaviour_session_folders{mouse}, [save_name_flashes, '.mat']);
+        save_path_scores_flashes = fullfile(behaviour_session_folders{mouse}, [save_name_scores_flashes, '.mat']);
+       
        
         % Predict frames with behaviour
-        predictions = predict(current_model, extracted_features_matrix{mouse});
+        [predictions, scores] = predict(current_model, extracted_features_matrix{mouse});
         predicted_labels = str2double(predictions);
-        
+        scores = scores(:, 2);
+
         % Post-processing: remove false positives
         % Identify continuous segments of behaviour
         [labeled_behaviour, num_segments] = bwlabel(predicted_labels);
@@ -159,10 +182,55 @@ for behaviour_idx = 1:length(behaviours)
                 predicted_labels(labeled_behaviour == segment) = 0; 
             end
         end
-               
-        save(save_path, 'predicted_labels');
-        disp([save_name, ' has been saved!'])
+
+        predicted_labels = reshape(predicted_labels, 502, 40)'; 
+        scores = reshape(scores, 502, 40)'; 
+        
+        % Select trial type using index provided at start of section
+        if ismember(mouse, received_stim_set_1)         
+            behaviour_looms = predicted_labels(stim_set_1_looms_idx, :);
+            behaviour_flashes = predicted_labels(stim_set_1_flashes_idx, :);
+            looms_scores = scores(stim_set_1_looms_idx, :);
+            flashes_scores = scores(stim_set_1_flashes_idx, :);
+        elseif ismember(mouse, received_stim_set_2)            
+            behaviour_looms = predicted_labels(stim_set_2_looms_idx, :);            
+            behaviour_flashes = predicted_labels(stim_set_2_flashes_idx, :);         
+            looms_scores = scores(stim_set_2_looms_idx, :);         
+            flashes_scores = scores(stim_set_2_flashes_idx, :);
         end
+                
+        % Save predictions
+        if exist(save_path_looms, 'file')
+            warning('%s already exists, skipping extraction', save_name_looms)
+        else
+            disp(['Making predictions for ', save_name_looms, '...'])
+            save(save_path_looms, 'behaviour_looms');
+            disp([save_name_looms, ' has been saved!'])       
+        end
+        
+        if exist(save_path_flashes, 'file')
+            warning('%s already exists, skipping extraction', save_name_flashes)
+        else
+            disp(['Making predictions for ', save_name_flashes, '...'])
+            save(save_path_flashes, 'behaviour_flashes');
+            disp([save_name_flashes, ' has been saved!'])       
+        end
+        
+        % Save behaviour probabilities for GLM covariate input
+        if exist(save_path_scores_looms, 'file')
+            warning('%s already exists, skipping probability extraction', save_name_scores_looms)
+        else
+            save(save_path_scores_looms, 'looms_scores');
+            disp([save_name_scores_looms, ' has been saved!'])
+        end
+        
+        if exist(save_path_scores_flashes, 'file')
+            warning('%s already exists, skipping probability extraction', save_name_scores_flashes)
+        else
+            save(save_path_scores_flashes, 'flashes_scores');
+            disp([save_name_scores_flashes, ' has been saved!'])
+        end
+
     
     end
 

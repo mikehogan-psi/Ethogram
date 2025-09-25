@@ -2,7 +2,7 @@
 
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -15,7 +15,6 @@ TH = 0.9;
 load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P')
 
 % !!! Provide filepath for SSM for estimating data !!!
-% SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\SSMs\SSM_test.mat';
 SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Models\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
 %% Get directory for DLC datafiles for each mouse for specified session
 % Select only mouse data folders
@@ -189,4 +188,3 @@ for mouse = 1:length(mouse_files)
 end
 
 % call 'plot3d_video(Xfit, false)' if you want to check fitting has worked
-%%

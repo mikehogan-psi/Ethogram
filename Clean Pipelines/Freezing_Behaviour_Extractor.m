@@ -7,7 +7,7 @@ session = 'Renewal';
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 %!!!Specify stim set for each mouse (mouse number only)!!!
-received_stim_set_1 = [1 2 3];
+received_stim_set_1 = [1 2 3 6 7];
 received_stim_set_2 = [4 5];
 
 %% Get directory for SSM datafiles for each mouse for specified session
@@ -49,7 +49,7 @@ SSM_file_paths = cell(num_mice, num_parts);
 
 for mouse = 1:length(SSM_session_folders)
     current_SSM_folder = SSM_session_folders{mouse};
-    SSM_file_list = dir(fullfile(current_SSM_folder, 'mouse*_SSM_fitted.mat'));
+    SSM_file_list = dir(fullfile(current_SSM_folder, 'p*_mouse*_SSM_fitted.mat'));
     SSM_file_list = SSM_file_list(~[SSM_file_list.isdir]);    
 
     [~, idx] = sort({SSM_file_list.name});
@@ -203,12 +203,14 @@ for mouse = 1:num_mice
     if exist(freeze_data_save_path_flash, 'file')
         warning([base_names{mouse} '_flashes_freezing.mat already exists, skipping save.']);
     else
+        disp(['Saving ', base_names{mouse}, '_flashes_freezing.mat'])
         save(freeze_data_save_path_flash, 'flash_freezing')
     end
 
     if exist(freeze_data_save_path_loom, 'file')
         warning([base_names{mouse} '_looms_freezing.mat already exists, skipping save'])
     else
+        disp(['Saving ', base_names{mouse}, '_looms_freezing.mat'])
         save(freeze_data_save_path_loom, 'loom_freezing')
     end
 
