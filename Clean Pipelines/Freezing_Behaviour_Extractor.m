@@ -1,7 +1,7 @@
 %% Setup (input needed)
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Renewal';
+session = 'Extinction';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -49,7 +49,7 @@ SSM_file_paths = cell(num_mice, num_parts);
 
 for mouse = 1:length(SSM_session_folders)
     current_SSM_folder = SSM_session_folders{mouse};
-    SSM_file_list = dir(fullfile(current_SSM_folder, 'p*_mouse*_SSM_fitted.mat'));
+    SSM_file_list = dir(fullfile(current_SSM_folder, 'mouse*_SSM_fitted.mat'));
     SSM_file_list = SSM_file_list(~[SSM_file_list.isdir]);    
 
     [~, idx] = sort({SSM_file_list.name});
@@ -215,4 +215,50 @@ for mouse = 1:num_mice
     end
 
 end
+
+%% Save velocity data
+
+for mouse = 1:num_mice
+    current_velocity_data = all_velocity_data(:, :, mouse);
+
+    % Select trial type using index provided at start of script
+    if ismember(mouse, received_stim_set_1)
+        loom_velocity = current_velocity_data(stim_set_1_looms_idx, :);
+        flash_velocity = current_velocity_data(stim_set_1_flashes_idx, :);
+    elseif ismember(mouse, received_stim_set_2)
+        loom_velocity = current_velocity_data(stim_set_2_looms_idx, :);
+        flash_velocity = current_velocity_data(stim_set_2_flashes_idx, :);
+    end
+    
+    % Extract folder for saving velocity data
+    mouse_name = mouse_files(mouse).name;
+    mouse_path = mouse_files(mouse).folder;
+    velocity_data_folder = fullfile(mouse_path, mouse_name,...
+        session, 'Behavioural Data', 'Extracted Behaviours', 'Velocity');
+    
+    % Create savepath for each file
+    velocity_data_save_path_flash = fullfile(velocity_data_folder,...
+            [base_names{mouse} '_flashes_velocity.mat']);
+
+    velocity_data_save_path_loom = fullfile(velocity_data_folder,...
+            [base_names{mouse} '_looms_velocity.mat']);
+    
+    % Save (or skip if already created)
+    if exist(velocity_data_save_path_flash, 'file')
+        warning([base_names{mouse} '_flashes_velocity.mat already exists, skipping save.']);
+    else
+        disp(['Saving ', base_names{mouse}, '_flashes_velocity.mat'])
+        save(velocity_data_save_path_flash, 'flash_velocity')
+    end
+
+    if exist(velocity_data_save_path_loom, 'file')
+        warning([base_names{mouse} '_looms_velocity.mat already exists, skipping save'])
+    else
+        disp(['Saving ', base_names{mouse}, '_looms_velocity.mat'])
+        save(velocity_data_save_path_loom, 'loom_velocity')
+    end
+
+end
+
+
 

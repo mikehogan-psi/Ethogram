@@ -1,8 +1,7 @@
-
 function [] = extract_neural_data_triggers(hab_path, p1_path, p2_path,...
     check_path, hab_path_triggers, p1_path_triggers, p2_path_triggers,...
     check_path_triggers, save_path_triggers, save_name_triggers)
-%EXTRACT_NEURAL_DATA_TRIGGERS Extract trigger event timings from Neuropixels recordings.
+%EXTRACT_NEURAL_DATA_TRIGGERS Extract trigger event timings from Neuropixels recordings (in neural sampling rate units).
 %   reads trigger event timings from .npy files produced during Neuropixels recordings and saves them 
 %   as .mat files. The function aligns triggers across sessions and 
 %   handles habituation, extinction parts 1 and 2, and optionally a 

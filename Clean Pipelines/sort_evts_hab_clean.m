@@ -1,5 +1,5 @@
 function evt_hab = sort_evts_hab_clean(evt, n_events)
-% SORT_EVTS_HAB - Generate pseudo-events for continuous habituation
+% SORT_EVTS_HAB - Generate pseudo-events for continuous habituation session
 %
 % INPUTS:
 %   evt      - vector of event timestamps in SECONDS
@@ -7,6 +7,9 @@ function evt_hab = sort_evts_hab_clean(evt, n_events)
 %
 % OUTPUT:
 %   evt_hab  - vector of pseudo-event timestamps in SECONDS
+% 
+% This function is called in:
+%   neural_data_preprocessing_pipeline.m
 
 % Total duration of habituation
 total_time = evt(end) - evt(1);

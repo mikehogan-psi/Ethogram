@@ -236,7 +236,8 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
         
                 evt_flash = cat(1,evt_flash,evt_flash1);
                 evt_loom =  cat(1,evt_loom ,evt_loom1);
-        
+            
+                % Extract every trigger for checkerboard stim
             elseif part == 4
                 evt_checkerboard = evt;    
             end 

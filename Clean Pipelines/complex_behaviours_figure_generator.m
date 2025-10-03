@@ -29,7 +29,7 @@ grooming_folders = cell(length(mouse_files), 1);
 num_mice = size(mouse_files, 1);
 num_behaviours = numel(behaviours);
 
-% Get DLC folders for specified session
+% Get behaviour folders for specified session
 for mouse = 1:num_mice
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;
@@ -39,7 +39,7 @@ end
 
 rearing_folders = cell(length(mouse_files), 1);
 
-% Get DLC folders for specified session
+% Get behaviour folders for specified session
 for mouse = 1:num_mice
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;
@@ -50,7 +50,7 @@ end
 
 darting_folders = cell(length(mouse_files), 1);
 
-% Get DLC folders for specified session
+% Get behaviour folders for specified session
 for mouse = 1:num_mice
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;

@@ -11,6 +11,9 @@ function[evt_loom,evt_flash] = sort_evts_clean(evt, n_trials, onset, which_epoch
 % OUTPUTS:
 %   evt_loom      - vector of loom stimulus onset times (1 per trial)
 %   evt_flash     - vector of flash stimulus onset times (1 per trial)
+% 
+% This function is called in:
+%   neural_data_preprocessing_pipeline.m
 
 
 
