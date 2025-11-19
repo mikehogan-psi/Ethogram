@@ -188,3 +188,137 @@ for mouse = 1:length(mouse_files)
 end
 
 % call 'plot3d_video(Xfit, false)' if you want to check fitting has worked
+
+%% Triangulate DLC data for habituation and save in appropriate subfolder
+
+% Master loop goes over each mouse and accesses its DLC data
+for mouse = 1:length(dlc_session_folders)
+    current_dlc_folder_path = dlc_session_folders{mouse};
+    dlc_file_list = dir(fullfile(current_dlc_folder_path, 'camera*_mouse*_habituation*.csv'));
+    dlc_file_list = dlc_file_list(~[dlc_file_list.isdir]);
+    base_names = cell(length(dlc_file_list), 1);
+    dlc_file_names = cell(length(dlc_file_list), 1);
+    
+    % Extract file names from list of DLC files
+    for n = 1:length(dlc_file_list)
+        dlc_file_names{n} =  dlc_file_list(n).name;
+    end
+    
+    % Loop through each filename and extract base name using regexp
+    for i = 1:length(dlc_file_names)
+    % Match pattern: mouseX_session_pY
+        tokens = regexp(dlc_file_names{i}, ['mouse\d+_' session '_habituation'] , 'match',...
+            'ignorecase');
+        if ~isempty(tokens)
+          base_names{i} = tokens{1};
+        end
+    end
+
+  
+    
+    % Extract filenames for each camera for each part
+    camera_files_struct = dir(fullfile(current_dlc_folder_path, ['camera*' base_names{1} '*.csv'])); 
+    % Ensure cameras are in the correct order (matching order of P matrix)
+    
+    % Load camera file paths into cell array
+    camera_files = cell(1, length(camera_files_struct)); % initiate cell array with length corresponding to number of cameras used
+
+    for camera = 1:length(camera_files_struct)
+        camera_files{camera} = fullfile(current_dlc_folder_path, camera_files_struct(camera).name);
+        % -> each cell will contain file paths for CSV files recorded by one camera   
+    end              
+
+    
+    % Get mouse names for file creation
+    mouse_name = regexp(current_dlc_folder_path, 'Mouse\s*\d+', 'match', 'once');
+
+    triangulated_data_folder = fullfile(master_directory, mouse_name,...
+    session, 'Behavioural Data', 'Triangulated Data'); 
+    % Skip if save directory cannot be found and display name of
+    % directory that needs creating
+    if ~exist(triangulated_data_folder, 'dir')
+        warning(['Save directory: ' triangulated_data_folder ' does not exist, skipping this file'])
+    continue
+    end
+
+    triangulated_data_save_path = fullfile(triangulated_data_folder,...
+        [base_names{1} '_triangulated.mat']);
+    % Check if triangulated data already exists, skip this file if it
+    % does
+    if exist(triangulated_data_save_path, 'file')
+    warning([base_names{1} '_triangulated.mat already exists, skipping triangulation.']);
+    else
+    
+    % Run load_data function 
+    disp(['Loading DLC data for ' base_names{1} '...']);
+    [x,L] = load_data_og(camera_files); % Extacts 2D coordinates and their likelihood values and loads them into x and L variables
+    
+    disp(['Triangulating data for ' base_names{1} '...'])
+    % Run triangulation function 
+    [X, W] = triangulate_simple_og(x, L, P, TH); 
+    
+    % Save data in appropriate subfolder and with appropriate name
+    save(triangulated_data_save_path,"W","X","x","L","TH","camera_files"); 
+    disp([base_names{1} '_triangulated.mat' ' saved to ' triangulated_data_folder])
+    end
+        
+end
+
+%% Fit SSM to triangulated data for habituation
+
+% Initialise 
+triangulated_session_folders = cell(length(mouse_files), 1);
+
+% Get triangulated data folders for each mouse for specified session
+for mouse = 1:length(mouse_files)
+    mouse_name = mouse_files(mouse).name;
+    mouse_path = mouse_files(mouse).folder;
+    triangulated_session_folders{mouse} = fullfile(mouse_path, mouse_name,...
+        session, 'Behavioural Data', 'Triangulated Data');
+
+    current_triangulated_folder_path = triangulated_session_folders{mouse};
+    
+    triangulated_file_list = dir(fullfile(current_triangulated_folder_path, 'mouse*_habituation_triangulated.mat'));
+    triangulated_file_list = triangulated_file_list(~[triangulated_file_list.isdir]);
+    
+    % Initialise
+    triangulated_file_paths = cell(length(triangulated_file_list), 1);
+    
+    % Extract file paths from list of triangulated files
+    for n = 1:length(triangulated_file_list)
+        triangulated_file_paths{n} =  fullfile(triangulated_file_list(n).folder, triangulated_file_list(n).name);
+    end
+    
+    % Loop through each filename and extract base name using regex
+    base_names = cell(length(triangulated_file_paths), 1);
+    for i = 1:length(triangulated_file_paths)
+    % Match pattern: mouseX_session_habituation
+        tokens = regexp(triangulated_file_paths{i}, ['mouse\d+_' session '_habituation'] , 'match',...
+            'ignorecase');
+        if ~isempty(tokens)
+          base_names{i} = tokens{1};
+        end
+    end
+    
+    % Setting save folder
+    SSM_data_save_folder = fullfile(mouse_path, mouse_name,...
+        session, 'Behavioural Data', 'SSM Fitted Data' );
+    if ~exist(SSM_data_save_folder, 'dir')
+        warning(['Save directory: ' SSM_data_save_folder ' does not exist,' ...
+            ' skipping this file' ])
+        continue
+    end
+    
+    % Fitting SSM 
+    SSM_save_path = fullfile(SSM_data_save_folder, [base_names{1},...
+        '_SSM_fitted.mat']);
+    % if exist(SSM_save_path, 'file')
+    %     warning([base_names{1}, '_SSM_fitted.mat already exists,' ...
+    %     ' skipping this file'])
+    %     continue
+    % end
+    disp(['Fitting SSM for ' base_names{1}, '...'])
+    Fit_SSM_3D_habituation(triangulated_file_paths{1}, SSM_save_path, SSM_model_path)
+
+
+end

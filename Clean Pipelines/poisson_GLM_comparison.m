@@ -353,21 +353,111 @@ for mouse = mice_to_analyse
         cell_ids = [cell_ids; tmp_cell_ids];
 
     end
+    
+    % Create table for glm input (all rows, all cells)
+    X_table = array2table(X, 'VariableNames', ...
+        {'Grooming','Rearing','Darting','Freezing','Velocity', ...
+         'TimeBin','Trial','TrialIdentifier','LoomON','FlashON'});
+    
+    % Scale only continuous predictors
+    X_table.Velocity = zscore(X_table.Velocity);
+    X_table.TimeBin  = zscore(X_table.TimeBin);
+    X_table.Trial    = zscore(X_table.Trial);
+    
+    % ---- Compute test pseudo-R2 per cell ----
+    unique_cells = unique(cell_ids);
+    nCells = numel(unique_cells);
+    pseudoR2_test = nan(nCells,1);
+    weights_per_cell = cell(nCells, 1);   % one entry per cell
+    coef_names = {};                      % will fill once from first successful model
 
-    % Transpose for correct Poisson NN format
-    X = X'; 
-    y = y'; 
-    cell_ids = cell_ids';
+    
+    opts = statset('glmfit');
+    opts.MaxIter = 100;
+    
+    for c = 1:nCells
+        this_cell = unique_cells(c);
+    
+        idx_all = (cell_ids == this_cell);
+    
+        X_cell = X_table(idx_all, :);
+        y_cell = y(idx_all);
+    
+        % % Skip dead / almost-dead cells
+        % if var(y_cell) == 0 || sum(y_cell) < 20
+        %     pseudoR2_test(c) = NaN;
+        %     continue
+        % end
+        
+        % 80/20 train/test split
+        N = numel(y_cell);
+        cv = cvpartition(N, 'HoldOut', 0.2);
+        train_idx = training(cv);
+        test_idx  = test(cv);
+    
+        X_train = X_cell(train_idx, :);
+        y_train = y_cell(train_idx);
+    
+        X_test  = X_cell(test_idx, :);
+        y_test  = y_cell(test_idx);
+    
+               % Fit GLM on train
+        try
+            mdl = fitglm(X_train, y_train, 'Distribution', 'poisson', 'Options', opts);
+        catch
+            pseudoR2_test(c) = NaN;
+            weights_per_cell{c} = NaN;   % store NaN for alignment
+            continue
+        end
 
-    % Save
+        % ---- Extract weights (coefficients) for this cell ----
+        weights_per_cell{c} = mdl.Coefficients.Estimate;  % (Intercept + 10 predictors)
+
+        % Save coefficient names once (same for all cells)
+        if isempty(coef_names)
+            coef_names = mdl.CoefficientNames;
+        end
+    
+        % Deviance on TEST data
+        lambda_test = predict(mdl, X_test);
+        D_full_test = poissonDeviance(y_test, lambda_test);
+
+    
+        % Null deviance on TEST data (constant rate fit on TRAIN)
+        mu_null = mean(y_train);
+        mu_test_null = mu_null * ones(size(y_test));
+        D_null_test = poissonDeviance(y_test, mu_test_null);
+    
+        pseudoR2_test(c) = 1 - D_full_test / D_null_test;
+    end
+    
+    % Save per-mouse results
     mouse_name = mouse_files(mouse).name;
-    save_folder = data_folders{mouse};
-    save_name = ['mouse', num2str(mouse), '_poissonNN_prepped_data_', lower(session)];
-    % if ~exist(save_name, 'file')
-        save(fullfile(save_folder, save_name), 'X', 'y', 'cell_ids', '-v7.3');
-        disp([save_name, ' has been saved!']);
-    % else
-    %     warning('%s already exists, skipping save', save_name)
-    % end
+    mouse_name = lower(strrep(mouse_name, ' ', ''));
+    save_name = [mouse_name, '_', lower(session), '_glm_test_pseudoR2.mat'];
+    save_path = fullfile(data_folders{mouse}, save_name);
+    if ~exist(fullfile(save_path, save_name), 'file')
+        save(save_path, 'pseudoR2_test', 'unique_cells','weights_per_cell', 'coef_names');
+        disp([save_name ' saved to ' save_path '!'])
+    else
+        fprintf('%s already exists, skipping save\n', save_name);
+    end
 
+
+
+end
+
+function D = poissonDeviance(y, mu)
+    % Compute Poisson deviance between observed y and mean mu
+    % y, mu: column vectors of same length
+
+    % Ensure column vectors
+    y  = y(:);
+    mu = mu(:);
+
+    idx = y > 0;
+    term_pos  = y(idx) .* log(y(idx) ./ mu(idx)) - (y(idx) - mu(idx));
+    term_zero = mu(~idx);   % contribution when y=0
+
+    D = 2 * (sum(term_pos) + sum(term_zero));
 end

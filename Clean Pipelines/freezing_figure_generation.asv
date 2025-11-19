@@ -2,12 +2,12 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal';
+session = 'Extinction';
 
 trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
-received_psilocybin = [3; 5; 7];
+received_psilocybin = [3; 5; 7; 8];
 received_vehicle = [1; 2; 4; 6];
 %%
 % Select only mouse data folders

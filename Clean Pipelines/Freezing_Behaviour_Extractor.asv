@@ -323,66 +323,62 @@ freezing_velocity_threshold = 0.0528;
 % Convert seconds to frames (1 second × 15 FPS)
 freezing_duration_threshold = 1*fps; 
 
-%% Thresholding & validating freezing (cell-based)
-
-freeze_counter_matrix   = cell(num_mice, 1);   % logical per-frame freezing
-validated_freeze_matrix = cell(num_mice, 1);   % logical per-frame validated freezing
+freeze_counter_matrix = cell(num_mice, 1);
 
 for mouse_idx = 1:num_mice
-    % Logical vector: frames below velocity threshold
-    freeze_counter_matrix{mouse_idx} = hab_velocity_data{mouse_idx} < freezing_velocity_threshold;
+freeze_counter_matrix{mouse_idx} = hab_velocity_data{mouse_idx} < freezing_velocity_threshold;
+end
 
-    % Label consecutive freezing segments for this mouse
-    [labeled_freezing, num_segments] = bwlabel(freeze_counter_matrix{mouse_idx});
+validated_freeze_matrix = cell(size(freeze_counter_matrix));
 
-    % Preallocate validated vector (same length as this session)
-    validated = false(size(freeze_counter_matrix{mouse_idx}));
+% Iterating over each video
+for mouse_ix = 1:num_mice
+    % Iterating over each trial    
 
-    if num_segments > 0
-        % Get length of each connected segment
-        segment_props = regionprops(labeled_freezing, 'Area');
-
-        % Keep only segments at least as long as freezing_duration_threshold
-        for segment = 1:num_segments
-            if segment_props(segment).Area >= freezing_duration_threshold
-                validated(labeled_freezing == segment) = true;
-            end
+    % Labeled_freezing is a vector same size as freeze_counter_matrix, but
+    % has a unique value for each 'blob' of consecutive trials.
+    % num_segments is as scalar representing how many 'blobs' there are
+    [labeled_freezing, num_segments] = bwlabel(freeze_counter_matrix(:, mouse_ix));
+    % Extracts length of connected regions in labeled_freezing and stores
+    % it in segment_props.Area
+    segment_props = regionprops(labeled_freezing, 'Area');
+    % Iterating over number of consecutive segments
+    for segment = 1:num_segments
+        if segment_props(segment).Area >=freezing_duration_threshold
+            validated_freeze_matrix(labeled_freezing == segment, mouse_ix) = 1;
         end
     end
-
-    % Store per-mouse validated freezing vector
-    validated_freeze_matrix{mouse_idx} = validated;
+    
 end
 
 %% Saving
 
 % Loop through each filename and extract base name for creating save paths
-base_names = cell(num_mice, 1);
-for i = 1:num_mice
-    % Match pattern: mouseX_session
-    tokens = regexp(SSM_file_paths{i}, 'mouse\d+_' , 'match', ...
+base_names = cell(length(SSM_session_folders), 1);
+for i = 1:length(SSM_session_folders)
+% Match pattern: mouseX_session_pY
+    tokens = regexp(SSM_file_paths{i, 1}, ['mouse\d+_' session] , 'match',...
         'ignorecase');
     if ~isempty(tokens)
-        base_names{i} = tokens{1};
+      base_names{i} = tokens{1};
     end
 end
 
 for mouse = 1:num_mice
-    % Now a logical vector for this mouse, variable length OK
-    hab_freeze_data = validated_freeze_matrix{mouse};
+    hab_freeze_data = validated_freeze_matrix(:, mouse);
 
     % Extract folder for saving freeze data
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;
-    freeze_data_folder = fullfile(mouse_path, mouse_name, ...
+    freeze_data_folder = fullfile(mouse_path, mouse_name,...
         session, 'Behavioural Data', 'Extracted Behaviours', 'Freezing');
 
-    save_name = [base_names{mouse}, lower(session) '_habituation_freezing.mat'];
-
+    save_name = [base_names{mouse}, '_freezing.mat'];
+    
     if ~exist(fullfile(freeze_data_folder, save_name), 'file')
-        save(fullfile(freeze_data_folder, save_name), "hab_freeze_data");
-        fprintf('%s has been saved to %s\n', save_name, freeze_data_folder);
+        save(fullfile(freeze_data_folder, save_name), "hab_freeze_data")
+        fprintf('%s has been saved to %s', save_name, freeze_data_folder)
     else
-        warning('%s already exists, skipping save', save_name);
+        warning('%s already exists, skipping save', save_name)
     end
 end

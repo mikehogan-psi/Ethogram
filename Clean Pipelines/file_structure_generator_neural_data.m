@@ -5,7 +5,7 @@ root_dir = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG 
 
 % Define folder names
 mice = {'Mouse 1', 'Mouse 2', 'Mouse 3', 'Mouse 4', 'Mouse 5', 'Mouse 6',...
-    'Mouse 7'}; % Add mice as needed
+    'Mouse 7', 'Mouse 8'}; % Add mice as needed
 sessions = {'Acquisition', 'Extinction', 'Renewal'};
 data_types = {'Behavioural Data', 'Neural Data', 'Combined Data'};
 processed_unprocessed_b = {'Extracted Behaviours', 'SSM Fitted Data',...

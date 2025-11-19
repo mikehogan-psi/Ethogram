@@ -3,15 +3,15 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!! Provide session being processed !!!
-session = 'Renewal';
+session = 'Extinction';
 
 % !!! Provide filepaths to previously generated RFMs for each behaviour !!!
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Darting\darting_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Grooming\grooming_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Rearing\rearing_model_1.mat")
 
-received_stim_set_1 = [1 2 3 6 7];
-received_stim_set_2 = [4 5];
+received_stim_set_1 = [1 2 3 6 7 8];
+received_stim_set_2 = [4 5 8];
 
 %% Get directory for SSM datafiles for each mouse for specified session
 % Select only mouse data folders
@@ -57,6 +57,7 @@ for mouse = 1:length(SSM_session_folders)
 
     [~, idx] = sort({SSM_file_list.name});
     SSM_file_list = SSM_file_list(idx);
+    mouse_files = mouse_files(sort_idx); 
 
     % Extract file paths from list of SSM files
     for part = 1:num_parts
@@ -76,7 +77,7 @@ missing_matrix = cell(num_mice, num_parts);
 % Extract variables needed from SSM files
 for file = 1:num_mice
     for part = 1:num_parts
-    load(SSM_file_paths{file}, 'Xfit', 'b', 'R', 'T', 'missing');
+    load(SSM_file_paths{file, part}, 'Xfit', 'b', 'R', 'T', 'missing');
     Xfit_matrix_whole{file, part} = Xfit;
     b_matrix{file, part} = b;
     angle_matrix{file, part} = rotm2eul(R, 'ZYX')';
@@ -200,36 +201,36 @@ for behaviour_idx = 1:length(behaviours)
         end
                 
         % Save predictions
-        if exist(save_path_looms, 'file')
-            warning('%s already exists, skipping extraction', save_name_looms)
-        else
+        % if exist(save_path_looms, 'file')
+        %     warning('%s already exists, skipping extraction', save_name_looms)
+        % else
             disp(['Making predictions for ', save_name_looms, '...'])
             save(save_path_looms, 'behaviour_looms');
             disp([save_name_looms, ' has been saved!'])       
-        end
+        % end
         
-        if exist(save_path_flashes, 'file')
-            warning('%s already exists, skipping extraction', save_name_flashes)
-        else
+        % if exist(save_path_flashes, 'file')
+        %     warning('%s already exists, skipping extraction', save_name_flashes)
+        % else
             disp(['Making predictions for ', save_name_flashes, '...'])
             save(save_path_flashes, 'behaviour_flashes');
             disp([save_name_flashes, ' has been saved!'])       
-        end
+        % end
         
         % Save behaviour probabilities for GLM covariate input
-        if exist(save_path_scores_looms, 'file')
-            warning('%s already exists, skipping probability extraction', save_name_scores_looms)
-        else
+        % if exist(save_path_scores_looms, 'file')
+        %     warning('%s already exists, skipping probability extraction', save_name_scores_looms)
+        % else
             save(save_path_scores_looms, 'looms_scores');
             disp([save_name_scores_looms, ' has been saved!'])
-        end
+        % end
         
-        if exist(save_path_scores_flashes, 'file')
-            warning('%s already exists, skipping probability extraction', save_name_scores_flashes)
-        else
+        % if exist(save_path_scores_flashes, 'file')
+        %     warning('%s already exists, skipping probability extraction', save_name_scores_flashes)
+        % else
             save(save_path_scores_flashes, 'flashes_scores');
             disp([save_name_scores_flashes, ' has been saved!'])
-        end
+        % end
 
     
     end

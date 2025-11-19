@@ -273,7 +273,8 @@ for mouse = mice_to_analyse
             else
                 behaviour_matrix = behaviour_data_flashes(mouse, :);
             end
-         
+    
+            
             frames_per_trial = size(behaviour_matrix{1}, 2);
     
             % Initialise binned behaviour matrix
@@ -297,7 +298,9 @@ for mouse = mice_to_analyse
                 % Flashes go second (trials 21..40)
                 binned_behaviour_all(:, (n_trials/2+1):n_trials, :) = binned_behaviour;
             end
+            
 
+            
             % Flatten and assemble features
             binned_grooming = reshape(squeeze(binned_behaviour_all(1, :, :))', [], 1);
             binned_rearing = reshape(squeeze(binned_behaviour_all(2, :, :))', [], 1);

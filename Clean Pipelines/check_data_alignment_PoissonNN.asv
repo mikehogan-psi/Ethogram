@@ -1,0 +1,78 @@
+% pick a cell to visualize
+num_bins = 66;
+ycol = y(:);
+ids = unique(cell_ids(:))';   % e.g., [0 1 2 ... N]
+
+for neuron_id = ids      % <- loops over 0,1,2,... exactly as stored
+    idx = find(cell_ids == neuron_id);
+    if isempty(idx), continue; end
+
+    n_trials = numel(idx)/num_bins;
+    if mod(numel(idx), num_bins) ~= 0, warning('skip %d', neuron_id); continue; end
+
+    Y = reshape(ycol(idx), num_bins, n_trials)';   % [n_trials x 66]
+    imagesc(Y); set(gca,'YDir','normal'); colormap hot; colorbar
+    title(sprintf('Neuron %d', neuron_id));
+
+        % annotate stimulus window and loom/flash boundary
+    fps = 15; bin_size = 0.5;
+    stim_start_bin = ceil((152/fps) / bin_size);
+    stim_end_bin   = ceil((202/fps) / bin_size);
+    
+    hold on
+    xline([stim_start_bin stim_end_bin] + 0.5, 'w--', 'LineWidth', 1);   % stim window
+    yline(20.5, 'w:');  % looms (1..20) vs flashes (21..40), per your stacking
+    hold off
+    % pause(0.1)
+    ginput(); close(gcf);
+end
+%%
+X = X';
+y= y';
+cell_ids = cell_ids';
+% ---- constants / helpers ----
+num_bins = 66;                 % 0.5 s bins
+fps = 15; bin_size = 0.5;
+stim_start_bin = ceil((152/fps) / bin_size);
+stim_end_bin   = ceil((202/fps) / bin_size);
+feat_names = {'Grooming','Rearing','Darting','Freezing','Velocity'};  % X(:,1:6)
+
+ids = unique(cell_ids(:))';    % neuron IDs as stored (e.g., 0..N-1)
+
+for neuron_id = ids
+    idx = find(cell_ids == neuron_id);
+    if isempty(idx), continue; end
+    if mod(numel(idx), num_bins) ~= 0
+        warning('Neuron %d: |idx|=%d not multiple of %d bins, skipping', neuron_id, numel(idx), num_bins);
+        continue
+    end
+    n_trials = numel(idx) / num_bins;
+
+    % Tiled figure with 6 features
+    figure('Name', sprintf('Neuron %d – features 1–6', neuron_id));
+    t = tiledlayout(2,3,'Padding','compact','TileSpacing','compact');
+
+    for f = 1:5
+        % pull this feature’s rows for the neuron and reshape to [trials x bins]
+        col = X(f).';
+        Yf  = reshape(col, num_bins, n_trials)';    % [66 x n_trials] -> [n_trials x 66]
+
+        nexttile;
+        imagesc(Yf);
+        set(gca,'YDir','normal');
+        colormap hot; colorbar;
+        title(feat_names{f});
+        xlabel('Time bin (0.5 s)'); ylabel('Trial');
+
+        hold on
+        xline([stim_start_bin stim_end_bin] + 0.5, 'w--', 'LineWidth', 1);
+        if n_trials == 40, yline(20.5, 'w:'); end   % looms vs flashes split
+        hold off
+    end
+
+    title(t, sprintf('Neuron %d – X(:,1:6)', neuron_id));
+
+    % click to advance to next neuron
+    ginput(); close(gcf);
+    % pause(0.5); close;
+end

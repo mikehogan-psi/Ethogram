@@ -2,19 +2,19 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal'; % 'Extinction' or 'Renewal'
+session = 'Extinction'; % 'Extinction' or 'Renewal'
 
 % !!! Provide trial type to analyse !!!
-trial_type = 'flashes'; % 'looms' or 'flashes'
+trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
-received_psilocybin = [3; 5; 7];
+received_psilocybin = [3; 5; 7; 8];
 received_vehicle = [1; 2; 4; 6];
 
 % !!! Provide filepath for where figures will be saved !!!
 save_folder = 'D:\behaviours_results';
 
-!!! Decide whether to save figures or not !!!
+% !!! Decide whether to save figures or not !!!
 do_save = false; % true or false
 %%
 
