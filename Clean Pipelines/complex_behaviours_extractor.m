@@ -3,7 +3,7 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!! Provide session being processed !!!
-session = 'Extinction';
+session = 'Renewal';
 
 % !!! Provide filepaths to previously generated RFMs for each behaviour !!!
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Darting\darting_model_1.mat")
@@ -52,7 +52,7 @@ SSM_file_paths = cell(num_mice, num_parts);
 
 for mouse = 1:length(SSM_session_folders)
     current_SSM_folder = SSM_session_folders{mouse};
-    SSM_file_list = dir(fullfile(current_SSM_folder, 'mouse*_SSM_fitted.mat'));
+    SSM_file_list = dir(fullfile(current_SSM_folder, 'mouse*_p*_SSM_fitted.mat'));
     SSM_file_list = SSM_file_list(~[SSM_file_list.isdir]);    
 
     [~, idx] = sort({SSM_file_list.name});

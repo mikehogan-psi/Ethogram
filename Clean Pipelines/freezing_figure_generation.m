@@ -2,13 +2,14 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal';
+session = 'Extinction';
 
 trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
-received_psilocybin = [3; 5; 7];
+received_psilocybin = [3; 5; 7; 8];
 received_vehicle = [1; 2; 4; 6];
+mice_to_analyse = [1 2 3 4 5 6 7 8];
 %%
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -17,7 +18,7 @@ mouse_files = dir(fullfile(master_directory, 'Mouse*'));
 freezing_folders = cell(length(mouse_files), 1);
 
 % Get DLC folders for specified session
-for mouse = 1:length(mouse_files)
+for mouse = mice_to_analyse
     mouse_name = mouse_files(mouse).name;
     mouse_path = mouse_files(mouse).folder;
     freezing_folders{mouse} = fullfile(mouse_path, mouse_name,...
@@ -26,7 +27,7 @@ end
 
 freeze_data = cell(length(mouse_files), 1);
 
-for mouse = 1:length(freezing_folders)
+for mouse = mice_to_analyse
     current_freeze_data_path = freezing_folders{mouse};
     current_freeze_data = dir(fullfile(current_freeze_data_path, ['*_', trial_type, '_freezing.mat']));
     file_to_load = fullfile(current_freeze_data.folder, current_freeze_data.name);
@@ -86,6 +87,7 @@ xlabel('Trial'); ylabel('Mean freezing (%)'); title([session, ' ', trial_type, '
 legend('Psilocybin (± SEM)','Vehicle (± SEM)','Location','best');
 grid on;
 ylim([0 100]);
+xlim([1 20])
 
 %% Frame-wise: average over trials, then compute mean +/- SEM across mice
 % per-mouse frame averages: frames x mice
@@ -129,11 +131,11 @@ veh_mean_over_mice = mean(veh, 3);  % trials x frames
 figure;
 subplot(1,2,1);
 imagesc(psi_mean_over_mice); axis xy;
-colorbar; xlabel('Frame'); ylabel('Trial'); title('Psilocybin: mean freezing (trial x frame)');
+colorbar; xlabel('Frame'); ylabel('Trial'); title('Psilocybin: mean freezing');
 
 subplot(1,2,2);
 imagesc(veh_mean_over_mice); axis xy;
-colorbar; xlabel('Frame'); ylabel('Trial'); title('Vehicle: mean freezing (trial x frame)');
+colorbar; xlabel('Frame'); ylabel('Trial'); title('Vehicle: mean freezing');
 cb2 = colorbar; 
 ylabel(cb2, 'Freezing Probability');
 sgtitle([session, ' ', trial_type])
@@ -144,7 +146,7 @@ sgtitle([session, ' ', trial_type])
 
 %%
 % Calculate per-mouse freezing means
-post_start = 252;
+post_start = 233;
 post_end   = size(psi, 2);
 
 % psilocybin group
@@ -156,18 +158,42 @@ veh_post_per_mouse = squeeze(mean(mean(veh(:, post_start:post_end, :), 2), 1));
 [p,~,stats] = ranksum(psi_post_per_mouse, veh_post_per_mouse);
 fprintf('Post-stim Mann–Whitney U test: p = %.4f\n', p);
 
-means = [mean(veh_post_per_mouse), mean(psi_post_per_mouse)];
+means = [mean(veh_post_per_mouse), mean(psi_post_per_mouse)] * 100;
 sems  = [std(veh_post_per_mouse)/sqrt(length(veh_post_per_mouse)), ...
-         std(psi_post_per_mouse)/sqrt(length(psi_post_per_mouse))];
+         std(psi_post_per_mouse)/sqrt(length(psi_post_per_mouse))] * 100;
 
 figure;
-bar(means); hold on;
+b = bar(1:2, means, 'FaceColor', 'flat'); hold on;
+
+% Vehicle (1) = blue, Psilocybin (2) = red
+b.CData(1,:) = [0 0.4470 0.7410];  % vehicle = blue
+b.CData(2,:) = [1 0 0];            % psilocybin = red
+
+% Thick black outline on bars
+b.EdgeColor = 'k';
+b.LineWidth = 1.5;
+
+% Error bars (black)
 errorbar(1:2, means, sems, 'k.', 'LineWidth', 1.5);
 
-set(gca, 'XTickLabel', {'Vehicle','Psilocybin'});
+ylim([0 100])
+set(gca, 'XTick', 1:2, 'XTickLabel', {'Vehicle','Psilocybin'});
 ylabel('Post-stim freezing (%)');
-title('Mean post-stimulus freezing');
+title('Mean post-stimulus freezing (all trials)');
 box off;
+
+ax = gca;
+
+% Thicker black axes
+ax.LineWidth = 1.5;        % axis outline thickness
+ax.XColor    = 'k';        % x-axis colour
+ax.YColor    = 'k';        % y-axis colour
+
+% (Optional) nicer ticks
+ax.TickDir   = 'out';
+ax.Box       = 'off';      % keep top/right lines off (you already do box off)
+
+
 
 %%
 % Compute U statistic
@@ -284,14 +310,32 @@ figure;
 bar_vals = [mean_veh_hab, mean_psi_hab];
 bar_sems = [sem_veh_hab, sem_psi_hab];
 
-bar(bar_vals); hold on;
+b = bar(1:2, bar_vals, 'FaceColor', 'flat'); hold on;
+
+% Vehicle = blue, Psilocybin = red
+b.CData(1,:) = [0 0.4470 0.7410];  % vehicle
+b.CData(2,:) = [1 0 0];            % psilocybin
+
+% Thick black outline on bars
+b.EdgeColor = 'k';
+b.LineWidth = 1.5;
+
+% Error bars
 errorbar(1:2, bar_vals, bar_sems, 'k.', 'LineWidth', 1.5);
 
 set(gca, 'XTick', 1:2, 'XTickLabel', {'Vehicle','Psilocybin'});
 ylabel('Total freezing during habituation (%)');
-title(['Habituation freezing (full session): ' session]);
+title(['Habituation freezing (full session mean): ' session]);
 ylim([0 100]);
 box off;
+
+ax = gca;
+ax.LineWidth = 1.5;
+ax.XColor    = 'k';
+ax.YColor    = 'k';
+ax.TickDir   = 'out';
+ax.Box       = 'off';
+
 
 %% Habituation statistics: normality + unpaired t-test (built-in MATLAB only)
 

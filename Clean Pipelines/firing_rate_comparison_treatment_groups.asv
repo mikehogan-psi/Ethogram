@@ -1,0 +1,102 @@
+extract_firing_habituation
+
+clearvars -except mean_fr_habituation
+
+master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
+
+session= 'Renewal';
+
+mice_to_analyse = [2 3 4 5 6 7 8];
+
+num_mice = max(mice_to_analyse);
+
+received_psi = [3 5 7 8];
+received_veh = [2 4 6];
+
+%% Load processed neural and behavioural data
+
+mouse_files = dir(fullfile(master_directory, 'Mouse*'));
+
+mouse_paths = cell(numel(mouse_files), 1);
+
+for mouse = mice_to_analyse
+    current_mouse_folder = mouse_files(mouse).folder;
+    current_mouse_name = mouse_files(mouse).name;
+    current_mouse_path = fullfile(current_mouse_folder, current_mouse_name,...
+        session, 'Combined Data');
+    mouse_paths{mouse} = current_mouse_path;
+end
+
+combined_data_matrices = cell(numel(mouse_files), 1);
+
+for mouse = mice_to_analyse
+    current_file_to_load = dir(fullfile(mouse_paths{mouse}, '*GLM_data*'));
+    current_data = load(fullfile(current_file_to_load.folder, current_file_to_load.name));
+    combined_data_matrices{mouse} = current_data;
+end
+
+
+%%
+bin_size = 0.5;
+
+normalised_data = cell(num_mice, 1);
+
+% Covert spiking data to Hz and normalise by subtracting mean firing during
+% habituation for each neuron
+for mouse = mice_to_analyse
+    current_data = combined_data_matrices{mouse}.X_table_full;
+    % Convert to firing rate (Hz)
+    current_data.SpikeCount = current_data.SpikeCount/bin_size;
+    unique_cells = combined_data_matrices{mouse}.unique_cells;
+    for idx = 1:numel(unique_cells)
+        current_neuron = unique_cells(idx);
+        current_neuron_rows = (current_data.CellID == current_neuron);
+        current_neuron_mean_fr = mean_fr_habituation{mouse}(idx);
+        current_data.SpikeCount(current_neuron_rows) = current_data.SpikeCount(current_neuron_rows)...
+            - current_neuron_mean_fr;
+    end
+    normalised_data{mouse} = current_data;
+end
+
+median_firing_during_loom = zeros(num_mice, 1);
+
+for mouse = mice_to_analyse
+    current_data = normalised_data{mouse};
+    firing_during_loom_idx = current_data.LoomON == 1;
+    spiking_during_loom = median(current_data.SpikeCount(firing_during_loom_idx));
+    median_firing_during_loom(mouse) = spiking_during_loom;
+end
+
+%%
+
+psi_firing_loom = median_firing_during_loom(received_psi);
+veh_firing_loom = median_firing_during_loom(received_veh);
+
+figure; hold on;
+
+means = [mean(veh_firing_loom) mean(psi_firing_loom)];
+sems  = [std(veh_firing_loom)/sqrt(numel(veh_firing_loom)), ...
+         std(psi_firing_loom)/sqrt(numel(psi_firing_loom))];
+
+bar(1:2, means, 'FaceColor',[0.8 0.8 0.8]); 
+errorbar(1:2, means, sems, 'k', 'LineStyle','none','LineWidth',2);
+
+scatter(ones(size(veh_firing_loom)), veh_firing_loom, 80, 'k','filled');
+scatter(2*ones(size(psi_firing_loom)), psi_firing_loom, 80, [0.9 0 0],'filled');
+
+set(gca,'XTick',[1 2],'XTickLabel',{'Vehicle','Psilocybin'});
+ylabel('Median normalised firing (Hz)');
+title([session ' loom response']);
+box off;
+
+%%
+hab_fr_psi = mean_fr_habituation(received_psi);
+hab_fr_veh = mean_fr_habituation(received_veh);
+
+mean_fr_psi_hab = zeros(length(hab_fr_psi), 1);
+for mouse = 1:length(hab_fr_psi)
+    current_mouse = hab_fr_psi{mouse};
+    temp_mean = mean(current_mouse);
+    mean_fr_psi_hab(mouse) = 
+
+

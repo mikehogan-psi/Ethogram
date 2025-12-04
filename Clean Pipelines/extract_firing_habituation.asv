@@ -2,7 +2,7 @@
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
  
-session = 'Extinction';
+session = 'Renewal';
 
 mice_to_analyse = [2 3 4 5 6 7 8];
 max_mouse_id    = max(mice_to_analyse); 
@@ -192,7 +192,7 @@ plot(t, mean_psi, 'Color', psi_col, 'LineWidth', 2);
 
 xlabel('Time in habituation (s)');
 ylabel('Mean firing rate (Hz)');
-title(['Mean Habituation firing rate: ' session]);
+title(['Mean Habituation firing rate: Veh vs Psilo ' session]);
 legend({'Veh SEM','Vehicle','Psi SEM','Psilocybin'}, 'Location','best');
 ylim([1.5 5])
 
@@ -212,6 +212,6 @@ plot(t, mean_veh_smooth, 'LineWidth', 2, 'Color', [0 0.4470 0.7410]);
 plot(t, mean_psi_smooth, 'LineWidth', 2, 'Color', [1 0 0]);
 xlabel('Time (s)');
 ylabel('Mean firing rate (Hz)');
-title(['Mean Habituation FR (Smoothed: ' num2str(window*0.5) 's Window): ' session]);
+title(['Mean Habituation FR (smoothed: ' num2str(window) 's window' session]);
 legend({'Vehicle','Psilocybin'}, 'Location','best');
 ylim([2 4.5])

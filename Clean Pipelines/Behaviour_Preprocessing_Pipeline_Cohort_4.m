@@ -141,7 +141,7 @@ for mouse = 1:length(mouse_files)
 
     current_triangulated_folder_path = triangulated_session_folders{mouse};
     
-    triangulated_file_list = dir(fullfile(current_triangulated_folder_path, 'mouse*_triangulated.mat'));
+    triangulated_file_list = dir(fullfile(current_triangulated_folder_path, 'mouse*_p*_triangulated.mat'));
     triangulated_file_list = triangulated_file_list(~[triangulated_file_list.isdir]);
     
     % Initialise
@@ -213,8 +213,6 @@ for mouse = 1:length(dlc_session_folders)
           base_names{i} = tokens{1};
         end
     end
-
-  
     
     % Extract filenames for each camera for each part
     camera_files_struct = dir(fullfile(current_dlc_folder_path, ['camera*' base_names{1} '*.csv'])); 
@@ -312,11 +310,11 @@ for mouse = 1:length(mouse_files)
     % Fitting SSM 
     SSM_save_path = fullfile(SSM_data_save_folder, [base_names{1},...
         '_SSM_fitted.mat']);
-    % if exist(SSM_save_path, 'file')
-    %     warning([base_names{1}, '_SSM_fitted.mat already exists,' ...
-    %     ' skipping this file'])
-    %     continue
-    % end
+    if exist(SSM_save_path, 'file')
+        warning([base_names{1}, '_SSM_fitted.mat already exists,' ...
+        ' skipping this file'])
+        continue
+    end
     disp(['Fitting SSM for ' base_names{1}, '...'])
     Fit_SSM_3D_habituation(triangulated_file_paths{1}, SSM_save_path, SSM_model_path)
 

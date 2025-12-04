@@ -2,7 +2,7 @@
 
 % !!! Specify which session is to be analysed !!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!! Provide directory with all data in !!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';

@@ -1,7 +1,7 @@
 % Directory where your *_glm_test_pseudoR2.mat files are saved
 data_dir = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
-mice_to_analyse = [2 3 4 5 6 7];
+mice_to_analyse = [2 3 4 5 6 7 8];
 session = 'Extinction';   % change if needed
 
 all_pr2 = [];
@@ -10,7 +10,7 @@ all_weights_per_cell = [];
 for mouse = mice_to_analyse
     
     % File name: mouse2_extinction_glm_test_pseudoR2.mat
-    save_name = sprintf('mouse%d_%s_glm_test_pseudoR2.mat', ...
+    save_name = sprintf('mouse%d_%s_poisson_GLM_data_and_results.mat', ...
         mouse, lower(session));
     
     % Folder name: "Mouse 2"  (with a space!)
