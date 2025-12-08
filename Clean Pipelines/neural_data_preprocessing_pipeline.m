@@ -2,14 +2,14 @@
 
 % !!! Specify which session is to be analysed !!!
 % Acquisition, Extinction, or Renewal
-session = 'Renewal';
+session = 'Extinction';
 
 % !!! Provide directory with all data in !!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 %!!!Specify stim set for each mouse (mouse number only)!!!
 received_stim_set_1 = [1 2 3 6 7];
-received_stim_set_2 = [4 5 8];
+received_stim_set_2 = [4 5 8 9];
 %% Get directories for .dat files and trigger.npy files and concantenate/extract
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));

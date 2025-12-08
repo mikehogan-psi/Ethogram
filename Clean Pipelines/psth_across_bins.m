@@ -1,3 +1,8 @@
+% PSTH_ACROSS_BINS
+% Generates mean PSTHs across bins for all neurons and for individual
+% clusters, as assigned by classify_cells_edited_mike. Set do_normalise to
+% true to perform a baseline subtraction on data (mean pre-stimulus firing)
+
 master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
 
 session= 'Extinction';
@@ -164,16 +169,16 @@ psi_post = mean(psi_spiking(:, post_idx), 2);
 fprintf('Post-stim t-test: p = %.4f, t(%d) = %.3f\n', ...
         p, stats.df, stats.tstat);
 
-%%
+%% Plot PSTHs for individual clusters
 
 num_clusters = max(cluster_assignments.ClusterID);
 sorted_clusters = cell(num_mice, num_clusters);
 trial_type = 1;
 num_bins = 66;
+pre_stim_bins = 1:19;
 
     
 for mouse = mice_to_analyse
-
 
     current_data = combined_data_matrices{mouse}.X_table_full;
     for cluster = 1:num_clusters
@@ -197,6 +202,35 @@ for mouse = mice_to_analyse
     end
     
 end
+
+
+
+if do_normalise
+    for mouse = mice_to_analyse
+        for cluster = 1:num_clusters
+            current_data = sorted_clusters{mouse, cluster};            
+            cellIDs = unique(current_data.CellID);
+            num_cells = length(cellIDs);
+            for neuron_idx = 1:num_cells
+                neuron = cellIDs(neuron_idx);
+                all_neuron_idx = current_data.CellID == neuron;
+                current_spikes = current_data.SpikeCount(all_neuron_idx);
+                current_bins = current_data.TimeBin(all_neuron_idx);
+    
+                pre_idx = current_bins >= pre_stim_bins(1) & current_bins <= pre_stim_bins(end);
+                baseline = mean(current_spikes(pre_idx));
+                norm_spikes = current_spikes - baseline;
+
+                current_data.SpikeCount(all_neuron_idx) = norm_spikes;
+            end
+        
+        sorted_clusters{mouse, cluster} = current_data;
+
+        end  
+
+    end
+end
+
 
 avg_spiking_per_bin_clusters = cell(num_clusters, 1);
 
@@ -289,7 +323,11 @@ for cluster = 1:num_clusters
     % cosmetics
     title(sprintf('Cluster %d', cluster));
     xlabel('Time (s)');
-    ylabel('Mean Spike Count/Bin');
+    if do_normalise
+        ylabel('Normalised Mean Spike Count/Bin');
+    else
+        ylabel('Mean Spike Count/Bin');
+    end
     xlim([t(1) t(end)]);
     ax = gca;
     ax.LineWidth = 1;
@@ -297,7 +335,7 @@ for cluster = 1:num_clusters
     ax.Box       = 'off';
     xline(10, 'k--', 'LineWidth', 1.5);
     xline(13.3, 'k--', 'LineWidth', 1.5)
-    ylim([0 15])
+    % ylim([0 15])
 
     if cluster == 1
         legend({'Veh SEM','Vehicle','Psi SEM','Psilocybin'}, ...

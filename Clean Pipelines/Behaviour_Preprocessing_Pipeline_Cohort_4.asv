@@ -118,15 +118,11 @@ for mouse = 1:length(dlc_session_folders)
         
         disp(['Triangulating data for ' base_names{part} '...'])
         
-        % Load correct P matrix for triangulation
         if ismember(mouse, used_p_matrix_1)
-            load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P') 
-        elseif ismember(mouse, used_p_matrix_2)
-            % load(NEW P MATRIX)
-        end
-        
-        % Run triangulation function 
+            load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P')
         [X, W] = triangulate_simple_og(x, L, P, TH); 
+        elseif ismember(mouse, used_p_matrix_2)
+            load(NEW P MATRIX)
         % Save data in appropriate subfolder and with appropriate name
         save(triangulated_data_save_path,"W","X","x","L","TH","camera_files"); 
         disp([base_names{part} '_triangulated.mat' ' saved to ' triangulated_data_folder])
