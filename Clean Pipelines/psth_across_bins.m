@@ -7,15 +7,15 @@ master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 
 session= 'Extinction';
 
-mice_to_analyse = [2 3 4 5 6 7 8];
+mice_to_analyse = [2 3 4 5 6 7 8 9];
 
 num_mice = max(mice_to_analyse);
 
 trial_type = 1; % 1 = loom, 0 = flash
 
 received_psi = [3 5 7 8];
-received_veh = [2 4 6];
-do_normalise = true;
+received_veh = [2 4 6 9];
+do_normalise = false;
 
 load("D:\PhD 3rd Year\cluster_assignments_temp.mat")
 
@@ -323,11 +323,11 @@ for cluster = 1:num_clusters
     % cosmetics
     title(sprintf('Cluster %d', cluster));
     xlabel('Time (s)');
-    if do_normalise
-        ylabel('Normalised Mean Spike Count/Bin');
-    else
+    % if do_normalise
+    %     ylabel('Normalised Mean Spike Count/Bin');
+    % else
         ylabel('Mean Spike Count/Bin');
-    end
+    % end
     xlim([t(1) t(end)]);
     ax = gca;
     ax.LineWidth = 1;

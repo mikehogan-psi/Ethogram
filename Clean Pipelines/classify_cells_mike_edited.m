@@ -14,10 +14,10 @@
 
 %----------------- USER INPUTS -----------------%
 fpath      = 'Y:\Mike\Poisson_GLM_Data_01_12_25\';
-mouse_num  = 2:8;
+mouse_num  = 2:9;
 
 % TODO: replace with real treatment labels per mouse (0 = ctrl, 1 = treated)
-mouse_treatment = [0,1,0,1,0,1,1];
+mouse_treatment = [0,1,0,1,0,1,1,0];
 
 TH_pR2     = 0.05;  % pseudoR2 threshold
 dropIntercept = true; % set true if first coefficient is intercept

@@ -3,15 +3,15 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!! Provide session being processed !!!
-session = 'Renewal';
+session = 'Extinction';
 
 % !!! Provide filepaths to previously generated RFMs for each behaviour !!!
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Darting\darting_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Grooming\grooming_model_1.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Rearing\rearing_model_1.mat")
 
-received_stim_set_1 = [1 2 3 6 7 8];
-received_stim_set_2 = [4 5 8];
+received_stim_set_1 = [1 2 3 6 7];
+received_stim_set_2 = [4 5 8 9];
 
 %% Get directory for SSM datafiles for each mouse for specified session
 % Select only mouse data folders

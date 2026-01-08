@@ -2,12 +2,12 @@
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
  
-session = 'Renewal';
+session = 'Extinction';
 
-mice_to_analyse = [2 3 4 5 6 7 8];
+mice_to_analyse = [2 3 4 5 6 7 8 9];
 
 received_stim_set_1 = [2 3 6 7];
-received_stim_set_2 = [4 5 8];
+received_stim_set_2 = [4 5 8 9];
 
 %% Load behavioural data
 

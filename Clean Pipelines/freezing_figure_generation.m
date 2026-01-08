@@ -2,14 +2,14 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Extinction';
+session = 'Renewal';
 
 trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
 received_psilocybin = [3; 5; 7; 8];
-received_vehicle = [1; 2; 4; 6];
-mice_to_analyse = [1 2 3 4 5 6 7 8];
+received_vehicle = [1; 2; 4; 6; 9];
+mice_to_analyse = [1 2 3 4 5 6 7 8 9];
 %%
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -158,16 +158,21 @@ veh_post_per_mouse = squeeze(mean(mean(veh(:, post_start:post_end, :), 2), 1));
 [p,~,stats] = ranksum(psi_post_per_mouse, veh_post_per_mouse);
 fprintf('Post-stim Mann–Whitney U test: p = %.4f\n', p);
 
-means = [mean(veh_post_per_mouse), mean(psi_post_per_mouse)] * 100;
-sems  = [std(veh_post_per_mouse)/sqrt(length(veh_post_per_mouse)), ...
-         std(psi_post_per_mouse)/sqrt(length(psi_post_per_mouse))] * 100;
+% Convert to %
+veh_vals = veh_post_per_mouse(:) * 100;
+psi_vals = psi_post_per_mouse(:) * 100;
 
-figure;
-b = bar(1:2, means, 'FaceColor', 'flat'); hold on;
+means = [mean(veh_vals), mean(psi_vals)];
+sems  = [std(veh_vals)/sqrt(numel(veh_vals)), std(psi_vals)/sqrt(numel(psi_vals))];
+
+figure; hold on;
+
+% Bars
+b = bar(1:2, means, 'FaceColor', 'flat');
 
 % Vehicle (1) = blue, Psilocybin (2) = red
-b.CData(1,:) = [0 0.4470 0.7410];  % vehicle = blue
-b.CData(2,:) = [1 0 0];            % psilocybin = red
+b.CData(1,:) = [0 0.4470 0.7410];
+b.CData(2,:) = [1 0 0];
 
 % Thick black outline on bars
 b.EdgeColor = 'k';
@@ -176,6 +181,18 @@ b.LineWidth = 1.5;
 % Error bars (black)
 errorbar(1:2, means, sems, 'k.', 'LineWidth', 1.5);
 
+% --- Individual datapoints (jittered) ---
+jit = 0.10; % jitter amount (adjust 0.05–0.2)
+
+xVeh = 1 + (rand(size(veh_vals)) - 0.5) * 2*jit;
+xPsi = 2 + (rand(size(psi_vals)) - 0.5) * 2*jit;
+
+scatter(xVeh, veh_vals, 35, 'k', 'filled', ...
+    'MarkerFaceAlpha', 0.75, 'MarkerEdgeColor', 'k');
+scatter(xPsi, psi_vals, 35, 'k', 'filled', ...
+    'MarkerFaceAlpha', 0.75, 'MarkerEdgeColor', 'k');
+
+% Cosmetics
 ylim([0 100])
 set(gca, 'XTick', 1:2, 'XTickLabel', {'Vehicle','Psilocybin'});
 ylabel('Post-stim freezing (%)');
@@ -183,15 +200,11 @@ title('Mean post-stimulus freezing (all trials)');
 box off;
 
 ax = gca;
-
-% Thicker black axes
-ax.LineWidth = 1.5;        % axis outline thickness
-ax.XColor    = 'k';        % x-axis colour
-ax.YColor    = 'k';        % y-axis colour
-
-% (Optional) nicer ticks
+ax.LineWidth = 1.5;
+ax.XColor    = 'k';
+ax.YColor    = 'k';
 ax.TickDir   = 'out';
-ax.Box       = 'off';      % keep top/right lines off (you already do box off)
+ax.Box       = 'off';
 
 
 

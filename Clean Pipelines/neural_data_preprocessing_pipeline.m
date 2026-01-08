@@ -1,8 +1,16 @@
+% NEURAL_DATA_PREPROCESSING_PIPELINE
+% Concatenates raw .dat neural data files and saves in appropriate file
+% using function (concatenate_neural_data_clean)
+% location on shared drive
+% Then extracts trigger timings in raw sampling rate terms (30KHz) using 
+% extract_neural_data_triggers
+% Then extracts event timings (redundant code now, do not use)
+
 %% Setup 
 
 % !!! Specify which session is to be analysed !!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!! Provide directory with all data in !!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
@@ -157,104 +165,104 @@ end
 
 %% Extract event times for aligning data from trigger timing files
 
-% Constants
-fs = 30000;  % Neuronal data sampling rate (30kHz) 
-n_trials = 20; % Number of trials in each session part
-onset = 10; % Second of onset for stimuli
-pseudo_events = 20; % Number of events to extract from habituation
-
-% Get master neural data folders for specified session
-for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
-    mouse_name = mouse_files(mouse).name;
-    mouse_path = mouse_files(mouse).folder;
-    current_trigger_folder = fullfile(mouse_path, mouse_name,...
-        session, 'Neural Data', 'Triggers');
-    
-    % Construct list of filepaths for trigger folders for current mouse
-    trigger_folder_dir = dir(fullfile(current_trigger_folder, 'mouse*'));
-    trigger_file_list = cell(length(trigger_folder_dir), 1);
-    
-    for part = 1:length(trigger_folder_dir)
-        trigger_file_list{part} = fullfile(trigger_folder_dir(part).folder,...
-            trigger_folder_dir(part).name);
-    end
-    
-    % Sort parts into correct order prior to extraction
-    if strcmp(session, 'Extinction')
-        idx = zeros(3,1);
-        key_words = {'habituation', 'p1', 'p2'};
-        for part = 1:numel(key_words)
-            idx(contains(trigger_file_list, key_words{part})) = part;
-        end
-    elseif strcmp(session, 'Renewal')
-        idx = zeros(4,1);
-        key_words = {'habituation', 'p1', 'p2', 'checkerboard'};
-        for part = 1:numel(key_words)
-            idx(contains(trigger_file_list, key_words{part})) = part;
-        end
-    end
-    
-    [~, sort_idx] = sort(idx);
-    trigger_file_list = trigger_file_list(sort_idx);
-    
-    % Check which stim set each mouse received
-    if ismember(mouse, received_stim_set_1)
-        which_stim_set = 1;
-    elseif ismember(mouse, received_stim_set_2)
-        which_stim_set = 2;
-    end
-
-    evt_flash = [];
-    evt_loom = [];
-    evt_hab = [];
-    evt_checkerboard = [];
-    
-    save_name = [lower(mouse_name), '_', lower(session), '_extracted_events.mat'];
-    save_file = fullfile(current_trigger_folder, save_name);
-    if exist(save_file, 'file')
-        warning('%s already exists, skipping extraction', save_file)
-    else
-        disp('Extracting event timings...')
-        % Iterate over all session parts
-        for part = 1:length(trigger_file_list) 
-        
-            load(trigger_file_list{part}, 'evt'); 
-            % Convert sampling number into seconds (divide by sampling rate)
-            evt = double(evt)/fs; 
-     
-            % Remove first event (artefact)
-            evt = evt(2:end);     
-            
-            % Extract arbitrary, evenly-spaced events from habituation (no stimuli)
-            if part == 1
-                evt_hab = sort_evts_hab_clean(evt, pseudo_events); 
-                       
-            % Extract loom and flash events (i.e. triggers of stimulus onset)
-            elseif part == 2 || part == 3    
-                [evt_loom1,evt_flash1] = sort_evts_clean(evt, n_trials, onset, part, ...
-                    which_stim_set);
-        
-                evt_flash = cat(1,evt_flash,evt_flash1);
-                evt_loom =  cat(1,evt_loom ,evt_loom1);
-            
-                % Extract every trigger for checkerboard stim
-            elseif part == 4
-                evt_checkerboard = evt;    
-            end 
-                                 
-        end   
-        
-        % Check session and save extracted events
-        if strcmp(session, 'Extinction')
-            save(save_file, 'evt_hab', 'evt_loom', 'evt_flash');
-            disp([save_name, ' has been saved!'])
-        elseif strcmp(session, 'Renewal')
-            save(save_file, 'evt_hab', 'evt_loom', 'evt_flash', 'evt_checkerboard');
-            disp([save_name, ' has been saved!'])
-        end     
-   
-    end
-
-end
-
-
+% % Constants
+% fs = 30000;  % Neuronal data sampling rate (30kHz) 
+% n_trials = 20; % Number of trials in each session part
+% onset = 10; % Second of onset for stimuli
+% pseudo_events = 20; % Number of events to extract from habituation
+% 
+% % Get master neural data folders for specified session
+% for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
+%     mouse_name = mouse_files(mouse).name;
+%     mouse_path = mouse_files(mouse).folder;
+%     current_trigger_folder = fullfile(mouse_path, mouse_name,...
+%         session, 'Neural Data', 'Triggers');
+% 
+%     % Construct list of filepaths for trigger folders for current mouse
+%     trigger_folder_dir = dir(fullfile(current_trigger_folder, 'mouse*'));
+%     trigger_file_list = cell(length(trigger_folder_dir), 1);
+% 
+%     for part = 1:length(trigger_folder_dir)
+%         trigger_file_list{part} = fullfile(trigger_folder_dir(part).folder,...
+%             trigger_folder_dir(part).name);
+%     end
+% 
+%     % Sort parts into correct order prior to extraction
+%     if strcmp(session, 'Extinction')
+%         idx = zeros(3,1);
+%         key_words = {'habituation', 'p1', 'p2'};
+%         for part = 1:numel(key_words)
+%             idx(contains(trigger_file_list, key_words{part})) = part;
+%         end
+%     elseif strcmp(session, 'Renewal')
+%         idx = zeros(4,1);
+%         key_words = {'habituation', 'p1', 'p2', 'checkerboard'};
+%         for part = 1:numel(key_words)
+%             idx(contains(trigger_file_list, key_words{part})) = part;
+%         end
+%     end
+% 
+%     [~, sort_idx] = sort(idx);
+%     trigger_file_list = trigger_file_list(sort_idx);
+% 
+%     % Check which stim set each mouse received
+%     if ismember(mouse, received_stim_set_1)
+%         which_stim_set = 1;
+%     elseif ismember(mouse, received_stim_set_2)
+%         which_stim_set = 2;
+%     end
+% 
+%     evt_flash = [];
+%     evt_loom = [];
+%     evt_hab = [];
+%     evt_checkerboard = [];
+% 
+%     save_name = [lower(mouse_name), '_', lower(session), '_extracted_events.mat'];
+%     save_file = fullfile(current_trigger_folder, save_name);
+%     if exist(save_file, 'file')
+%         warning('%s already exists, skipping extraction', save_file)
+%     else
+%         disp('Extracting event timings...')
+%         % Iterate over all session parts
+%         for part = 1:length(trigger_file_list) 
+% 
+%             load(trigger_file_list{part}, 'evt'); 
+%             % Convert sampling number into seconds (divide by sampling rate)
+%             evt = double(evt)/fs; 
+% 
+%             % Remove first event (artefact)
+%             evt = evt(2:end);     
+% 
+%             % Extract arbitrary, evenly-spaced events from habituation (no stimuli)
+%             if part == 1
+%                 evt_hab = sort_evts_hab_clean(evt, pseudo_events); 
+% 
+%             % Extract loom and flash events (i.e. triggers of stimulus onset)
+%             elseif part == 2 || part == 3    
+%                 [evt_loom1,evt_flash1] = sort_evts_clean(evt, n_trials, onset, part, ...
+%                     which_stim_set);
+% 
+%                 evt_flash = cat(1,evt_flash,evt_flash1);
+%                 evt_loom =  cat(1,evt_loom ,evt_loom1);
+% 
+%                 % Extract every trigger for checkerboard stim
+%             elseif part == 4
+%                 evt_checkerboard = evt;    
+%             end 
+% 
+%         end   
+% 
+%         % Check session and save extracted events
+%         if strcmp(session, 'Extinction')
+%             save(save_file, 'evt_hab', 'evt_loom', 'evt_flash');
+%             disp([save_name, ' has been saved!'])
+%         elseif strcmp(session, 'Renewal')
+%             save(save_file, 'evt_hab', 'evt_loom', 'evt_flash', 'evt_checkerboard');
+%             disp([save_name, ' has been saved!'])
+%         end     
+% 
+%     end
+% 
+% end
+% 
+% 

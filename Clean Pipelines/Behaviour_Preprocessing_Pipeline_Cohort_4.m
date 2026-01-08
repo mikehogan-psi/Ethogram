@@ -9,7 +9,7 @@ master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 
 % !!! Define likelihood threshold (only DLC data which exceed this
 % confidence value will be used for triangulation) !!!
-TH = 0.9; 
+TH = 0.7; 
 
 used_p_matrix_1 = [1 2 3 4 5 6 7 8];
 used_p_matrix_2 = [9];
@@ -122,7 +122,7 @@ for mouse = 1:length(dlc_session_folders)
         if ismember(mouse, used_p_matrix_1)
             load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P') 
         elseif ismember(mouse, used_p_matrix_2)
-            % load(NEW P MATRIX)
+            load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\16_12_25_P_matrix\P_matrix_161225.mat', 'P')
         end
         
         % Run triangulation function 
@@ -261,6 +261,13 @@ for mouse = 1:length(dlc_session_folders)
     disp(['Loading DLC data for ' base_names{1} '...']);
     [x,L] = load_data_og(camera_files); % Extacts 2D coordinates and their likelihood values and loads them into x and L variables
     
+    % Load correct P matrix for triangulation
+    if ismember(mouse, used_p_matrix_1)
+        load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\p_matrices\Pcal_hogan_9cameras.mat', 'P') 
+    elseif ismember(mouse, used_p_matrix_2)
+        load('C:\Users\G71044MH\OneDrive - The University of Manchester\Documents\GitHub\3D_camera_calibration\16_12_25_P_matrix\P_matrix_161225.mat', 'P')
+    end
+
     disp(['Triangulating data for ' base_names{1} '...'])
     % Run triangulation function 
     [X, W] = triangulate_simple_og(x, L, P, TH); 

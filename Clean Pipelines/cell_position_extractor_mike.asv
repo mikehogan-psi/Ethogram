@@ -129,11 +129,4 @@ for mouse = mice_to_analyse
         depth_table.ChannelID(cell_idx) = current_channel(1);
     end
 
-    mouse_name = mouse_files(mouse).name;
-    mouse_name = lower(strrep(mouse_name, ' ', ''));
-    save_name = [mouse_name, '_', lower(session), '_', 'cell_depths.mat'];
-    save_path = fullfile(data_folders{mouse}, save_name);
-    save(save_path, "depth_table");
-    disp([save_name ' saved to ' data_folders{mouse} '!'])
-
-end
+    

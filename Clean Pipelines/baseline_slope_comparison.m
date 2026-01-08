@@ -1,3 +1,10 @@
+% BASELINE_SLOPE_COMPARISON
+% Calculates baseline firing (pre stim) and then  compares this to firing
+% during and post stim, plotted on log-log axes
+% Then fits a linear regression model to examine relationships between
+% baseline firing and firing during these periods: 
+% log10(Response)=β0 + β1log10(Baseline) + β2Group + β3(log10(Baseline)*Group)
+
 master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
 
 session= 'Extinction';
@@ -48,7 +55,7 @@ all_mouse    = [];
 for mouse = mice_to_analyse
     current_data = combined_data_matrices{mouse}.X_table_full;
     
-    % Select loom trials
+    % Select correct trials
     current_data = current_data(current_data.TrialIdentifier == trial_type, :);
     cellIDs = unique(current_data.CellID);
 

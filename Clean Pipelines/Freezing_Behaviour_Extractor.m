@@ -8,7 +8,7 @@ master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 
 %!!!Specify stim set for each mouse (mouse number only)!!!
 received_stim_set_1 = [1 2 3 6 7];
-received_stim_set_2 = [4 5 8];
+received_stim_set_2 = [4 5 8 9];
 
 %% Get directory for SSM datafiles for each mouse for specified session
 % Select only mouse data folders
