@@ -21,7 +21,7 @@ master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
 
-session = 'Extinction';
+session = 'Renewal';
 %% Get filepaths for neural data
 
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -38,21 +38,6 @@ for mouse = mice_to_analyse
         session, 'Neural Data', 'Concatenated Data', 'kilosort4\');           
 end
 
-% Extract filepath containing settings.xml
-
-settings_path = cell(num_mice, 1);
-
-for mouse = mice_to_analyse
-    mouse_name = mouse_files(mouse).name;
-    mouse_path = mouse_files(mouse).folder;
-    raw_folder = fullfile(mouse_path, mouse_name, ...
-        session, 'Neural Data', 'Raw Data');
-    rec_folder = dir(fullfile(raw_folder, 'mouse*_*habituation*'));
-    rec_folder = rec_folder.name;
-    node_folder = fullfile(raw_folder, rec_folder, 'Record Node 101');
-    current_settings_path = dir(fullfile(node_folder, 'settings*.xml'));
-    settings_path{mouse} = fullfile(current_settings_path.folder, current_settings_path.name);
-end
 
 
 %% Get save paths for cell positions
@@ -74,59 +59,71 @@ end
 for mouse = mice_to_analyse
 
     kilosort_path = neural_data_folders{mouse};
-    xml_file = settings_path{mouse};
 
     chan_map      = readNPY(fullfile(kilosort_path,'channel_map.npy'));        % length = nCh
     chan_pos      = readNPY(fullfile(kilosort_path,'channel_positions.npy'));  % [nCh x 2], columns: x,y (µm)
     spike_clusters     = readNPY(fullfile(kilosort_path,'spike_clusters.npy'));     % [nSpikes x 1]
     spike_templates    = readNPY(fullfile(kilosort_path,'spike_templates.npy'));    % [nSpikes x 1]
     templates    = readNPY(fullfile(kilosort_path,'templates.npy'));          % [nTemplates x nTime x nChan]
-    
-    % Extract channel depths from probe settings
-    current_channel_depths = read_settings_xml(xml_file);
+   
  
     % Calculate peak to peak amplitude across time for each template (putative
     % cell) for each channel
     ptp = squeeze(max(templates, [], 2) - min(templates, [], 2));
     
     % Get indices of channels with peak template amplitudes
-    [max_ptp, best_channels_templates] = max(ptp, [], 2);
+    [max_ptp, best_channels_idx] = max(ptp, [], 2);
     
     % Find position of peak amplitude templates on probe
-    best_positions_templates = chan_pos(best_channels_templates, 2);
+    best_positions_templates_x = chan_pos(best_channels_idx, 1);
+    best_positions_templates_y = chan_pos(best_channels_idx, 2);
     
+    % Channel ID for each template
+    best_channel_for_template = chan_map(best_channels_idx);   
+
     % Get unique cell IDs
     cluster_values = double(unique(spike_clusters));
-    
-    depth_clusters = zeros(size(cluster_values, 1), 1);
+    n_clusters = numel(cluster_values);
+    depth_clusters = zeros(n_clusters, 1);
+    lat_clusters = zeros(n_clusters, 1);
+    peak_channel_ids = zeros(n_clusters, 1);
     
     % Find most common template associated with cluster and assign cluster
-    % depth associated with that template
+    % x, y and channel associated with that template
     for i = 1:numel(cluster_values)
         cell_id = cluster_values(i);
-        % Find all template ids allocated to thi cluster
+        % Find all template ids allocated to this cluster
         template_idxs = spike_templates(spike_clusters == cell_id);
         % Find most common template id associated with cluster
         common_template = mode(template_idxs) + 1; % +1 because template ids start at 0
         % Assign cluster depth of most common template
-        current_cell_depth = best_positions_templates(common_template);
+        current_cell_depth = best_positions_templates_y(common_template);
         depth_clusters(i) = current_cell_depth;
+        current_cell_lat = best_positions_templates_x(common_template);
+        lat_clusters(i) = current_cell_lat;
+        % Assign cluster channel associated with template
+        peak_channel_ids(i) = best_channel_for_template(common_template);
     end
     
     
+    % Subtract minimum value to get positions of cells relative to position
+    % of first recording site
+    y0 = min(chan_pos(:, 2));
+    x0 = min(chan_pos(:, 1));
+    
+    depth_clusters = depth_clusters-y0;
+    lat_clusters = lat_clusters-x0;
+
     % Generate table
-    depth_table = table(depth_clusters, cluster_values,...
-        'VariableNames', {'Depth',  'CellID'});
+    depth_table = table(lat_clusters, depth_clusters,  cluster_values,...
+        peak_channel_ids, 'VariableNames', {'x', 'y', 'CellID', 'Channel'});
     
  
-    depths = unique(current_channel_depths.y_pos);
-    
-    for i = 1:length(depths)
-        current_depth = depths(i);
-        cell_idx = (depth_table.Depth == current_depth);
-        current_channel_idx = (current_channel_depths.y_pos == current_depth);
-        current_channel = current_channel_depths.ChannelID(current_channel_idx);
-        depth_table.ChannelID(cell_idx) = current_channel(1);
-    end
+    mouse_name = mouse_files(mouse).name;
+    mouse_name = lower(strrep(mouse_name, ' ', ''));
+    save_name = [mouse_name, '_', lower(session), '_', 'cell_depths.mat'];
+    save_path = fullfile(data_folders{mouse}, save_name);
+    save(save_path, "depth_table");
+    disp([save_name ' saved to ' data_folders{mouse} '!'])
 
-    
+end

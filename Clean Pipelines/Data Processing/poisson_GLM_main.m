@@ -1,13 +1,19 @@
+% POISSON_GLM_MAIN
+%
+% Preps neural and behavioural data for input into a GLM that predicts
+% firing based on behavioural covariates and saves pseudo-R2 values and 
+% input tables
+
 %% Directory Setup
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
  
-session = 'Renewal';
+session = 'Extinction';
 
-mice_to_analyse = [2 3 4 5 6 7 8];
+mice_to_analyse = [2 3 4 5 6 7 8 9];
 
 received_stim_set_1 = [2 3 6 7];
-received_stim_set_2 = [4 5 8];
+received_stim_set_2 = [4 5 8 9];
 
 %% Load behavioural data
 
@@ -223,16 +229,16 @@ bin_size = 0.5; % 0.5 s bins
 num_bins = floor(trial_length / bin_size); % 66 bins
 
 num_behaviours = size(behaviour_data_flashes, 2);
-neuron_counter = -1; % Start at -1 to preseve python-based numbering
 
 for mouse = mice_to_analyse
 
     mouse_name = mouse_files(mouse).name;
-    save_folder = data_folders{mouse};
-    save_name = ['mouse', num2str(mouse), '_poissonNN_prepped_data_', lower(session) '.mat'];
-    save_path = fullfile(save_folder, save_name);
+    mouse_name = lower(strrep(mouse_name, ' ', ''));
+    save_name = [mouse_name, '_', lower(session), '_poisson_GLM_data_and_results.mat'];
+    save_path = fullfile(data_folders{mouse}, save_name);
+    
     if ~exist(save_path, 'file')
-
+    
         X = [];
         y = [];
         cell_ids = [];
@@ -245,7 +251,7 @@ for mouse = mice_to_analyse
         cluster_values = cluster_value_matrix{mouse};
     
         for neuron = 1:numel(cluster_values)
-            neuron_counter = neuron_counter + 1;
+           
     
             if ismember(mouse, received_stim_set_1)
                 stim_set = 1;
@@ -317,7 +323,7 @@ for mouse = mice_to_analyse
         
                 time_bins = repmat((1:num_bins)', n_trials, 1);
                 trials_binned = repelem((1:n_trials)', num_bins);
-                neuron_number = repelem(neuron_counter, n_trials * num_bins)';
+                neuron_number = repelem(neuron-1, n_trials * num_bins)';
         
                 if trial_type == 1
                     trial_id = 1;
@@ -360,17 +366,114 @@ for mouse = mice_to_analyse
             cell_ids = [cell_ids; tmp_cell_ids];
     
         end
+        
+        % Create table for glm input (all rows, all cells)
+        X_table = array2table(X, 'VariableNames', ...
+            {'Grooming','Rearing','Darting','Freezing','Velocity', ...
+             'TimeBin','Trial','TrialIdentifier','LoomON','FlashON'});
+        
+        % Scale only continuous predictors
+        X_table.Velocity = zscore(X_table.Velocity);
+        X_table.TimeBin  = zscore(X_table.TimeBin);
+        X_table.Trial    = zscore(X_table.Trial);
+        
+        % ---- Compute test pseudo-R2 per cell ----
+        unique_cells = unique(cell_ids);
+        nCells = numel(unique_cells);
+        pseudoR2_test = nan(nCells,1);
+        weights_per_cell = cell(nCells, 1);   % one entry per cell
+        coef_names = {};                      % will fill once from first successful model
     
-        % Transpose for correct Poisson NN format
-        X = X'; 
-        y = y'; 
-        cell_ids = cell_ids';
+        
+        opts = statset('glmfit');
+        opts.MaxIter = 100;
+        
+        for c = 1:nCells
+            this_cell = unique_cells(c);
+        
+            idx_all = (cell_ids == this_cell);
+        
+            X_cell = X_table(idx_all, :);
+            y_cell = y(idx_all);
+        
+            % % Skip dead / almost-dead cells
+            % if var(y_cell) == 0 || sum(y_cell) < 20
+            %     pseudoR2_test(c) = NaN;
+            %     continue
+            % end
+            
+            % 80/20 train/test split
+            N = numel(y_cell);
+            cv = cvpartition(N, 'HoldOut', 0.2);
+            train_idx = training(cv);
+            test_idx  = test(cv);
+        
+            X_train = X_cell(train_idx, :);
+            y_train = y_cell(train_idx);
+        
+            X_test  = X_cell(test_idx, :);
+            y_test  = y_cell(test_idx);
+        
+                   % Fit GLM on train
+            try
+                mdl = fitglm(X_train, y_train, 'Distribution', 'poisson', 'Options', opts);
+            catch
+                pseudoR2_test(c) = NaN;
+                weights_per_cell{c} = NaN;   % store NaN for alignment
+                continue
+            end
     
-        % Save
-        save(save_path, 'X', 'y', 'cell_ids', '-v7.3');
-        disp([save_name, ' has been saved to ' save_folder]);
+            % ---- Extract weights (coefficients) for this cell ----
+            weights_per_cell{c} = mdl.Coefficients.Estimate;  % (Intercept + 10 predictors)
+    
+            % Save coefficient names once (same for all cells)
+            if isempty(coef_names)
+                coef_names = mdl.CoefficientNames;
+            end
+        
+            % Deviance on TEST data
+            lambda_test = predict(mdl, X_test);
+            D_full_test = poissonDeviance(y_test, lambda_test);
+    
+        
+            % Null deviance on TEST data (constant rate fit on TRAIN)
+            mu_null = mean(y_train);
+            mu_test_null = mu_null * ones(size(y_test));
+            D_null_test = poissonDeviance(y_test, mu_test_null);
+        
+            pseudoR2_test(c) = 1 - D_full_test / D_null_test;
+
+
+        end
+
+        % Save all data in a table for later analysis
+        X_table_full = X_table;
+        X_table_full.SpikeCount = y;        % firing / spike counts
+        X_table_full.CellID     = cell_ids; % neuron identifier per row
+    
+        % Save per-mouse results
+        save(save_path, 'X_table_full', 'pseudoR2_test', ...
+            'unique_cells', 'weights_per_cell', 'coef_names');
+        disp([save_name ' saved to ' save_path '!'])
+    
     else
-        warning('%s already exists, skipping processing', save_name)
+        fprintf('%s already exists, skipping save\n', save_name);
     end
 
+end
+
+%%
+function D = poissonDeviance(y, mu)
+    % Compute Poisson deviance between observed y and mean mu
+    % y, mu: column vectors of same length
+
+    % Ensure column vectors
+    y  = y(:);
+    mu = mu(:);
+
+    idx = y > 0;
+    term_pos  = y(idx) .* log(y(idx) ./ mu(idx)) - (y(idx) - mu(idx));
+    term_zero = mu(~idx);   % contribution when y=0
+
+    D = 2 * (sum(term_pos) + sum(term_zero));
 end

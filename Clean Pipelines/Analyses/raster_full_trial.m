@@ -14,6 +14,8 @@ function[spike_count] = raster_full_trial(evt, spike_times, clusters, cluster_va
 % OUTPUTS
 %   spike_count    : 1 x nCells cell, each cell is [nTrials x nBins] spike counts
 %                    ordered with looms first then flashes (via indstim)
+% 
+% Called in poisson_GLM_main to extract spike counts in bins
 
 % Choose the trial-type (stimulus) vector for this mouse/session
 if stim_set == 1

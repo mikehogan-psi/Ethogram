@@ -1,3 +1,10 @@
+% NEEDS UPDATING
+%
+% Compares pR2 values between NN output and regular GLM output and
+% generates figures for this comparison.
+%
+% Also does something else lol
+
 % Directory where your *_glm_test_pseudoR2.mat files are saved
 data_dir = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
