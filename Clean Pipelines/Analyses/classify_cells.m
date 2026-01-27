@@ -13,7 +13,7 @@
 % 8) Compare cluster composition for treatment vs control
 
 %----------------- USER INPUTS -----------------%
-fpath      = 'Y:\Mike\Poisson_GLM_Data_01_12_25\';
+fpath      = 'D:\PhD 3rd Year\poisson_GLM_data_21_01_26';
 mouse_num  = 2:9;
 
 % TODO: replace with real treatment labels per mouse (0 = ctrl, 1 = treated)

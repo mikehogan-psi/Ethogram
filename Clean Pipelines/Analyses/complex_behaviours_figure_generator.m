@@ -2,10 +2,10 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal'; % 'Extinction' or 'Renewal'
+session = 'Extinction'; % 'Extinction' or 'Renewal'
 
 % !!! Provide trial type to analyse !!!
-trial_type = 'flashes'; % 'looms' or 'flashes'
+trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
 received_psilocybin = [3; 5; 7; 8];
@@ -148,4 +148,149 @@ for b = 1:num_behaviours
     close; 
     end
 
+end
+
+%% ===== Summary bar plots (mean across mice ± SEM) + individual points + stats =====
+
+% Windows (based on your xlines)
+stim_start = 151;
+stim_end   = 202;
+
+post_start = 203;
+post_end   = timepoints;  % to end
+
+% Sanity clamp (in case timepoints < 202 etc.)
+stim_start = max(1, min(stim_start, timepoints));
+stim_end   = max(1, min(stim_end,   timepoints));
+post_start = max(1, min(post_start, timepoints));
+post_end   = max(1, min(post_end,   timepoints));
+
+stim_idx = stim_start:stim_end;
+post_idx = post_start:post_end;
+
+% Preallocate storage: per mouse value in the relevant window
+% We'll store two columns: [psi_values, veh_values] in cells per behaviour
+psi_window_vals = cell(num_behaviours, 1);
+veh_window_vals = cell(num_behaviours, 1);
+
+% Decide which window per behaviour: darting -> stim, others -> post
+is_darting = strcmpi(behaviours, 'darting');
+
+for b = 1:num_behaviours
+    if is_darting(b)
+        idx = stim_idx;
+    else
+        idx = post_idx;
+    end
+
+    % --- Psilocybin group per-mouse window means ---
+    psi_vals = [];
+    for m = 1:size(psi_behaviours,1)
+        if isempty(psi_behaviours{m,b}), continue; end
+        mouse_data = psi_behaviours{m,b};     % [trials x time]
+        per_mouse_timecourse = mean(mouse_data, 1);  % mean across trials -> [1 x time]
+        psi_vals(end+1,1) = mean(per_mouse_timecourse(idx)); % scalar per mouse
+    end
+
+    % --- Vehicle group per-mouse window means ---
+    veh_vals = [];
+    for m = 1:size(veh_behaviours,1)
+        if isempty(veh_behaviours{m,b}), continue; end
+        mouse_data = veh_behaviours{m,b};
+        per_mouse_timecourse = mean(mouse_data, 1);
+        veh_vals(end+1,1) = mean(per_mouse_timecourse(idx));
+    end
+
+    psi_window_vals{b} = psi_vals;
+    veh_window_vals{b} = veh_vals;
+end
+
+% --- Bar plots + stats per behaviour ---
+for b = 1:num_behaviours
+    psi_vals = psi_window_vals{b};
+    veh_vals = veh_window_vals{b};
+
+    % Skip if missing data
+    if isempty(psi_vals) || isempty(veh_vals)
+        warning('Skipping %s: missing data in one group.', behaviours{b});
+        continue;
+    end
+
+    psi_mean = mean(psi_vals);
+    veh_mean = mean(veh_vals);
+
+    psi_sem = std(psi_vals, 0) ./ sqrt(numel(psi_vals));
+    veh_sem = std(veh_vals, 0) ./ sqrt(numel(veh_vals));
+
+    % Stats: ranksum (robust) + ttest2 (optional)
+    p_ranksum = ranksum(psi_vals, veh_vals);
+    [~, p_ttest] = ttest2(psi_vals, veh_vals); % unpaired, equal/unequal variance default
+
+    % Build figure
+    figure; hold on;
+
+    means = [veh_mean, psi_mean];
+    sems  = [veh_sem,  psi_sem];
+
+    bh = bar(1:2, means, 'FaceAlpha', 0.8);
+    % Colour bars (Vehicle blue, Psi red) - keep simple
+    bh.FaceColor = 'flat';
+    bh.CData(1,:) = [0 0 1];
+    bh.CData(2,:) = [1 0 0];
+
+    errorbar(1:2, means, sems, 'k', 'LineStyle', 'none', 'LineWidth', 1.5, 'CapSize', 10);
+
+    % Overlay individual datapoints with jitter
+    jitter_amt = 0.08;
+    xVeh = 1 + (rand(size(veh_vals)) - 0.5) * 2*jitter_amt;
+    xPsi = 2 + (rand(size(psi_vals)) - 0.5) * 2*jitter_amt;
+
+    scatter(xVeh, veh_vals, 60, 'k', 'filled', 'MarkerFaceAlpha', 0.75);
+    scatter(xPsi, psi_vals, 60, 'k', 'filled', 'MarkerFaceAlpha', 0.75);
+
+    % Formatting
+    set(gca, 'XTick', [1 2], 'XTickLabel', {'Vehicle','Psilocybin'});
+    ylabel('Mean Probability');
+    title_str = [session,' ',trial_type,' ',behaviours{b}];
+
+    if is_darting(b)
+        win_str = sprintf('Stim window: frames %d-%d', stim_start, stim_end);
+    else
+        win_str = sprintf('Post-stim window: frames %d-%d', post_start, post_end);
+    end
+
+    title({title_str; win_str; sprintf('ranksum p=%.4g | ttest2 p=%.4g', p_ranksum, p_ttest)}, 'Interpreter','none');
+
+    % Nice y-limits
+    ymin = 0;
+    ymax = max([veh_vals; psi_vals]) * 1.25;
+    if ymax <= 0, ymax = 0.1; end
+    ylim([ymin ymax]);
+
+    grid on; box off;
+
+    % Optional: simple significance annotation using ranksum p
+    % (you can remove this block if you don't want stars)
+    yStar = ymax * 0.92;
+    plot([1 2], [yStar yStar], 'k-', 'LineWidth', 1.5);
+    if p_ranksum < 0.001
+        star = '***';
+    elseif p_ranksum < 0.01
+        star = '**';
+    elseif p_ranksum < 0.05
+        star = '*';
+    else
+        star = 'n.s.';
+    end
+    text(1.5, yStar*1.02, star, 'HorizontalAlignment','center', 'FontSize', 14);
+
+    hold off;
+
+    % Save if needed
+    if do_save == true
+        save_name = [title_str, '_bar.png'];
+        save_path = fullfile(save_folder, save_name);
+        exportgraphics(gcf, save_path, 'Resolution', 300);
+        close;
+    end
 end

@@ -2,14 +2,14 @@
 
 % !!!Specify which session is to be analysed!!!
 % Acquisition, Extinction, or Renewal
-session = 'Extinction';
+session = 'Renewal';
 
 % !!!Provide master directory with all data in!!!
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!! Define likelihood threshold (only DLC data which exceed this
 % confidence value will be used for triangulation) !!!
-TH = 0.7; 
+TH = 0.9; 
 
 used_p_matrix_1 = [1 2 3 4 5 6 7 8];
 used_p_matrix_2 = [9];

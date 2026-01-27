@@ -15,9 +15,9 @@ trial_type = 1; % 1 = loom, 0 = flash
 
 received_psi = [3 5 7 8];
 received_veh = [2 4 6 9];
-do_normalise = false;
+do_normalise = true;
 
-load("D:\PhD 3rd Year\cluster_assignments_temp.mat")
+load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
 
 %% Load processed neural and behavioural data
 

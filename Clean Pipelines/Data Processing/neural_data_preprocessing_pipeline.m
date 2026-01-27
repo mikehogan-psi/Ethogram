@@ -52,9 +52,25 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
             idx(contains(raw_folder_list, key_words{part})) = part;
         end
     end
-
+    
+    
     [~, sort_idx] = sort(idx);
     raw_folder_list = raw_folder_list(sort_idx);
+    
+    % Debugging
+    fprintf('\n=== %s | %s | folder order check ===\n', mouse_name, session);
+    disp(table((1:numel(raw_folder_list))', idx(sort_idx), raw_folder_list, ...
+    'VariableNames', {'Order','Idx','RawFolder'}));
+
+        % Hard checks: no zeros, no duplicates
+    if any(idx==0)
+        warning('Unmatched folder(s) (idx==0):');
+        disp(raw_folder_list(idx==0))
+        error('Folder keyword matching failed for %s', mouse_name);
+    end
+    if numel(unique(idx)) ~= numel(idx)
+        error('Ambiguous keyword matching (duplicate idx) for %s', mouse_name);
+    end
 
 
     % Assign filepaths for .dat files in each folder to a cell array
@@ -69,6 +85,31 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
     dat_files{part} = current_dat;
     end
     
+    % Debugging
+    % Report what got picked
+    fprintf('\n--- Part %d (%s) ---\n', part, key_words{part});
+    fprintf('Raw folder: %s\n', raw_folder_list{part});
+    fprintf('Picked experiment: %s\n', exp_dir(1).name);
+    fprintf('Picked recording : %s\n', rec_dir(1).name);
+    
+    dat_path = fullfile(current_dat, 'continuous.dat');
+    info = dir(dat_path);
+    fprintf('continuous.dat size: %.3f GB (%d bytes)\n', info.bytes/1e9, info.bytes);
+
+    % Check continuous.dat existence + size
+    dat_path = fullfile(current_dat, 'continuous.dat');
+    if exist(dat_path, 'file') ~= 2
+        error('Missing continuous.dat at: %s', dat_path);
+    end
+    info = dir(dat_path);
+    fprintf('continuous.dat size: %.3f GB (%d bytes)\n', info.bytes/1e9, info.bytes);
+    
+    % Optional: quick int16 sanity (bytes should be even)
+    if mod(info.bytes,2) ~= 0
+        error('continuous.dat byte count is not even -> not int16? (%s)', dat_path);
+    end
+
+
     % Extract file paths and assign names for concatenation function
     hab_path = dat_files{1};
     p1_path = dat_files{2};
@@ -91,6 +132,20 @@ for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)
         rec_dir = dir(fullfile(exp_dir(1).folder, exp_dir(1).name, 'recording*'));
         current_TTL = fullfile(rec_dir(1).folder, rec_dir(1).name,...
             'events', 'Neuropix-PXI-100.ProbeA', 'TTL\');
+       
+        % DEBUGGING
+        fprintf('\n--- TTL Part %d (%s) ---\n', part, key_words{part});
+        fprintf('Raw folder: %s\n', raw_folder_list{part});
+        fprintf('Picked experiment: %s\n', exp_dir(1).name);
+        fprintf('Picked recording : %s\n', rec_dir(1).name);
+        
+        ttl_path = current_TTL;
+        fprintf('TTL folder: %s\n', ttl_path);
+        if exist(ttl_path,'dir') ~= 7
+            error('Missing TTL folder: %s', ttl_path);
+        end
+
+
     TTL_files{part} = current_TTL;
     end
 

@@ -3,7 +3,7 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!! Provide session being processed !!!
-session = 'Extinction';
+session = 'Renewal';
 
 % !!! Provide filepaths to previously generated RFMs for each behaviour !!!
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files\Darting\darting_model_1.mat")

@@ -1,6 +1,6 @@
 # Network name, architecture
 model: 
-  network_name: 'NN1'
+  network_name: 'NN2'
   hidden_dim_list: [10,10]
   
 # Training parameters
@@ -14,16 +14,12 @@ training:
 
 # Data files
 data: 
-# Data files
-data:
-data:
   data_dir: [
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse1.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse2_poissonNN_prepped_data_extinction.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse3_poissonNN_prepped_data_extinction.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse4_poissonNN_prepped_data_extinction.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse5_poissonNN_prepped_data_extinction.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse6_poissonNN_prepped_data_extinction.mat',
-    'C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse7_poissonNN_prepped_data_extinction.mat'
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse2_poissonNN_prepped_data_extinction.mat",
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse3_poissonNN_prepped_data_extinction.mat",
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse4_poissonNN_prepped_data_extinction.mat",
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse5_poissonNN_prepped_data_extinction.mat",
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse6_poissonNN_prepped_data_extinction.mat",
+    "C:\\Users\\G71044MH\\OneDrive - The University of Manchester\\Documents\\GitHub\\Ethogram\\Neural Data Analysis\\PoissonNN\\data\\mouse7_poissonNN_prepped_data_extinction.mat"
   ]
 

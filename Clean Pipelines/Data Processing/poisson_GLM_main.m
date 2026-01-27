@@ -373,9 +373,9 @@ for mouse = mice_to_analyse
              'TimeBin','Trial','TrialIdentifier','LoomON','FlashON'});
         
         % Scale only continuous predictors
-        X_table.Velocity = zscore(X_table.Velocity);
-        X_table.TimeBin  = zscore(X_table.TimeBin);
-        X_table.Trial    = zscore(X_table.Trial);
+        % X_table.Velocity = zscore(X_table.Velocity);
+        % X_table.TimeBin  = zscore(X_table.TimeBin);
+        % X_table.Trial    = zscore(X_table.Trial);
         
         % ---- Compute test pseudo-R2 per cell ----
         unique_cells = unique(cell_ids);

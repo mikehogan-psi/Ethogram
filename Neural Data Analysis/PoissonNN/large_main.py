@@ -34,7 +34,7 @@ print(repr(cfg))
 
 # Load data and wrap into a Dataloader
 print("Loading data: ...")
-datafiles = cfg.data
+datafiles = cfg.data['data_dir']
 batch_size = cfg.training['batch_size']
 
 X_path, y_path, cell_ids_path, n_features, total_rows, num_cells = \
@@ -46,7 +46,7 @@ dataset = large_data_io.MemmapDataset(X_path, y_path, cell_ids_path, \
     n_features=n_features, total_rows=total_rows)
     
 alldata_loader, train_loader, test_loader = \
-    large_data_io.prepare_data(dataset, batch_size=100)
+    large_data_io.prepare_data(dataset, batch_size)
 
 # Init Model
 input_dim = n_features
@@ -60,6 +60,12 @@ lr = cfg.training['learning_rate']
 pl = cfg.training['patience_length']
 chkout = cfg.training['checkout_epochs']
 nname = cfg.model['network_name']
+
+#model initialised on cpu, here move the model to cuda
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#model.to(device)
+
+# train the model
 model.train_model(train_loader, max_epochs=mepchs, learning_rate=lr,
                   patience_length=pl, checkpoints=chkout, net_name=nname)
 

@@ -1,0 +1,38 @@
+function[] = test_raster(n_trials)
+fpath_evt = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Mouse 2\Extinction\Neural Data\Triggers\';
+fpath_spk = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Mouse 2\Extinction\Neural Data\Concatenated Data\kilosort4\';
+evt1 = load([fpath_evt '
+.mat']);
+evt2= load([fpath_evt 'mouse2_extinction_p2_triggers.mat']);
+spk = readNPY([fpath_spk 'spike_times.npy']);
+clu = readNPY([fpath_spk 'spike_clusters.npy']);
+evt = cat(1,evt1.evt(2:end),evt2.evt(2:end));
+stim = [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1];
+stim = cat(2,stim,[0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1]);
+indstim = [find(stim==1)'; find(stim==0)'];
+
+
+fs = 30000;
+evt = double(evt)/fs;
+dt = median(diff(evt));
+spk = double(spk)/fs;
+clu_val = unique(clu);
+Ncell = numel(clu_val);
+evt = reshape(evt,numel(evt)/n_trials,n_trials)';
+evt = cat(2,evt,evt(:,end)+dt);
+
+count = cell(1,Ncell);
+for n = 1:Ncell
+    count{n} = get_counts(spk(clu==clu_val(n)),evt);
+    count{n} = count{n}(indstim,:);
+    p = pcolor(count{n}); set(p,'LineStyle','none'); line(150*[1 1],[1 40],'Color','r'); ginput(); close all;
+end
+
+
+function[count] = get_counts(spk,evt)
+[Ntrial,Nbin] = size(evt);
+for n = 1:Ntrial
+    count(n,:) = histc(spk(spk>evt(n,1)&spk<evt(n,end)),evt(n,:));
+end
+count = count(:,1:end-1);
+

@@ -2,7 +2,7 @@
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 % !!!Provide session to be analysed!!!
-session = 'Renewal';
+session = 'Extinction';
 
 trial_type = 'looms'; % 'looms' or 'flashes'
 
@@ -69,8 +69,11 @@ veh = double(veh);
 
 %% Trial-wise: average over frames, then compute mean +/- SEM across mice
 % per-mouse trial averages: trials x mice
-psi_trial_per_mouse = squeeze(mean(psi, 2));   % [trials x mice]
-veh_trial_per_mouse = squeeze(mean(veh, 2));   % [trials x mice]
+post_stim_psi = psi(:, 250:end, :);
+post_stim_veh = veh(:, 250:end, :);
+
+psi_trial_per_mouse = squeeze(mean(post_stim_psi, 2));   % [trials x mice]
+veh_trial_per_mouse = squeeze(mean(post_stim_veh, 2));   % [trials x mice]
 
 % mean across mice (trials x 1) and SEM across mice
 psi_trial_mean = mean(psi_trial_per_mouse, 2);                 % trials x 1
@@ -88,6 +91,32 @@ legend('Psilocybin (± SEM)','Vehicle (± SEM)','Location','best');
 grid on;
 ylim([0 100]);
 xlim([1 20])
+%%
+
+binSize = 4;
+nBins = floor(n_trials/binSize);
+
+psi_bin_per_mouse = squeeze(mean(reshape(psi_trial_per_mouse(1:nBins*binSize,:), binSize, nBins, []), 1)); % [nBins x mice]
+veh_bin_per_mouse = squeeze(mean(reshape(veh_trial_per_mouse(1:nBins*binSize,:), binSize, nBins, []), 1));
+
+psi_bin_mean = mean(psi_bin_per_mouse, 2);
+veh_bin_mean = mean(veh_bin_per_mouse, 2);
+
+psi_bin_sem  = std(psi_bin_per_mouse, 0, 2) ./ sqrt(n_mice_psi);
+veh_bin_sem  = std(veh_bin_per_mouse, 0, 2) ./ sqrt(n_mice_veh);
+
+binCenters = (1:binSize:nBins*binSize) + (binSize-1)/2;
+
+figure; hold on;
+errorbar(binCenters, psi_bin_mean*100, psi_bin_sem*100, 'r-o', 'LineWidth', 1.5);
+errorbar(binCenters, veh_bin_mean*100, veh_bin_sem*100, 'b-o', 'LineWidth', 1.5);
+
+xlabel('Trial (binned)'); ylabel('Freezing (%)');
+title([session,' ',trial_type,' binned mean±SEM']);
+legend('Psi','Veh','Location','best');
+grid on; ylim([0 100]); xlim([1 n_trials]);
+
+
 
 %% Frame-wise: average over trials, then compute mean +/- SEM across mice
 % per-mouse frame averages: frames x mice
@@ -146,7 +175,7 @@ sgtitle([session, ' ', trial_type])
 
 %%
 % Calculate per-mouse freezing means
-post_start = 233;
+post_start = 250;
 post_end   = size(psi, 2);
 
 % psilocybin group

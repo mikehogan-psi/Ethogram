@@ -1,6 +1,6 @@
 %% For extracting names from 'video files'
 % Define the base directory where your videos are stored
-baseDir = 'C:\Cohort 4 Temp Data Storage\Mouse9\Extinction';
+baseDir = 'C:\Cohort 4 Temp Data Storage\Mouse9\Renewal';
 
 % Get all files recursively
 allFiles = dir(fullfile(baseDir, '**', '*.*'));
