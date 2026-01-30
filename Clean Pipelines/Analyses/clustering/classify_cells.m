@@ -1,4 +1,4 @@
-% CLASSIFY_CELLS_MIKE
+% CLASSIFY_CELLS
 % Clusters neurons based on their GLM coefficients and compares
 % cluster composition between treatment groups.
 %
@@ -9,19 +9,27 @@
 % 4) Normalise / standardise coefficients
 % 5) PCA for dimensionality reduction
 % 6) Cluster cells (k-means) in PCA space
-% 7) Visualise clusters with t-SNE
-% 8) Compare cluster composition for treatment vs control
+% 7) Optionally perform a cell-wise shuffle of coefficients to determine
+%    whether coefficients truly covary across neurons and therefore reflect 
+%    real tuning profiles
+% 8) Optionally save model for mapping retention cells onto
+%    extinction-based clusters
+% 9) Visualise clusters with t-SNE
+% 10) Compare cluster composition for treatment vs control
+% 11) Map retention cells onto extinction clusters
 
 %----------------- USER INPUTS -----------------%
 fpath      = 'D:\PhD 3rd Year\poisson_GLM_data_21_01_26';
+% fpath = 'D:\PhD 3rd Year\renewal_glm_data';
 mouse_num  = 2:9;
 
 % TODO: replace with real treatment labels per mouse (0 = ctrl, 1 = treated)
 mouse_treatment = [0,1,0,1,0,1,1,0];
 
-TH_pR2     = 0.05;  % pseudoR2 threshold
 dropIntercept = true; % set true if first coefficient is intercept
 do_shuffle = false;
+do_save_results = false;
+do_save_model = false;
 maxK       = 10;    % maximum K to evaluate for silhouette
 rng(24);            % reproducibility for t-SNE and k-means
 %------------------------------------------------%
@@ -31,15 +39,17 @@ treatment_vec = [];   % treatment label per cell
 mouse_vec     = [];   % mouse ID per cell (for later per-mouse stats)
 cellID_vec   = [];   % local cell index within each mouse file
 
-
+ 
 for im = 1:numel(mouse_num)
     mID = mouse_num(im);
     datafile = fullfile(fpath, ...
         ['mouse' num2str(mID) '_extinction_poisson_GLM_data_and_results.mat']);
     load(datafile);  % should load pseudoR2_test, weights_per_cell, etc.
+    
+    [keep_mask] = find_good_cells(pseudoR2, pseudoR2_shuff_all);
 
     % Keep only cells with sufficient pseudoR2
-    indok = find(pseudoR2_test > TH_pR2);   % indices into original cell list
+    indok = find(keep_mask);   % indices into original cell list
 
     % Concatenate coefficients for these cells
       % [num_coeff x Ncells]
@@ -63,8 +73,7 @@ for im = 1:numel(mouse_num)
 
 end
 
-
-
+% Optional shuffling step to test integrity of clusters
 if do_shuffle
     nShuf = 200;
     bestSil_null = nan(nShuf,1);
@@ -99,7 +108,6 @@ if do_shuffle
 end
 
 
-
 %----------------- NORMALISATION -----------------%
 % Option 1: L2-normalise each cell's coefficient vector
 for iCell = 1:size(B,1)
@@ -109,12 +117,9 @@ for iCell = 1:size(B,1)
     end
 end
 
-% Option 2 (alternative): z-score each coefficient across cells
-% B = zscore(B, 0, 1);
-
 %----------------- PCA -----------------%
 % Centre the data across cells
-[coeff, score, lambda] = pca(B, 'Centered', true);
+[coeff, score, lambda, ~, explained, mu] = pca(B, 'Centered', true);
 
 % Number of PCs explaining 90% variance
 explVar = cumsum(lambda) / sum(lambda);
@@ -158,7 +163,22 @@ K = Ks(bestIdx);
 fprintf('Chosen K = %d (max mean silhouette = %.3f).\n', K, mean_sil(bestIdx));
 
 % Final k-means with chosen K
-idx = kmeans(X_cluster, K, 'Replicates', 100, 'MaxIter', 1000);
+[idx, C] = kmeans(X_cluster, K, 'Replicates', 100, 'MaxIter', 1000);
+
+if do_save_model
+    % Save clustering model for application to retention data 
+    model_ext = struct();
+    model_ext.coeff = coeff;                 % PCA loadings (coeffs x PCs)
+    model_ext.mu = mu;                       % mean of B used for centering
+    model_ext.lambda = lambda;
+    model_ext.num_PC_cluster = num_PC_cluster;
+    model_ext.K = K;
+    model_ext.C = C;                         % centroids in PCA space (K x num_PC_cluster)
+    model_ext.dropIntercept = dropIntercept;
+    
+    save(fullfile(fpath, 'clustering_model_extinction.mat'), 'model_ext');
+    disp("clustering_model_extinction.mat saved to " + fpath + "!")
+end
 
 % Map clusters back to original cells
 % One row per cell kept in B
@@ -169,9 +189,10 @@ cluster_assignments = table( ...
     idx, ...
     'VariableNames', {'MouseID','CellID','Treatment','ClusterID'});
 
-% % Optional: save for later indexing
-% save(fullfile(fpath, 'cluster_assignments_extinction.mat'), 'cluster_assignments');
-
+if do_save_results
+    save(fullfile(fpath, 'cluster_assignments_extinction.mat'), 'cluster_assignments');
+    disp("cluster_assignments saved to " + fpath + "!")
+end
 
 %----------------- t-SNE FOR VISUALISATION -----------------%
 B_tsne = tsne(X_cluster); % t-SNE on PCA space for plotting only
@@ -275,3 +296,82 @@ disp('p-values per cluster (ctrl vs treated, per-mouse proportions):');
 disp(p_vals);
 
 
+%% Sort retention cells into clusters defined by extinction data
+fpath_ret      = 'D:\PhD 3rd Year\renewal_glm_data';
+fpath_ext = 'D:\PhD 3rd Year\poisson_GLM_data_21_01_26';
+mouse_num  = 2:9;
+
+% TODO: replace with real treatment labels per mouse (0 = ctrl, 1 = treated)
+mouse_treatment = [0,1,0,1,0,1,1,0];
+
+dropIntercept = true; % set true if first coefficient is intercept
+do_save_results = true;
+%------------------------------------------------%
+
+B_ret = [];               % coefficient matrix (cells x coeffs)
+treatment_vec_ret = [];   % treatment label per cell
+mouse_vec_ret     = [];   % mouse ID per cell (for later per-mouse stats)
+cellID_vec_ret   = [];   % local cell index within each mouse file
+
+ 
+for im = 1:numel(mouse_num)
+    mID = mouse_num(im);
+    datafile = fullfile(fpath_ret, ...
+        ['mouse' num2str(mID) '_renewal_poisson_GLM_data_and_results.mat']);
+    load(datafile);  % should load pseudoR2_test, weights_per_cell, etc.
+    
+    [keep_mask] = find_good_cells(pseudoR2, pseudoR2_shuff_all);
+
+    % Keep only cells with sufficient pseudoR2
+    indok = find(keep_mask);   % indices into original cell list
+
+    % Concatenate coefficients for these cells
+      % [num_coeff x Ncells]
+    temp = weights_per_cell(indok);                  % keep good cells only
+    temp = horzcat(temp{:});  
+
+    if dropIntercept
+        temp = temp(2:end, :);
+    end
+    
+    % Append as additional cells (transpose: cells x coeffs)
+    B_ret = cat(1, B_ret, temp.');
+   
+
+    % Labels for these cells
+    nOK = numel(indok);
+    treatment_vec_ret = cat(2, treatment_vec_ret, mouse_treatment(im) * ones(1, nOK));
+    mouse_vec_ret     = cat(2, mouse_vec_ret,     mID               * ones(1, nOK));
+    cellID_vec_ret = cat(2, cellID_vec_ret, (indok - 1).');   % 0-based CellID
+
+
+end
+
+%----------------- NORMALISATION -----------------%
+% Option 1: L2-normalise each cell's coefficient vector
+for iCell = 1:size(B_ret,1)
+    nrm = norm(B_ret(iCell,:));
+    if nrm > 0
+        B_ret(iCell,:) = B_ret(iCell,:) ./ nrm;
+    end
+end
+
+% Load previously generated clustering model based on extinction data
+load(fullfile(fpath_ext, 'clustering_model_extinction.mat'), 'model_ext');
+
+% Centre using extinction mean, then multiply by extinction PCA loadings
+X_ret = (B_ret - model_ext.mu) * model_ext.coeff(:, 1:model_ext.num_PC_cluster);
+
+% Assign each retention cell to nearest extinction centroid
+D = pdist2(X_ret, model_ext.C);      % (nRetCells x K)
+[~, idx_ret] = min(D, [], 2);        % cluster label for each retention cell
+
+cluster_assignments_retention = table( ...
+    mouse_vec_ret(:), cellID_vec_ret(:), treatment_vec_ret(:), idx_ret(:), ...
+    'VariableNames', {'MouseID','CellID','Treatment','ClusterID'});
+
+if do_save_results
+    save(fullfile(fpath_ret, 'cluster_assignments_retention_to_extinction.mat'), ...
+         'cluster_assignments_retention', 'model_ext');
+    disp("cluster_assignments_retention_to_extinction.mat saved to " + fpath_ret)
+end

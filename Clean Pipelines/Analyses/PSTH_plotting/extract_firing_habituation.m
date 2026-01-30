@@ -1,10 +1,15 @@
+% EXTRACT_FIRING_HABITUATION
+%
+% Extract habituation data and plots it across whole session, showing raw
+% and smoothed plots
+% Also extract mean spike count per bin for each cell for use elsewhere
 %% Directory Setup
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
  
 session = 'Extinction';
 
-mice_to_analyse = [2 3 4 5 6 7 8];
+mice_to_analyse = [2 3 4 5 6 7 8 9];
 max_mouse_id    = max(mice_to_analyse); 
 
 %% Load neural data
@@ -211,7 +216,7 @@ figure('Color','w'); hold on;
 plot(t, mean_veh_smooth, 'LineWidth', 2, 'Color', [0 0.4470 0.7410]);
 plot(t, mean_psi_smooth, 'LineWidth', 2, 'Color', [1 0 0]);
 xlabel('Time (s)');
-ylabel('Mean firing rate (Hz)');
+ylabel('Mean firing rate (Spike Count)');
 title(['Mean Habituation FR (Smoothed: ' num2str(window*0.5) 's Window): ' session]);
 legend({'Vehicle','Psilocybin'}, 'Location','best');
 ylim([2 4.5])

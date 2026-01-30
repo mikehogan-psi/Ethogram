@@ -8,7 +8,7 @@
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
  
-session = 'Extinction';
+session = 'Renewal';
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
 
@@ -510,28 +510,29 @@ for mouse = mice_to_analyse
 
             % NULL SHUFFLE
             if do_shuffle
-                n_trials = 40;
-                num_bins = 66;
                 pseudoR2_shuff = nan(nShuff,1);
             
                 Ymat = reshape(y_cell, num_bins, n_trials)'; 
             
-                nL = n_trials/2;
-                loom_idx  = 1:nL;
-                flash_idx = (nL+1):n_trials;
-            
                 for s = 1:nShuff
-                    % make RNG unique per cell+shuffle (prevents identical shuffles across cells)
-                    rng(1000*c + s);
-            
-                    permL = loom_idx(randperm(nL));
-                    permF = flash_idx(randperm(nL));   % nL == number of flash trials too
-            
+                    
                     Yshuff = Ymat;
-                    Yshuff(loom_idx,:)  = Ymat(permL,:);
-                    Yshuff(flash_idx,:) = Ymat(permF,:);
-            
+                    band = 10;
+                    half_trial = num_bins/2;
+                    k_min = half_trial - band;
+                    k_max = half_trial + band;
+
+                    % Does a circular shift of spiking data where number
+                    % of places data is moved always somwhere around 33
+                    % bins +- 10
+
+                    for t = 1:n_trials
+                        k = randi([k_min, k_max]);    
+                        Yshuff(t,:) = circshift(Ymat(t,:), [0 k]);
+                    end
+                    
                     y_shuff = reshape(Yshuff', [], 1);
+
           
                     try
                         mdl_s = fitglm(X_cell_model(train_idx,:), y_shuff(train_idx), ...
@@ -557,11 +558,11 @@ for mouse = mice_to_analyse
                 pseudoR2_shuff_all{c} = pseudoR2_shuff;
                 pseudoR2_shuff_p95(c) = prctile(pseudoR2_shuff, 95);
                 pseudoR2_shuff_mean(c)= mean(pseudoR2_shuff, 'omitnan');
+            
+                valid = sum(isfinite(pseudoR2_shuff));
+                fprintf('Cell %d: valid shuffles %d/%d\n', c, valid, nShuff);
             end
             % END NULL SHUFFLE
-            valid = sum(isfinite(pseudoR2_shuff));
-            fprintf('Cell %d: valid shuffles %d/%d\n', c, valid, nShuff);
-
 
         end
 

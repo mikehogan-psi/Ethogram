@@ -1,11 +1,11 @@
 % PSTH_ACROSS_BINS
 % Generates mean PSTHs across bins for all neurons and for individual
-% clusters, as assigned by classify_cells_edited_mike. Set do_normalise to
+% clusters, as assigned by classify_cells_temp. Set do_normalise to
 % true to perform a baseline subtraction on data (mean pre-stimulus firing)
 
 master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
 
-session= 'Extinction';
+session= 'Renewal';
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
 
@@ -17,7 +17,8 @@ received_psi = [3 5 7 8];
 received_veh = [2 4 6 9];
 do_normalise = true;
 
-load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
+% load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
+load("D:\PhD 3rd Year\renewal_glm_data\cluster_assignments_extinction.mat")
 
 %% Load processed neural and behavioural data
 

@@ -7,16 +7,16 @@
 
 master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
 
-session= 'Extinction';
+session= 'Renewal';
 
-mice_to_analyse = [2 3 4 5 6 7 8];
+mice_to_analyse = [2 3 4 5 6 7 8 9];
 
 num_mice = max(mice_to_analyse);
 
 trial_type = 1; % 1 = loom, 0 = flash
 
 received_psi = [3 5 7 8];
-received_veh = [2 4 6];
+received_veh = [2 4 6 9];
 
 %% Load processed neural and behavioural data
 
