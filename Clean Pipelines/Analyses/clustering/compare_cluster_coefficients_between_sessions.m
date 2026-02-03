@@ -5,42 +5,44 @@
 % Loaded files: cluster assignments for extinction and retention +
 % coefficient matrices for extinction and retention
 
-load("D:\PhD 3rd Year\renewal_glm_data\cluster_assignments_retention_to_extinction.mat")
-load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
-load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\extinction_coefficients.mat")
-load("D:\PhD 3rd Year\renewal_glm_data\renewal_coefficients.mat")
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\Model\extinction_coefficients.mat")
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\Model\renewal_coefficients.mat")
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ren\cluster_assignments_renewal_to_extinction.mat")
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ext\cluster_assignments_extinction.mat")
 
-num_weights = size(B_ret, 2);
-num_clusters = max(cluster_assignments_retention.ClusterID);
+coef_names = {'Grooming','Rearing','Darting','Freezing','Velocity', ...
+                 'TimeBin','Trial','TrialIdentifier','StimOn','StimOn_x_Type'};
 
-mean_weights_retention = zeros(num_weights, num_clusters);
+num_weights = size(B_ren, 2);
+num_clusters = max(cluster_assignments_renewal.ClusterID);
+
+mean_weights_renewal = zeros(num_weights, num_clusters);
 
 
 for cluster = 1:num_clusters
     % Filter coefficients matrix for current cluster data only
-    current_clu_mask = cluster_assignments_retention.ClusterID == cluster;
-    clu_coefs = B_ret(current_clu_mask, :);
+    current_clu_mask = cluster_assignments_renewal.ClusterID == cluster;
+    clu_coefs = B_ren(current_clu_mask, :);
     % For each weight, calculate the mean 
     for weight = 1:num_weights
         current_col = clu_coefs(:, weight);
         mean_current_col = mean(current_col,'omitnan');
-        mean_weights_retention(weight, cluster) = mean_current_col;
+        mean_weights_renewal(weight, cluster) = mean_current_col;
     end
 end
 
 %%
-load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
 
-num_weights = size(B_ret, 2);
-num_clusters = max(cluster_assignments.ClusterID);
+num_weights = size(B_ext, 2);
+num_clusters = max(cluster_assignments_extinction.ClusterID);
 
 mean_weights_extinction = zeros(num_weights, num_clusters);
 
 
 for cluster = 1:num_clusters
     % Filter coefficients matrix for current cluster data only
-    current_clu_mask = cluster_assignments.ClusterID == cluster;
-    clu_coefs = B(current_clu_mask, :);
+    current_clu_mask = cluster_assignments_extinction.ClusterID == cluster;
+    clu_coefs = B_ext(current_clu_mask, :);
     % For each weight, calculate the mean 
     for weight = 1:num_weights
         current_col = clu_coefs(:, weight);
@@ -52,12 +54,12 @@ end
 %%
 % ---- inputs you should have ----
 % mean_ext: [num_weights x num_clusters]
-% mean_ret: [num_weights x num_clusters]
+% mean_ren: [num_weights x num_clusters]
 % weight_names: string/cellstr [num_weights x 1] (e.g., your GLM covariate names)
 
 weight_names = coef_names;
 mean_ext = mean_weights_extinction;
-mean_ret = mean_weights_retention;
+mean_ren = mean_weights_renewal;
 
 figure('Color','w');
 
@@ -70,7 +72,7 @@ for c = 1:num_clusters
     x = 1:num_weights;
 
     plot(x, mean_ext(:,c), 'LineWidth', 2);        % extinction (template)
-    plot(x, mean_ret(:,c), '--', 'LineWidth', 1.8); % retention-assigned
+    plot(x, mean_ren(:,c), '--', 'LineWidth', 1.8); % renewal-assigned
 
     yline(0, ':');
 
@@ -86,10 +88,100 @@ for c = 1:num_clusters
     ax.TickDir = 'out';
     ax.Box = 'off';
     ax.LineWidth = 1.2;
+    ylim([-1.6 0.8])
 
     if c == 1
-        legend({'Ext (template)','Ret (assigned)'}, 'Box','off', 'Location','best');
+        legend({'Ext (template)','Ren (assigned)'}, 'Box','off', 'Location','best');
     end
 end
 
-sgtitle('Mean GLM coefficients per cluster: Extinction vs Retention-assigned');
+sgtitle('Mean GLM coefficients per cluster: Extinction vs Renewal-assigned');
+
+%% Calulcate effect of inducing standard pertubation of coefficients to gauge tuning
+% ---- You must have these in workspace ----
+% B_ext, B_ren
+% cluster_assignments_extinction (table with ClusterID)
+% cluster_assignments_renewal (table with ClusterID)
+% coef_names (1 x nCoef cell array)
+
+% ---------- sanity checks ----------
+assert(size(B_ext,1) == height(cluster_assignments_extinction), 'B rows != cluster_assignments_extinction rows');
+assert(size(B_ren,1) == height(cluster_assignments_renewal), 'B_ren rows != cluster_assignments_renewal rows');
+assert(size(B_ext,2) == numel(coef_names), 'B_ext cols != coef_names');
+assert(size(B_ren,2) == numel(coef_names), 'B_ren cols != coef_names');
+
+cluster_id_ext = cluster_assignments_extinction.ClusterID;
+cluster_id_ren = cluster_assignments_renewal.ClusterID;
+
+% ---------- define "standard perturbation" Δx per predictor ----------
+% Rule of thumb:
+% - if a predictor is zscored: use Δx = 1 (1 SD)
+% - if a predictor is a probability (0..1): use Δx = 0.1 (10 percentage points)
+delta_x = ones(1, numel(coef_names));
+
+is_prob = ismember(coef_names, {'Grooming','Rearing','Darting','Freezing'});
+delta_x(is_prob) = 0.1;
+
+% If you DID NOT zscore TimeBin/Trial, set these to something meaningful, e.g.:
+delta_x(strcmp(coef_names,'TimeBin')) = 1;  % 1 bin
+delta_x(strcmp(coef_names,'Trial'))   = 1;  % 1 trial
+% If you DID zscore them, leave as 1.
+
+% ---------- compute per-cell % rate change under Δx ----------
+pct_ext = (exp(B_ext .* delta_x) - 1) * 100;         % nCells_ext x nCoef
+pct_ren = (exp(B_ren .* delta_x) - 1) * 100;     % nCells_ret x nCoef
+
+% ---------- summarise per cluster (median + IQR) ----------
+[med_ext, lo_ext, hi_ext, clusters_ext] = summarise_by_cluster(pct_ext, cluster_id_ext);
+[med_ren, lo_ren, hi_ren, clusters_ren] = summarise_by_cluster(pct_ren, cluster_id_ren);
+
+% ---------- plot heatmaps ----------
+figure;
+imagesc(med_ext); colorbar;
+title('% rate change (median) - Extinction');
+xlabel('Predictor'); ylabel('Cluster');
+set(gca,'XTick',1:numel(coef_names),'XTickLabel',coef_names,'XTickLabelRotation',45);
+set(gca,'YTick',1:numel(clusters_ext),'YTickLabel',"C"+string(clusters_ext));
+
+figure;
+imagesc(med_ren); colorbar;
+title('% rate change (median) - Renewal');
+xlabel('Predictor'); ylabel('Cluster');
+set(gca,'XTick',1:numel(coef_names),'XTickLabel',coef_names,'XTickLabelRotation',45);
+set(gca,'YTick',1:numel(clusters_ren),'YTickLabel',"C"+string(clusters_ren));
+
+% ---------- plot difference (Renewal - Extinction) if same cluster IDs ----------
+if isequal(sort(clusters_ext), sort(clusters_ren))
+    % align rows in same cluster order
+    [~, ie] = ismember(clusters_ext, clusters_ext);
+    [~, ir] = ismember(clusters_ext, clusters_ren);  % reorder renewal to extinction order
+
+    diff_med = med_ren(ir,:) - med_ext(ie,:);
+
+    figure;
+    imagesc(diff_med); colorbar;
+    title('Renewal - Extinction (% rate change, median)');
+    xlabel('Predictor'); ylabel('Cluster');
+    set(gca,'XTick',1:numel(coef_names),'XTickLabel',coef_names,'XTickLabelRotation',45);
+    set(gca,'YTick',1:numel(clusters_ext),'YTickLabel',"C"+string(clusters_ext));
+end
+
+
+% ================= helper function =================
+function [med_mat, lo_mat, hi_mat, clusters] = summarise_by_cluster(pct_mat, cluster_id)
+    clusters = unique(cluster_id(:));
+    K = numel(clusters);
+    nPred = size(pct_mat,2);
+
+    med_mat = nan(K, nPred);
+    lo_mat  = nan(K, nPred);
+    hi_mat  = nan(K, nPred);
+
+    for k = 1:K
+        idx = cluster_id == clusters(k);
+        Xk = pct_mat(idx, :);
+        med_mat(k,:) = median(Xk, 1, 'omitnan');
+        lo_mat(k,:)  = prctile(Xk, 25, 1);
+        hi_mat(k,:)  = prctile(Xk, 75, 1);
+    end
+end

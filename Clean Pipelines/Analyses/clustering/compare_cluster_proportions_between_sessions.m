@@ -1,11 +1,11 @@
-% Load your assignment tables
-load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
-load("D:\PhD 3rd Year\renewal_glm_data\cluster_assignments_retention_to_extinction.mat")
+% Load assignment tables
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ren\cluster_assignments_renewal_to_extinction.mat")
+load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ext\cluster_assignments_extinction.mat")
 
-cluster_assignments.Session = repmat("extinction", height(cluster_assignments), 1);
-cluster_assignments_retention.Session = repmat("retention", height(cluster_assignments_retention), 1);
+cluster_assignments_extinction.Session = repmat("extinction", height(cluster_assignments_extinction), 1);
+cluster_assignments_renewal.Session = repmat("retention", height(cluster_assignments_renewal), 1);
 
-T = vertcat(cluster_assignments, cluster_assignments_retention);
+T = vertcat(cluster_assignments_extinction, cluster_assignments_renewal);
 
 T.Treatment = categorical(T.Treatment, [0 1], {'Veh','Psi'});
 T.Session   = categorical(T.Session, {'extinction','retention'});
