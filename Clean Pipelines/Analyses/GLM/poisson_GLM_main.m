@@ -7,7 +7,9 @@
 %% Directory Setup
 
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
- 
+
+scaler_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\GLM';
+
 session = 'Renewal';
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
@@ -121,6 +123,17 @@ end
 % Final order of behaviours is grooming, rearing, darting, freezing
 behaviour_data_looms = cat(2, behaviour_data_looms, freezing_data_looms, velocity_data_looms);
 behaviour_data_flashes = cat(2, behaviour_data_flashes, freezing_data_flashes, velocity_data_flashes);
+%% Extract mean and SD of global velocity data from extinction for normalising renewal data
+if strcmp(session, 'Extinction')
+
+    all_velocity = [velocity_data_looms; velocity_data_flashes];
+    all_velocity_vector = [all_velocity{:}];
+    all_velocity_vector = all_velocity_vector(:);
+    [~, scaler.vel_mu, scaler.vel_sd] = zscore(all_velocity_vector, 0, 'omitnan');
+    save(fullfile(scaler_directory, 'extinction_velocity_scaler.mat'), 'scaler');
+    disp("extinction_velocity_scaler.mat saved to " + scaler_directory)
+
+end
 
 %% Load neural data
 n_trials  = 40; % total number of trials
@@ -369,6 +382,8 @@ for mouse = mice_to_analyse
             cell_ids = [cell_ids; tmp_cell_ids];
     
         end
+
+       
         
         % Create table for glm input (all rows, all cells)
         X_table = array2table(X, 'VariableNames', ...
@@ -382,18 +397,21 @@ for mouse = mice_to_analyse
         X_table.Trial(X_table.TrialIdentifier==0) = ...
         X_table.Trial(X_table.TrialIdentifier==0) - n_trials/2;  % flashes become 1..20
         
-        fprintf('TrialRaw unique count = %d, min=%d, max=%d\n', ...
-            numel(unique(X_table.TrialRaw)), min(X_table.TrialRaw), max(X_table.TrialRaw));
         
         X_table.StimOn = double(X_table.LoomON | X_table.FlashON);
         X_table.StimOn_x_Type = X_table.StimOn .* X_table.TrialIdentifier;
-
-        % Scale only continuous predictors
-        X_table.Velocity = zscore(X_table.Velocity);
-        X_table.TimeBin  = zscore(X_table.TimeBin);
-        debug = X_table.Trial;
-        X_table.Trial    = zscore(X_table.Trial);
         
+
+        % Load global velocity scaler from extinction data and apply to all data        
+        load(fullfile(scaler_directory, 'extinction_velocity_scaler.mat'), 'scaler');
+        X_table.Velocity = (X_table.Velocity - scaler.vel_mu) ./ scaler.vel_sd;
+
+        % Normalise other continuous variables (these are consistent across
+        % all mice and sessions)
+        X_table.Trial = zscore(X_table.Trial);
+        X_table.TimeBin = zscore(X_table.TimeBin);
+
+
         % ---- Compute test pseudo-R2 per cell ----
         unique_cells = unique(cell_ids);
         nCells = numel(unique_cells);
