@@ -5,20 +5,26 @@
 
 master_directory = "Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)";
 
-session= 'Renewal';
+session= 'Extinction';
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
 
 num_mice = max(mice_to_analyse);
 
-trial_type = 1; % 1 = loom, 0 = flash
+trial_type = 0; % 1 = loom, 0 = flash
 
 received_psi = [3 5 7 8];
 received_veh = [2 4 6 9];
-do_normalise = true;
+do_normalise = false;
 
-% load("D:\PhD 3rd Year\poisson_GLM_data_21_01_26\cluster_assignments_extinction.mat")
-load("D:\PhD 3rd Year\renewal_glm_data\cluster_assignments_extinction.mat")
+
+if strcmp(session, 'Extinction')
+    load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ext\cluster_assignments_extinction.mat")
+    cluster_assignments = cluster_assignments_extinction;
+elseif strcmp(session, 'Renewal')
+    load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ren\cluster_assignments_renewal_to_extinction.mat")
+    cluster_assignments = cluster_assignments_renewal;
+end
 
 %% Load processed neural and behavioural data
 
@@ -50,7 +56,7 @@ psth_data = cell(num_mice, 1);
 for mouse = mice_to_analyse
     current_data = combined_data_matrices{mouse};
     current_data = current_data.X_table_full;
-    spiking_of_interest_idx = current_data.TrialIdentifier == 1;
+    spiking_of_interest_idx = current_data.TrialIdentifier == trial_type;
     spiking_of_interest.SpikeCount = current_data.SpikeCount(spiking_of_interest_idx);
     spiking_of_interest.TimeBin = repmat(1:66, 1, length(spiking_of_interest.SpikeCount)/66)';
     spiking_of_interest.CellID = current_data.CellID(spiking_of_interest_idx);
@@ -86,7 +92,7 @@ if do_normalise
 end
  
 
-avg_spiking_per_bin = zeros(num_mice, num_bins);
+avg_spiking_per_bin = nan(num_mice, num_bins);
 
 for mouse = mice_to_analyse
     current_data = psth_data{mouse};
@@ -174,7 +180,6 @@ fprintf('Post-stim t-test: p = %.4f, t(%d) = %.3f\n', ...
 
 num_clusters = max(cluster_assignments.ClusterID);
 sorted_clusters = cell(num_mice, num_clusters);
-trial_type = 1;
 num_bins = 66;
 pre_stim_bins = 1:19;
 
@@ -238,7 +243,7 @@ avg_spiking_per_bin_clusters = cell(num_clusters, 1);
 for cluster = 1:num_clusters
     current_cluster_data = sorted_clusters(:, cluster);
 
-    avg_spiking_per_bin = zeros(num_mice, num_bins);
+    avg_spiking_per_bin = nan(num_mice, num_bins);
     
     for mouse = mice_to_analyse
         current_data = current_cluster_data{mouse};
@@ -274,7 +279,7 @@ psi_col = [1 0 0];
 figure('Color','w');
 
 for cluster = 1:num_clusters
-    subplot(4,2,cluster); hold on;  % 4x2 grid for 8 clusters
+    subplot(2,2,cluster); hold on;  % 4x2 grid for 8 clusters
 
     psi_mat = psi_clusters{cluster};   % [nPsi x num_bins]
     veh_mat = veh_clusters{cluster};   % [nVeh x num_bins]
@@ -307,6 +312,22 @@ for cluster = 1:num_clusters
         sem_psi  = nan(1, num_bins);
     end
 
+        % --- Per-mouse lines (overlay) ---
+    % Vehicle mice (thin lines)
+    if ~isempty(veh_mat)
+        for i = 1:size(veh_mat,1)
+            plot(t, veh_mat(i,:), 'Color', [veh_col 0.3], 'LineWidth', 1);
+        end
+    end
+
+    % Psilocybin mice (thin lines)
+    if ~isempty(psi_mat)
+        for i = 1:size(psi_mat,1)
+            plot(t, psi_mat(i,:), 'Color', [psi_col 0.3], 'LineWidth', 1);
+        end
+    end
+
+
     % shaded SEM – vehicle
     veh_upper = mean_veh + sem_veh;
     veh_lower = mean_veh - sem_veh;
@@ -320,6 +341,8 @@ for cluster = 1:num_clusters
     fill([t fliplr(t)], [psi_upper fliplr(psi_lower)], psi_col, ...
         'FaceAlpha', 0.2, 'EdgeColor', 'none');
     plot(t, mean_psi, 'Color', psi_col, 'LineWidth', 1.5);
+
+
 
     % cosmetics
     title(sprintf('Cluster %d', cluster));
@@ -343,3 +366,21 @@ for cluster = 1:num_clusters
                'Location','best', 'Box','off');
     end
 end
+
+%% Statistical tests: compare baselines between treatment groups
+baseline_bins = 1:19;
+
+p_vals = nan(num_clusters,1);
+baseline_rates_all = nan(9, num_clusters);  % 9 mice, row 1 empty
+
+for cluster = 1:num_clusters
+    baseline_rates = mean(avg_spiking_per_bin_clusters{cluster}(:, baseline_bins), 2, 'omitnan'); % [9x1]
+    baseline_rates_all(:,cluster) = baseline_rates;
+
+    x_ctrl = baseline_rates(received_veh);
+    x_psi  = baseline_rates(received_psi);
+
+    p_vals(cluster) = ranksum(x_ctrl, x_psi);
+end
+
+disp(p_vals)
