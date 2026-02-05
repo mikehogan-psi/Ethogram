@@ -5,8 +5,6 @@
 % Loaded files: cluster assignments for extinction and retention +
 % coefficient matrices for extinction and retention
 
-do_normalise= true;
-
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\Model\extinction_coefficients.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\Model\renewal_coefficients.mat")
 load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\GLM_output_ren\cluster_assignments_renewal_to_extinction.mat")
@@ -20,25 +18,25 @@ num_clusters = max(cluster_assignments_renewal.ClusterID);
 
 mean_weights_renewal = zeros(num_weights, num_clusters);
 
-if do_normalise
-    %----------------- NORMALISATION -----------------%
-    % Option 1: L2-normalise each cell's coefficient vector
-    for iCell = 1:size(B_ext,1)
-        nrm = norm(B_ext(iCell,:));
-        if nrm > 0
-            B_ext(iCell,:) = B_ext(iCell,:) ./ nrm;
-        end
-    end
-    
-    %----------------- NORMALISATION -----------------%
-    % Option 1: L2-normalise each cell's coefficient vector
-    for iCell = 1:size(B_ren,1)
-        nrm = norm(B_ren(iCell,:));
-        if nrm > 0
-            B_ren(iCell,:) = B_ren(iCell,:) ./ nrm;
-        end
+
+%----------------- NORMALISATION -----------------%
+% Option 1: L2-normalise each cell's coefficient vector
+for iCell = 1:size(B_ext,1)
+    nrm = norm(B_ext(iCell,:));
+    if nrm > 0
+        B_ext(iCell,:) = B_ext(iCell,:) ./ nrm;
     end
 end
+
+%----------------- NORMALISATION -----------------%
+% Option 1: L2-normalise each cell's coefficient vector
+for iCell = 1:size(B_ext,1)
+    nrm = norm(B_ext(iCell,:));
+    if nrm > 0
+        B_ext(iCell,:) = B_ext(iCell,:) ./ nrm;
+    end
+end
+
 
 for cluster = 1:num_clusters
     % Filter coefficients matrix for current cluster data only

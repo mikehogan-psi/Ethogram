@@ -10,7 +10,7 @@ master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 
 
 scaler_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\GLM';
 
-session = 'Renewal';
+session = 'Extinction';
 
 mice_to_analyse = [2 3 4 5 6 7 8 9];
 
@@ -140,6 +140,7 @@ if strcmp(session, 'Extinction')
     all_grooming_vector = [all_grooming{:}];
     all_grooming_vector = all_grooming_vector(:);
     [~, scaler.groom_mu, scaler.groom_sd] = zscore(all_grooming_vector, 0, 'omitnan');
+    save(fullfile(scaler_directory, 'extinction_velocity_scaler.mat'), 'scaler');
     
     all_rearing = [behaviour_data_looms(:, 2); behaviour_data_flashes(:, 2)];
     all_rearing_vector = [all_rearing{:}];
@@ -154,8 +155,8 @@ if strcmp(session, 'Extinction')
 
 
     % save(fullfile(scaler_directory, 'extinction_scaler.mat'), 'scaler');
-    save(fullfile(scaler_directory, 'extinction_scaler.mat'), 'scaler');
     disp("extinction_scaler.mat saved to " + scaler_directory)
+
 
 end
 
@@ -431,7 +432,6 @@ for mouse = mice_to_analyse
         X_table.Velocity = (X_table.Velocity - scaler.vel_mu) ./ scaler.vel_sd;
         X_table.Grooming = (X_table.Grooming - scaler.groom_mu) ./ scaler.groom_sd;
         X_table.Rearing = (X_table.Rearing - scaler.rear_mu) ./ scaler.rear_sd;
-        X_table.Freezing = (X_table.Freezing - scaler.freeze_mu) ./ scaler.freeze_sd;
         
         % Binarise darting due to sparsity (same factor as during scaler
         % calc)
@@ -573,7 +573,7 @@ for mouse = mice_to_analyse
                     k_max = half_trial + band;
 
                     % Does a circular shift of spiking data where number
-                    % of places data is moved always somewhere around 33
+                    % of places data is moved always somwhere around 33
                     % bins +- 10
 
                     for t = 1:n_trials

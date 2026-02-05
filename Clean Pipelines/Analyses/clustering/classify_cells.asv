@@ -28,7 +28,7 @@ mouse_num  = 2:9;
 mouse_treatment = [0,1,0,1,0,1,1,0];
 
 dropIntercept = true; % set true if first coefficient is intercept
-do_shuffle = true;
+do_shuffle = false;
 do_save_results = false;
 do_save_model = false;
 maxK       = 10;    % maximum K to evaluate for silhouette
@@ -210,7 +210,7 @@ for k = 1:K
     scatter(B_tsne(idx==k,1), B_tsne(idx==k,2), 10, colors(k,:), 'filled');
 end
 xlabel('t-SNE1'); ylabel('t-SNE2');
-legend({'Cluster 1', 'Cluster 2'}, Location='best')
+legend('Cluster 1', Clustre)
 title('t-SNE embedding coloured by k-means cluster');
 
 weight_names = {'Grooming','Rearing','Darting','Freezing','Velocity', ...

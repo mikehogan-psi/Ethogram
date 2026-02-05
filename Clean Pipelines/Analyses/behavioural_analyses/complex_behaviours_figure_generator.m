@@ -9,7 +9,7 @@ trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
 received_psilocybin = [3; 5; 7; 8];
-received_vehicle = [1; 2; 4; 6];
+received_vehicle = [1; 2; 4; 6; 9];
 
 % !!! Provide filepath for where figures will be saved !!!
 save_folder = 'D:\behaviours_results';
@@ -224,7 +224,7 @@ for b = 1:num_behaviours
 
     % Stats: ranksum (robust) + ttest2 (optional)
     p_ranksum = ranksum(psi_vals, veh_vals);
-    [~, p_ttest] = ttest2(psi_vals, veh_vals); % unpaired, equal/unequal variance default
+    [~, p_ttest] = ttest2(psi_vals, veh_vals);
 
     % Build figure
     figure; hold on;
@@ -233,7 +233,6 @@ for b = 1:num_behaviours
     sems  = [veh_sem,  psi_sem];
 
     bh = bar(1:2, means, 'FaceAlpha', 0.8);
-    % Colour bars (Vehicle blue, Psi red) - keep simple
     bh.FaceColor = 'flat';
     bh.CData(1,:) = [0 0 1];
     bh.CData(2,:) = [1 0 0];
@@ -258,8 +257,7 @@ for b = 1:num_behaviours
     else
         win_str = sprintf('Post-stim window: frames %d-%d', post_start, post_end);
     end
-
-    title({title_str; win_str; sprintf('ranksum p=%.4g | ttest2 p=%.4g', p_ranksum, p_ttest)}, 'Interpreter','none');
+    title({title_str; win_str}, 'Interpreter','none');
 
     % Nice y-limits
     ymin = 0;
@@ -269,8 +267,7 @@ for b = 1:num_behaviours
 
     grid on; box off;
 
-    % Optional: simple significance annotation using ranksum p
-    % (you can remove this block if you don't want stars)
+    % Significance line + stars (ranksum)
     yStar = ymax * 0.92;
     plot([1 2], [yStar yStar], 'k-', 'LineWidth', 1.5);
     if p_ranksum < 0.001
@@ -283,6 +280,19 @@ for b = 1:num_behaviours
         star = 'n.s.';
     end
     text(1.5, yStar*1.02, star, 'HorizontalAlignment','center', 'FontSize', 14);
+
+    % ---- ADD P-VALUE TEXT ON THE GRAPH ----
+    p_text = sprintf('ranksum p = %.3g\nttest2 p = %.3g', p_ranksum, p_ttest);
+
+    % Put it top-left in axes coordinates (always in same spot)
+    text(0.05, 0.95, p_text, ...
+        'Units', 'normalized', ...
+        'HorizontalAlignment', 'left', ...
+        'VerticalAlignment', 'top', ...
+        'FontSize', 11, ...
+        'BackgroundColor', 'w', ...
+        'EdgeColor', [0.3 0.3 0.3], ...
+        'Margin', 6);
 
     hold off;
 
