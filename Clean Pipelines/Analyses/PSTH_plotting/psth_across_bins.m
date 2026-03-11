@@ -15,7 +15,7 @@ trial_type = 1; % 1 = loom, 0 = flash
 
 received_psi = [3 5 7 8];
 received_veh = [2 4 6 9];
-do_normalise = true;
+do_normalise = false;
 
 
 if strcmp(session, 'Extinction')
@@ -243,6 +243,45 @@ if do_normalise
     end
 end
 
+%TEST
+num_bins = 66;
+trials_per_block = 5;
+
+for mouse = mice_to_analyse
+    for cluster = 1:num_clusters
+        T = sorted_clusters{mouse, cluster};
+        if isempty(T) || height(T)==0
+            sorted_clusters{mouse, cluster} = T;
+            continue
+        end
+
+        T.TrialNum   = nan(height(T),1);
+        T.TrialBlock = nan(height(T),1);
+
+        cellIDs = unique(T.CellID);
+        for c = 1:numel(cellIDs)
+            cid = cellIDs(c);
+            idx = find(T.CellID == cid);  % preserves current order
+
+            n = numel(idx);
+            nTrials = n / num_bins;
+
+            if abs(nTrials - round(nTrials)) > 1e-9
+                warning('Mouse %d Cluster %d CellID %d: rows (%d) not divisible by %d bins.', ...
+                        mouse, cluster, cid, n, num_bins);
+                continue
+            end
+            nTrials = round(nTrials);
+
+            T.TrialNum(idx)   = repelem((1:nTrials)', num_bins, 1);
+            T.TrialBlock(idx) = ceil(T.TrialNum(idx) / trials_per_block);
+        end
+
+        sorted_clusters{mouse, cluster} = T;
+    end
+end
+%TEST
+
 
 avg_spiking_per_bin_clusters = cell(num_clusters, 1);
 
@@ -397,3 +436,97 @@ for cluster = 1:num_clusters
 end
 
 disp(p_vals)
+
+%% TEST for plotting progression of psths across clusters 
+
+num_blocks = 4;
+avg_spiking_per_bin_byBlock_clusters = cell(num_clusters,1);
+
+for cluster = 1:num_clusters
+    A = nan(num_mice, num_bins, num_blocks);
+
+    for mouse = mice_to_analyse
+        T = sorted_clusters{mouse, cluster};
+        if isempty(T) || height(T)==0 || ~ismember('TrialBlock', T.Properties.VariableNames)
+            continue
+        end
+
+        for b = 1:num_blocks
+            Tb = T(T.TrialBlock == b, :);
+            if isempty(Tb), continue; end
+
+            for bin = 1:num_bins
+                A(mouse, bin, b) = mean(Tb.SpikeCount(Tb.TimeBin==bin), 'omitnan');
+            end
+        end
+    end
+
+    avg_spiking_per_bin_byBlock_clusters{cluster} = A;
+end
+
+clusters_to_plot = [1 2];     % two clusters
+num_blocks = 4;               % 5+5+5+5
+veh_col = [0 0.4470 0.7410];
+psi_col = [1 0 0];
+
+figure('Color','w');
+
+% --- Make two big panels (left/right) ---
+p1 = uipanel('Parent', gcf, 'Units','normalized', 'Position',[0.02 0.08 0.47 0.87], 'BorderType','none');
+p2 = uipanel('Parent', gcf, 'Units','normalized', 'Position',[0.51 0.08 0.47 0.87], 'BorderType','none');
+panels = {p1, p2};
+
+for s = 1:2
+    cluster = clusters_to_plot(s);
+    A = avg_spiking_per_bin_byBlock_clusters{cluster}; % [mouse x bin x block]
+
+    % nested 2x2 layout inside each big panel
+    tl = tiledlayout(panels{s}, 2, 2, 'TileSpacing','compact', 'Padding','compact');
+    title(tl, sprintf('Cluster %d', cluster), 'FontWeight','bold');
+
+    for b = 1:num_blocks
+        ax = nexttile(tl); hold(ax, 'on');
+
+        veh_mat = squeeze(A(received_veh, :, b)); % [nVeh x bins]
+        psi_mat = squeeze(A(received_psi, :, b)); % [nPsi x bins]
+
+        % means + SEM
+        mean_veh = mean(veh_mat, 1, 'omitnan');
+        mean_psi = mean(psi_mat, 1, 'omitnan');
+        sem_veh  = std(veh_mat, 0, 1, 'omitnan') ./ sqrt(size(veh_mat,1));
+        sem_psi  = std(psi_mat, 0, 1, 'omitnan') ./ sqrt(size(psi_mat,1));
+
+        % shaded SEM + mean line
+        fill(ax, [t fliplr(t)], [mean_veh+sem_veh fliplr(mean_veh-sem_veh)], ...
+            veh_col, 'FaceAlpha',0.2, 'EdgeColor','none');
+        plot(ax, t, mean_veh, 'Color',veh_col, 'LineWidth',2);
+
+        fill(ax, [t fliplr(t)], [mean_psi+sem_psi fliplr(mean_psi-sem_psi)], ...
+            psi_col, 'FaceAlpha',0.2, 'EdgeColor','none');
+        plot(ax, t, mean_psi, 'Color',psi_col, 'LineWidth',2);
+
+        xline(ax, 10, 'k--', 'LineWidth',1.2);
+        xline(ax, 13.3, 'k--', 'LineWidth',1.2);
+
+        block_start = (b-1)*5 + 1;
+        block_end   = b*5;
+        title(ax, sprintf('Trials %d–%d', block_start, block_end));
+
+        xlim(ax, [0 33]);
+        xlabel(ax, 'Time (s)');
+        ylabel(ax, 'Mean spike count/bin');
+
+        ax.TickDir = 'out';
+        ax.Box = 'off';
+        ax.LineWidth = 1.2;
+        if ~do_normalise
+            ylim([1 8])
+        end
+
+        if b == 1
+            legend(ax, {'Veh SEM','Vehicle','Psi SEM','Psilocybin'}, 'Location','best', 'Box','off');
+        end
+    end
+end
+
+

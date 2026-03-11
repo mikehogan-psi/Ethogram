@@ -87,9 +87,17 @@ if do_shuffle
 
     for s = 1:nShuf
         Bsh = B0;
-        for i = 1:size(B0,1)
+
+        % SHUFFLE COEFS WITHIN CELLS
+        for i = 1:size(B0,1)        % for each cell
             Bsh(i,:) = B0(i, randperm(size(B0,2)));
         end
+        
+        % % SHUFFLE WITHIN COEFS ACROSS CELLS
+        % for j = 1:size(B0,2)          % for each covariate
+        %     Bsh(:,j) = B0(randperm(size(B0,1)), j);
+        % end
+
     
         % normalise exactly as real
         Bsh = Bsh ./ vecnorm(Bsh,2,2);

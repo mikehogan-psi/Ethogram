@@ -5,7 +5,7 @@
 session = 'Renewal';
 
 % !!!Provide master directory with all data in!!!
-master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
+master_directory = 'W:\Mike\Neuropixels_Fear_Conditioning\Data';
 
 % !!! Define likelihood threshold (only DLC data which exceed this
 % confidence value will be used for triangulation) !!!
@@ -18,7 +18,11 @@ used_p_matrix_2 = [9];
 
 
 % !!! Provide filepath for SSM for estimating data !!!
-SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Models\SSMs\SSM_3D_implant_mouse1_head_fixed.mat';
+% SSM_model_path = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort
+% 4_06_05_25 (SC PAG Implanted
+% Animals)\Models\SSMs\SSM_3D_implant_mouse1_head_fixed.mat'; CURRENT SSM
+% USED ON ALL DATA
+SSM_model_path = 'W:\Mike\Neuropixels_Fear_Conditioning\Models\SSMs\SSM_mouse1_to_9.mat';
 %% Get directory for DLC datafiles for each mouse for specified session
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
@@ -197,7 +201,7 @@ for mouse = 1:length(mouse_files)
 
 end
 
-% call 'plot3d_video(Xfit, false)' if you want to check fitting has worked
+% call 'plot3d_video(Xfit, true)' if you want to check fitting has worked
 
 %% Triangulate DLC data for habituation and save in appropriate subfolder
 

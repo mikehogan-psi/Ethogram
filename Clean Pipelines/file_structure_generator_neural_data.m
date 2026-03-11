@@ -1,7 +1,7 @@
 %% Scalable file structure for Cohort 4
 
 % Define root directory
-root_dir = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
+root_dir = 'W:\Mike\Neuropixels_Fear_Conditioning';
 
 % Define folder names
 mice = {'Mouse 1', 'Mouse 2', 'Mouse 3', 'Mouse 4', 'Mouse 5', 'Mouse 6',...

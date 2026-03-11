@@ -1,4 +1,4 @@
-session = 'Renewal';
+session = 'Extinction';
 
 if strcmp(session, 'Extinction')
     load("Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\Clustering\Model\extinction_coefficients.mat")
@@ -117,7 +117,7 @@ disp('============================================================')
 disp(lme_norm.Coefficients)
 
 %% Run cluster-specific contrasts per PC (within-cluster treatment effects)
-pc = 5;
+pc = 4;
 
 current_T = cluster_assignments_table;
 current_T.Component = pcs(:, pc);
@@ -172,7 +172,7 @@ disp(results_by_cluster)
 %% Inspect loading of PCs to interpret them
 coef_names = {'Grooming','Rearing','Darting','Freezing','Velocity', ...
                  'TimeBin','Trial','TrialIdentifier','StimOn','StimOn_x_Type'};
-pc = 5;
+pc = 4;
 loadings = coeff(:,pc);
 
 [~, idx] = sort(abs(loadings), 'descend');

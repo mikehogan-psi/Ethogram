@@ -2,7 +2,7 @@ function[] = Fit_SSM_3D_new(current_3Ddata_file, SSM_data_path, SSM_model_name_p
 
 options.Ltrial = 502;
 options.wind = [0.2 0.6 0.2];
-options.good_landm = [1:11];
+options.good_landm = [1:11]; % use 11 for SSM_3D_implant_mouse1_head_fixed
 options.ind_head = [1:7];      % including implant markers (1:3)
 options.ind_body = [8:13];
 options.alpha_reg = 0.1;

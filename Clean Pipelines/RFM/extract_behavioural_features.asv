@@ -63,7 +63,7 @@ if strcmp(behaviour, 'Grooming')
     window_size = 30;
 
 elseif strcmp(behaviour, 'Rearing')   
-    feature_strings_idx = [1 21, 24, 25, 26, 27];
+    feature_strings_idx = [21, 24, 25, 26, 27];
     window_size = 4;
 
 elseif strcmp(behaviour, 'Darting')

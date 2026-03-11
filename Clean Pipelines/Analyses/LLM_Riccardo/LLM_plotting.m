@@ -5,7 +5,7 @@ tiledlayout(1,2, 'Padding','compact', 'TileSpacing','compact');
 nexttile; 
 plot(1:numel(explained), explained, '-o', 'LineWidth', 1.5);
 xlabel('PC'); ylabel('% variance explained');
-title('PCA on B\_dir: Scree');
+title('PCA on direction vectors: Scree');
 xlim([1 10])
 grid on;
 
@@ -15,7 +15,7 @@ plot(1:numel(explained), cumsum(explained), '-o', 'LineWidth', 1.5); hold on;
 yline(90,'--','90%','LineWidth',1.2);
 xline(num_pcs,'--',sprintf('Chosen = %d', num_pcs),'LineWidth',1.2);
 xlabel('PC'); ylabel('Cumulative % explained');
-title('PCA on B\_dir: Cumulative');
+title('PCA on direction vectors: Cumulative');
 xlim([1 10])
 ylim([0 100]);
 grid on;
@@ -51,7 +51,7 @@ sig = results_table_int.PC(results_table_int.FDR_P_Value <= 0.05);
 disp("Significant PCs (interaction, FDR<=0.05): " + strjoin(string(sig), ", "));
 
 %%
-pc = 5;
+pc = 4;
 T = cluster_assignments_table;
 T.Component = pcs(:,pc);
 
@@ -104,28 +104,36 @@ end
 sgtitle(sprintf('Between-subject: PC%d by Treatment within Cluster (mouse means)', pc));
 
 %%
-pc = 5;  % same pc used for results_by_cluster
+pc = 4;
 R = results_by_cluster;
 
 est = R.TreatEffect;
 se  = R.SE;
 ci95 = 1.96 * se;
 
-figure('Color','w'); hold on;
-
 y = 1:height(R);
-errorbar(est, y, ci95, 'horizontal', 'o', 'LineWidth', 1.5);
+
+figure('Color','w'); hold on;
+errorbar(est, y, ci95, 'horizontal', 'o', 'LineWidth', 1.8, 'CapSize', 10);
 xline(0,'--','LineWidth',1.2);
 
 yticks(y);
-yticklabels(string(R.ClusterID));
+yticklabels("Cluster " + string(R.ClusterID));
+ylim([0.5 height(R)+0.5]);   % tight y
+
+% Tight x-lims around the CI range
+xmin = min(est - ci95); 
+xmax = max(est + ci95);
+pad = 0.15 * (xmax - xmin + eps);
+xlim([xmin - pad, xmax + pad]);
+
 xlabel(sprintf('Treatment effect (psilocybin - vehicle) on PC%d score', pc));
 title(sprintf('Cluster-specific treatment contrasts (PC%d)', pc));
 grid on;
 
 % Mark FDR-significant clusters
 sig = R.qValue <= 0.05;
-plot(est(sig), y(sig), 's', 'MarkerSize', 8, 'LineWidth', 1.5);
+plot(est(sig), y(sig), 's', 'MarkerSize', 9, 'LineWidth', 1.8);
 
 legend({'Estimate \pm 95% CI','0','FDR sig'}, 'Location','best');
 
@@ -152,7 +160,7 @@ legend(categories(categorical(Tmouse.Treatment)), 'Location','best');
 
 %%
 % --- Bar chart of PCA loadings for a chosen PC ---
-pc = 5;                          % choose PC
+pc = 4;                          % choose PC
 loadings = coeff(:, pc);         % coeff from pca()
 names = string(coef_names(:));   % predictor names (same order as columns in B_dir)
 

@@ -1,10 +1,9 @@
 %% 
 % !!! Provide top directory with all data in !!!
-% master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
-master_directory = 'W:\Mike\Neuropixels_Fear_Conditioning\Data';
+master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
-% !!! Provide path to where RFM files are !!!
-RFM_folder = 'W:\Mike\Neuropixels_Fear_Conditioning\Models\RFMs';
+% !!! Provide path to master file where labels will be saved !!!
+labels_folder = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)\RFM Training Files';
 
 % !!! Provide session !!!
 session = 'Extinction'; % Extinction or Renewal
@@ -13,13 +12,13 @@ session = 'Extinction'; % Extinction or Renewal
 behaviour = 'Rearing'; % Rearing, Grooming or Darting
 
 % Provide number of mouse to label
-mouse_to_label = 5; 
+mouse_to_label = 8; 
 
 % Provide video part to label
 part = 2;
 
 % Provide model number
-model_number = 2;
+model_number = 1;
 
 %%
 mouse_files = dir(fullfile(master_directory, 'mouse*'));
@@ -50,8 +49,7 @@ for mouse_idx = 1:num_mice
 end
 
 %%
-labels_output_folder = fullfile(RFM_folder, behaviour, 'Labelled Data');
-models_output_folder = fullfile(RFM_folder, behaviour, 'Models');
+output_folder = fullfile(labels_folder, behaviour, 'Labelled Data');
 
 video_paths = cell(4, 1);
 
@@ -73,16 +71,16 @@ SSM_data_path = fullfile(SSM_path.folder, SSM_path.name);
 
 load(SSM_data_path, 'Xfit', 'b', 'R', 'T', 'missing')
 
-[labels, features] = label_behaviour_gui(video_paths, Xfit, b, R, T, missing, behaviour, labels_output_folder, base_name);
+[labels, features] = label_behaviour_gui(video_paths, Xfit, b, R, T, missing, behaviour, output_folder, base_name);
 %% Train model with extracted features/labels
 
 % Load all labeled data and put into single variables
-labelled_files = dir(fullfile(labels_output_folder, '*_labels.mat'));
+labelled_files = dir(fullfile(output_folder, '*_labels.mat'));
 all_features = [];
 all_labels = [];
 
 for i = 1:length(labelled_files)
-    data = load(fullfile(labels_output_folder, labelled_files(i).name));
+    data = load(fullfile(output_folder, labelled_files(i).name));
     all_features = [all_features; data.extracted_features(~isnan(data.labels), :)]; % Extract valid features
     all_labels = [all_labels; data.labels(~isnan(data.labels))];
 end
@@ -153,5 +151,5 @@ model.(model_name) = TreeBagger(numTrees, all_features, all_labels, 'Method', 'c
 
 save_name = [lower(behaviour), '_model_' num2str(model_number) '.mat'];
 
-save(fullfile(models_output_folder, save_name), '-struct', 'model', model_name);
+save(fullfile(output_folder, save_name), [lower(behaviour), '_model']);
 
