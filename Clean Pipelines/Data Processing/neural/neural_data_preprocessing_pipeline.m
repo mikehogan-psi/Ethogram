@@ -16,11 +16,24 @@ session = 'Renewal';
 master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
 
 %!!!Specify stim set for each mouse (mouse number only)!!!
-received_stim_set_1 = [1 2 3 6 7];
+received_stim_set_1 = [1 2 3 6 7 10 11 12];
 received_stim_set_2 = [4 5 8 9];
 %% Get directories for .dat files and trigger.npy files and concantenate/extract
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
+num_mice = length(mouse_files);
+
+% Sort mice according to number
+mouse_nos = zeros(num_mice, 1);
+expression = '\d+';
+
+for i = 1:num_mice
+    mouse_no = regexp(mouse_files(i).name, expression, 'match', 'once');
+    mouse_nos(i) = str2double(mouse_no);
+end
+
+[~, sort_idx] = sort(mouse_nos);
+mouse_files = mouse_files(sort_idx);
 
 % Get master neural data folders for specified session
 for mouse = 2:length(mouse_files) % Always skip mouse 1 (data wrong format)

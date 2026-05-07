@@ -63,12 +63,16 @@ if strcmp(behaviour, 'Grooming')
     window_size = 30;
 
 elseif strcmp(behaviour, 'Rearing')   
-    feature_strings_idx = [21, 24, 25, 26, 27];
+    feature_strings_idx = [1 21, 24, 25, 26, 27];
     window_size = 4;
 
 elseif strcmp(behaviour, 'Darting')
     feature_strings_idx = [11, 12, 14, 15, 16];
     window_size = 26;
+
+elseif strcmp(behaviour, 'Freezing')
+    feature_strings_idx = 19;
+    window_size = 1;
 
 else
     warning('This behaviour is not recognised')
@@ -81,7 +85,7 @@ extracted_features = NaN(num_frames, length(feature_selection));
 
 % Extract features for appropriate window size for behaviour
 for frame = 1:num_frames
-    
+    if mod(window_size, 2) = 0
     % Sort data into windows
     start_idx = max(1, frame - (window_size / 2));
     end_idx = min(num_frames, frame + (window_size / 2));
@@ -90,6 +94,9 @@ for frame = 1:num_frames
     T_window = T(:, start_idx:end_idx);
     R_window = R(:, start_idx:end_idx);
     missing_window = missing(:, start_idx:end_idx);
+
+    elseif mod(window_size, 2) = 1;
+        
 
     if sum(missing_window(:)) > 6
         continue % too many missing points → leave as NaN

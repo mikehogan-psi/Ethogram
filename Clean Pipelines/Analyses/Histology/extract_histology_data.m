@@ -1,0 +1,52 @@
+%% EXTRACT_HISTOLOGY_DATA
+% Loads histology pipeline output and stores it in a cell array of tables
+%
+% INPUT
+% histology_folder: file_path to where .csv files of final histology output
+% are stored as with mouse_x , where x is its number
+%
+% OUTPUT
+% hist_data: cell array containing tables of histology data
+%%
+function[hist_data] = extract_histology_data(histology_folder)
+
+%% Extract .csv filepaths
+hist_dirs = dir(fullfile(histology_folder, 'mouse_*'));
+
+num_mice = size(hist_dirs, 1);
+
+hist_paths = cell(num_mice, 1);
+
+for i = 1:num_mice
+    current_path = fullfile(hist_dirs(i).folder, hist_dirs(i).name);
+    hist_paths{i} = current_path;
+end
+
+% Sort files according to their mouse number
+expression_name = 'mouse_\d+';
+expression_no = '\d+';
+mouse_nos = cell(num_mice, 1);
+
+for i = 1:num_mice
+    mouse_name = regexp(hist_paths{i}, expression_name, 'match', 'once');
+    mouse_no = regexp(mouse_name, expression_no, 'match', 'once');
+    mouse_nos{i} = mouse_no;
+end
+
+mouse_nos = str2double(mouse_nos);
+
+[mouse_nos, sort_idx] = sort(mouse_nos);
+hist_paths = hist_paths(sort_idx);
+
+
+%% Load histology .csvs and store in cell array
+hist_data = cell(num_mice, 1);
+
+for i = 1:num_mice
+    current_data = readtable(hist_paths{i});
+    % Add mouse number to the table
+    current_data.mouse = repmat(mouse_nos(i), size(current_data, 1), 1);
+    hist_data{i} = current_data;
+end
+
+end

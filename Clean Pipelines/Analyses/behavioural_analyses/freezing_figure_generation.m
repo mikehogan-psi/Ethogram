@@ -1,5 +1,6 @@
 % !!!Provide master directory with all data in!!!
-master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
+% master_directory = 'Z:\Mike\Data\Psilocybin Fear Conditioning\Cohort 4_06_05_25 (SC PAG Implanted Animals)';
+master_directory = 'W:\Mike\Neuropixels_Fear_Conditioning\Data';
 
 % !!!Provide session to be analysed!!!
 session = 'Extinction';
@@ -7,12 +8,25 @@ session = 'Extinction';
 trial_type = 'looms'; % 'looms' or 'flashes'
 
 % !!! Provide treatment mouse numbers for each treatment group !!!
-received_psilocybin = [3; 5; 7; 8];
+received_psilocybin = [3; 5; 7; 8; 10];
 received_vehicle = [1; 2; 4; 6; 9];
-mice_to_analyse = [1 2 3 4 5 6 7 8 9];
+mice_to_analyse = [1 2 3 4 5 6 7 8 9 10];
+% Mouse 6 has weird data
 %%
 % Select only mouse data folders
 mouse_files = dir(fullfile(master_directory, 'Mouse*'));
+
+mouse_names = cell(length(mouse_files), 1);
+
+for i = 1:length(mouse_files)
+    mouse_names{i} = mouse_files(i).name;
+end
+
+expression = '\d+';
+
+mouse_numbers = str2double(regexp(mouse_names, expression, 'match', 'once'));
+[~, numbers_sort] = sort(mouse_numbers);
+mouse_files = mouse_files(numbers_sort);
 
 % Initialise 
 freezing_folders = cell(length(mouse_files), 1);

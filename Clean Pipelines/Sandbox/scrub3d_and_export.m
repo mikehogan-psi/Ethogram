@@ -55,7 +55,7 @@ hold(ax,'on');
 % One distinct color per marker:
 % Colorblind-friendly palette (Okabe–Ito)
 okabeIto = [
-    0.5000 0.3000 0.0000  % black
+    0.3000 0.3000 0.3000  % black (true)
     0.9020 0.6235 0.0000  % orange
     0.3373 0.7059 0.9137  % sky blue
     0.0000 0.6196 0.4510  % bluish green
@@ -63,10 +63,10 @@ okabeIto = [
     0.0000 0.4471 0.6980  % blue
     0.8353 0.3686 0.0000  % vermillion
     0.8000 0.4745 0.6549  % reddish purple
-    0.4000 0.4000 0.4000  % dark grey  (NEW)
-    0.3922 0.0000 0.8000  % deep purple (NEW)
+    0.5960 0.3060 0.9000  % bright purple
+    0.8900 0.1020 0.1100  % bright red
+    0.6000 0.6000 0.6000  % grey (lighter, clearer than dark grey)
 ];
-
 
 % Assign to markers (repeats if Np > 8)
 markerColors = okabeIto(mod(0:Np-1, size(okabeIto,1)) + 1, :);

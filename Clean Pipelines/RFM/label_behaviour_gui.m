@@ -131,7 +131,7 @@ uicontrol(fig,'Style','pushbutton','String','Save Labels', ...
                 if frame_idx < num_frames
                     slider.Value = frame_idx + 1; % advance
                 end
-                disp(['Frame ', num2str(frame_idx), ' unlabelled as ', lower(behaviour)])
+                disp(['Frame ', num2str(frame_idx), ' delabelled as ', lower(behaviour)])
                 update_frame();
         end
     end

@@ -1,3 +1,5 @@
+load("W:\Mike\Neuropixels_Fear_Conditioning\Models\SSMs\SSM_mouse1_to_9.mat")
+
 % --- settings ---
 maxPlotFrames = 4000;
 alphaCloud    = 0.1;
@@ -41,18 +43,17 @@ template_ransac = Estimate_mean_RANSAC(Xplot_f, false);     % Np x 3
 % ---- colours ----
 if Np == 11
     markerColors = [
-        0.5000 0.3000 0.0000
-        0.9020 0.6235 0.0000
-        0.3373 0.7059 0.9137
-        0.0000 0.6196 0.4510
-        0.9412 0.8941 0.2588
-        0.0000 0.4471 0.6980
-        0.8353 0.3686 0.0000
-        0.8000 0.4745 0.6549
-        0.4000 0.4000 0.4000
-        0.3922 0.0000 0.8000
-        0.6000 0.2000 0.1000
-        0.7631 0.1342 0.5321
+    0.3000 0.3000 0.3000  % black (true)
+    0.9020 0.6235 0.0000  % orange
+    0.3373 0.7059 0.9137  % sky blue
+    0.0000 0.6196 0.4510  % bluish green
+    0.9412 0.8941 0.2588  % yellow
+    0.0000 0.4471 0.6980  % blue
+    0.8353 0.3686 0.0000  % vermillion
+    0.8000 0.4745 0.6549  % reddish purple
+    0.5960 0.3060 0.9000  % bright purple
+    0.8900 0.1020 0.1100  % bright red
+    0.6000 0.6000 0.6000  % grey (lighter, clearer than dark grey)
     ];
 else
     markerColors = hsv2rgb([linspace(0,1,Np)' 0.85*ones(Np,1) 0.95*ones(Np,1)]);
@@ -62,7 +63,7 @@ end
 fig = figure('Color','w','Renderer','opengl');
 ax = axes('Parent',fig); hold(ax,'on');
 set(fig,'Units','pixels','Position',[100 100 1300 800]);   % bigger window
-set(ax,'Units','normalized','Position',[0.06 0.08 0.72 0.86]); % leave room right for legend + margins
+% set(ax,'Units','normalized','Position',[0.06 0.08 0.72 0.86]); % leave room right for legend + margins
 
 % clouds (use FILTERED Xplot_f so outliers don't wreck the view)
 for m = 1:Np
@@ -123,12 +124,12 @@ camtarget(ax, [mean(xlim(ax)) mean(ylim(ax)) mean(zlim(ax))]);
 % zoom OUT a bit (values <1 zoom out)
 camzoom(ax, 0.85);     % try 0.8–0.9
 
-% optional: widen limits a little more (extra padding)
-xl = xlim(ax); yl = ylim(ax); zl = zlim(ax);
-pad2 = 0.15;  % 15% extra
-xlim(ax, xl + pad2*[-1 1]*range(xl));
-ylim(ax, yl + pad2*[-1 1]*range(yl));
-zlim(ax, zl + pad2*[-1 1]*range(zl));
+% % optional: widen limits a little more (extra padding)
+% xl = xlim(ax); yl = ylim(ax); zl = zlim(ax);
+% pad2 = 0.15;  % 15% extra
+% xlim(ax, xl + pad2*[-1 1]*range(xl));
+% ylim(ax, yl + pad2*[-1 1]*range(yl));
+% zlim(ax, zl + pad2*[-1 1]*range(zl));
 
 labels = { ...
     'Cable Tip', ...
@@ -144,30 +145,30 @@ labels = { ...
     'Tail Anterior'...
 };
 
-% Create invisible dummy handles for a clean legend
-hLeg = gobjects(Np,1);
-for m = 1:Np
-    hLeg(m) = scatter3(ax, NaN, NaN, NaN, ptSizeMean, ...
-        'filled', 'MarkerFaceColor', markerColors(m,:), ...
-        'MarkerEdgeColor','k', 'LineWidth', 0.6);
-end
+% % Create invisible dummy handles for a clean legend
+% hLeg = gobjects(Np,1);
+% for m = 1:Np
+%     hLeg(m) = scatter3(ax, NaN, NaN, NaN, ptSizeMean, ...
+%         'filled', 'MarkerFaceColor', markerColors(m,:), ...
+%         'MarkerEdgeColor','k', 'LineWidth', 0.6);
+% end
 
-% Make legend markers bigger
-for m = 1:Np
-    hLeg(m).SizeData = 200;      % try 150–400 (area in points^2)
-    hLeg(m).LineWidth = 1.0;     % thicker edge in legend
-end
+% % Make legend markers bigger
+% for m = 1:Np
+%     hLeg(m).SizeData = 200;      % try 150–400 (area in points^2)
+%     hLeg(m).LineWidth = 1.0;     % thicker edge in legend
+% end
 
 set(fig,'Units','pixels','Position',[100 100 1300 800]);
 set(ax,'Units','normalized','Position',[0.06 0.08 0.72 0.86]);
 
-lgd = legend(ax, hLeg, labels, 'Location','northeast', 'Box','off');
-lgd.FontSize = 20;
-lgd.FontWeight = 'bold';
-lgd.ItemTokenSize = [18 12];
+% lgd = legend(ax, hLeg, labels, 'Location','northeast', 'Box','off');
+% lgd.FontSize = 25;
+% lgd.FontWeight = 'bold';
+% lgd.ItemTokenSize = [18 12];
 grid(ax,'on'); box(ax,'on');
 xlabel(ax,'X'); ylabel(ax,'Y'); zlabel(ax,'Z');
-set(hLeg(m), 'SizeData', 120);  % legend marker size (area in points^2)
+% set(hLeg(m), 'SizeData', 120);  % legend marker size (area in points^2)
 
 % --- prevent clipping of 3D axes/labels ---
 set(ax,'Units','normalized');

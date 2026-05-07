@@ -70,6 +70,10 @@ elseif strcmp(behaviour, 'Darting')
     feature_strings_idx = [11, 12, 14, 15, 16];
     window_size = 26;
 
+elseif strcmp(behaviour, 'Freezing')
+    feature_strings_idx = 19;
+    window_size = 1;
+
 else
     warning('This behaviour is not recognised')
     extracted_features = [];
@@ -81,10 +85,10 @@ extracted_features = NaN(num_frames, length(feature_selection));
 
 % Extract features for appropriate window size for behaviour
 for frame = 1:num_frames
-    
-    % Sort data into windows
-    start_idx = max(1, frame - (window_size / 2));
-    end_idx = min(num_frames, frame + (window_size / 2));
+    half_win = floor(window_size / 2);
+
+    start_idx = max(1, frame - half_win);
+    end_idx   = min(num_frames, frame + half_win);
     
     b_window = b(:, start_idx:end_idx);
     T_window = T(:, start_idx:end_idx);
